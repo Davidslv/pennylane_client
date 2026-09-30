@@ -1,0 +1,55 @@
+# Contributing to pennylane_client
+
+Thanks for your interest. This document covers setup, what a change must include, and how larger work is proposed.
+
+## Development setup
+
+```sh
+git clone https://github.com/Davidslv/pennylane_client.git
+cd pennylane_client
+bundle install
+bundle exec rake
+```
+
+You need Ruby 3.3 or newer. CI runs on Ruby 3.3, 3.4 and 4.0.
+
+`bundle exec rake` is the gate. It runs:
+
+1. the Minitest suite (`test/`), which stubs all HTTP with WebMock and never reaches Pennylane;
+2. RuboCop;
+3. `rbs validate` on `sig/`.
+
+The repository does not commit a `Gemfile.lock`, as recommended for gems.
+
+## What every change needs
+
+- **A test first.** Write the failing test, then the code. A change without a test is not done.
+- **Stubbed HTTP only.** New HTTP interactions get WebMock stubs, never live calls.
+- **RBS for public methods.** Anything public gets a signature in `sig/`.
+- **Docs in the same change.** If public behaviour changes, update `README.md` and `docs/`. If internals change in a way that invalidates `docs/architecture.md`, fix it too.
+
+## The clean-room rule
+
+This gem is written only from Pennylane's public documentation and observed sandbox behaviour. Do not read, copy or adapt the source, README or tests of any other Pennylane API client, in any language. If the docs are unclear, open an issue describing the ambiguity. See [CONTEXT.md](CONTEXT.md).
+
+## Zero runtime dependencies
+
+The gem uses only the Ruby standard library. Pull requests that add a runtime dependency will be declined unless there is no reasonable alternative.
+
+## Commits and pull requests
+
+- One concern per commit. Imperative subject ("Add cursor pagination"); the body explains why.
+- Branch `<issue-number>-kebab-description`, PR title `[#<issue-number>] Description`.
+- Pull requests describe the problem, the approach and how it was tested.
+
+## Proposing larger changes
+
+Open an issue first for features, API changes or behaviour changes. Significant design lives in `proposals/`.
+
+## Verifying against a real Pennylane sandbox
+
+The maintainer has no Pennylane account, so the checklist's `live` column starts as unverified. If you have a Pennylane company account with a sandbox, you can help by running the smoke suite once it exists (tracked in the Epic) and submitting the report. Never run load or stress tests against Pennylane's servers, sandbox included.
+
+## Code of conduct
+
+By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).

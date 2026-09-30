@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "pennylane_client"
+abstract: "Unofficial Ruby client for the Pennylane Company API v2."
+type: software
+authors:
+  - family-names: Silva
+    given-names: David
+repository-code: "https://github.com/Davidslv/pennylane_client"
+license: MIT
