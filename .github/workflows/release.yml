@@ -1,0 +1,57 @@
+name: Release
+
+# On a v* tag: run the gate, then publish the gem to RubyGems by Trusted
+# Publishing (OIDC, no API key) with a Sigstore attestation. The trusted
+# publisher on rubygems.org names this workflow and the `release`
+# environment. See docs/releasing.md.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: release
+    permissions:
+      # rubygems/release-gem asks for both: id-token for the OIDC exchange
+      # and the attestation, contents for `rake release`.
+      contents: write
+      id-token: write
+    steps:
+      # The tag already exists, so `rake release` neither tags nor pushes.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler: latest
+      # No bundler-cache: it keys on Gemfile.lock, which this gem does not keep.
+      - name: Install dependencies
+        run: bundle install
+      - name: Check the tag matches the gem version
+        run: |
+          version="v$(ruby -Ilib -rpennylane_client/version -e 'print PennylaneClient::VERSION')"
+          if [ "$version" != "$TAG" ]; then
+            echo "Tag $TAG does not match PennylaneClient::VERSION ($version)."
+            exit 1
+          fi
+        env:
+          TAG: ${{ github.ref_name }}
+      - name: Run the gate (tests, RuboCop, RBS, stale generated files)
+        run: bundle exec rake
+      - name: Publish to RubyGems with an attestation
+        uses: rubygems/release-gem@v1
+        with:
+          attestations: true
