@@ -29,5 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `FakePennylane`, a test-support stand-in that enforces Pennylane's rate limit and headers and misbehaves on demand, in process or on a local socket. `rake load` and `rake stress` run the client against it; results in `docs/performance.md`. CI runs `rake load` on every pull request and `rake stress` on demand.
 - `NetHttpTransport` keeps an idle connection for 10 s (`keep_alive_timeout:`) instead of `Net::HTTP`'s 2 s, so a rate-limit wait no longer costs a new connection.
 - `client.customer_invoices`: all 24 Customer Invoices operations Named, including the Hidden installment action. `list` and the lists under one invoice walk every page; `import_e_invoice` and `upload_appendix` stream their file; `categorize` takes the bare array. RBS in `sig/pennylane_client/resources.rbs`.
+- `client.customers`: all 16 Customers operations Named, company and individual, with contacts and categories. `create_company` and `create_individual` are the documented creates; `create(customer_type:, ...)` is the Hidden one that makes either kind.
 
 [Unreleased]: https://github.com/Davidslv/pennylane_client/commits/main

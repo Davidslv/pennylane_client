@@ -159,6 +159,43 @@ invoices.import_e_invoice(Pathname("facturx.pdf"), invoice_options: { customer_i
 
 `link_credit_note(42, credit_note_id: 43)` links credit note 43 to invoice 42. `mark_installment_as_paid(42, 3)` marks one installment paid; Pennylane tags it Hidden and alpha, so it may change.
 
+## Work with customers
+
+`client.customers` names every Customers operation. Pennylane keeps company and individual customers apart. `list` and `find` return both, and each item's `customer_type` says which. Create and update through the kind:
+
+```ruby
+customers = client.customers
+address = { address: "8 rue de la paix", postal_code: "75002", city: "Paris", country_alpha2: "FR" }
+
+acme = customers.create_company(name: "Acme", billing_address: address)
+ada  = customers.create_individual(first_name: "Ada", last_name: "Lovelace", billing_address: address)
+
+customers.update_company(acme[:id], payment_conditions: "30_days")
+customers.update_individual(ada[:id], emails: ["ada@example.org"])
+customers.find_company(acme[:id])     # also find_individual; find(id) works for either
+```
+
+`create` is `postCustomer`, which makes either kind from `customer_type:`. Pennylane tags it Hidden, so it may change. Prefer `create_company` and `create_individual`:
+
+```ruby
+customers.create(customer_type: "company", name: "Acme", billing_address: address)
+```
+
+Contacts belong to one customer, so every contact method takes the customer id first. A contact is its own record. Adding, changing or deleting one does not touch the customer's invoice recipients (`emails`):
+
+```ruby
+customers.contacts(7, sort: "-id").each { |contact| ... }
+contact = customers.create_contact(7, first_name: "Grace", last_name: "Hopper", email: "grace@example.org")
+customers.update_contact(7, contact[:id], role: "CFO")
+customers.delete_contact(7, contact[:id])
+```
+
+`categories(7)` lists a customer's categories. `categorize` replaces them with a bare array, like the invoice one:
+
+```ruby
+customers.categorize(7, [{ id: 426, weight: "0.6575" }, { id: 427, weight: "0.3425" }])
+```
+
 ## Handle a validation error
 
 ```ruby

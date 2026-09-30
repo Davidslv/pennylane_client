@@ -2,7 +2,7 @@
 
 An unofficial Ruby client for the [Pennylane](https://www.pennylane.com) Company API v2. Not affiliated with Pennylane.
 
-> **Status: in development, not yet released.** The plan is in [proposal 0001](proposals/0001-pennylane-client-gem.md) and delivery is tracked in [Epic #1](https://github.com/Davidslv/pennylane_client/issues/1). Today `client.call(:operationId, **params)` works for every operation, inside the rate limit and with safe retries; `client.paginate` walks any list, and uploads stream from disk. Load and stress results against a local fake are in [docs/performance.md](docs/performance.md). Customer Invoices has its named methods (`client.customer_invoices...`); the other resource groups are still to come.
+> **Status: in development, not yet released.** The plan is in [proposal 0001](proposals/0001-pennylane-client-gem.md) and delivery is tracked in [Epic #1](https://github.com/Davidslv/pennylane_client/issues/1). Today `client.call(:operationId, **params)` works for every operation, inside the rate limit and with safe retries; `client.paginate` walks any list, and uploads stream from disk. Load and stress results against a local fake are in [docs/performance.md](docs/performance.md). Customer Invoices and Customers have their named methods (`client.customer_invoices...`, `client.customers...`); the other resource groups are still to come.
 
 ## Why
 
@@ -30,7 +30,8 @@ client.customer_invoices.list(filter: [{ field: "status", operator: "eq", value:
       .each { |invoice| puts invoice[:invoice_number] }
 client.customer_invoices.finalize(42)
 client.customer_invoices.send_by_email(42)
-client.call(:getCustomer, id: 7)   # any operation, by its Pennylane operationId
+client.customers.find(7)
+client.call(:getSupplier, id: 12)   # any operation, by its Pennylane operationId
 ```
 
 Operations with a Ruby name are marked `named` in the [checklist](docs/api/CHECKLIST.md). Every other operation is reachable through `client.call` until it gets one.

@@ -58,7 +58,7 @@ invoices.finalize(invoice[:id])
 invoices.send_by_email(invoice[:id])
 ```
 
-Attributes go to Pennylane as you pass them. Lists return every item lazily, as `client.paginate` does. The full list of methods is in `lib/pennylane_client/resources/` and `sig/pennylane_client/resources.rbs`; [the how-to](how-to.md#work-with-customer-invoices) covers the ones you would not guess.
+Attributes go to Pennylane as you pass them. Lists return every item lazily, as `client.paginate` does. The full list of methods is in `lib/pennylane_client/resources/` and `sig/pennylane_client/resources.rbs`; the how-to covers the ones you would not guess, for [customer invoices](how-to.md#work-with-customer-invoices) and [customers](how-to.md#work-with-customers).
 
 ## When it fails
 
