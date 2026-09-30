@@ -36,8 +36,9 @@ module PennylaneClient
         loop do
           page = fetch(cursor)
           yielder << page
-          cursor = page[:next_cursor]
-          break unless @operation.paginated && page[:has_more] && cursor
+          break unless @operation.paginated && page[:has_more] && page[:next_cursor]
+
+          cursor = next_cursor(page, cursor)
         end
       end.lazy
     end
@@ -54,6 +55,13 @@ module PennylaneClient
       end
 
       params.merge(limit:)
+    end
+
+    # The same cursor twice would ask for the same page forever.
+    def next_cursor(page, cursor)
+      return page[:next_cursor] unless page[:next_cursor] == cursor
+
+      raise Error, "#{@operation.id} returned the cursor it was given, #{cursor.inspect}"
     end
 
     def fetch(cursor)

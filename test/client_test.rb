@@ -191,6 +191,11 @@ class ClientPaginationTest < Minitest::Test
     pages.each { assert_requested(_1, times: 1) }
   end
 
+  # A GET is retried already, and `retry` must never reach Pennylane.
+  def test_paginate_refuses_a_retry_policy
+    assert_raises(ArgumentError) { client.paginate(:getCustomerInvoices, retry: :always) }
+  end
+
   def test_pages_gives_each_page
     stub_page(nil, [1], "c2")
     stub_page("c2", [2], nil)

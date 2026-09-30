@@ -106,6 +106,12 @@ class PaginatorTest < Minitest::Test
     assert_raises(ArgumentError) { paginator(:postJournals) }
   end
 
+  def test_raises_when_the_cursor_does_not_move
+    looping = [page([1], next_cursor: "c2"), page([2], next_cursor: "c2"), page([3])]
+
+    assert_raises(PennylaneClient::Error) { paginator(:getCustomerInvoices, responses: looping).items.to_a }
+  end
+
   def test_raises_when_a_response_is_not_a_page
     error = assert_raises(PennylaneClient::Error) { paginator(:getJournal, { id: 1 }, responses: [ok(200, '{"id":1}')]).items.to_a }
     assert_match(/getJournal/, error.message)

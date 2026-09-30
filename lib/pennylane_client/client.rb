@@ -69,7 +69,11 @@ module PennylaneClient
 
     private
 
+    # A list is a GET, which Retry already retries; `retry` would otherwise
+    # be sent to Pennylane as a query param.
     def paginator(operation_id, params)
+      raise ArgumentError, "paginate takes no retry policy: a GET is retried already" if params.key?(:retry)
+
       Paginator.new(executor: @executor, operation: Registry.default.fetch(operation_id), params:)
     end
   end
