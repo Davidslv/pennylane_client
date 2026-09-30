@@ -1,0 +1,72 @@
+module PennylaneClient
+  module Resources
+    type item = Hash[Symbol, untyped]
+    type result = Hash[Symbol, untyped] | bool
+    # What Multipart streams as a file part.
+    type file = File | IO | StringIO | Pathname | Upload
+
+    class Resource
+      @client: Client
+
+      def initialize: (Client client) -> void
+
+      def inspect: () -> String
+
+      private
+
+      def call: (Symbol operation_id, ?untyped body, **untyped params) -> untyped
+
+      def paginate: (Symbol operation_id, **untyped params) -> Enumerator::Lazy[item, void]
+    end
+
+    class CustomerInvoices < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+
+      def delete: (Integer id) -> result
+
+      def create_from_quote: (**untyped attributes) -> item
+
+      def import: (**untyped attributes) -> item
+
+      def import_e_invoice: (file file, **untyped fields) -> item
+
+      def finalize: (Integer id) -> item
+
+      def mark_as_paid: (Integer id) -> result
+
+      def mark_installment_as_paid: (Integer customer_invoice_id, Integer id) -> result
+
+      def send_by_email: (Integer id, **untyped fields) -> result
+
+      def send_to_pa: (Integer id) -> result
+
+      def link_credit_note: (Integer id, credit_note_id: Integer) -> item
+
+      def update_imported: (Integer id, **untyped attributes) -> item
+
+      def invoice_lines: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def invoice_line_sections: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def payments: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def matched_transactions: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def custom_header_fields: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def appendices: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def upload_appendix: (Integer customer_invoice_id, file file) -> item
+
+      def categories: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def categorize: (Integer customer_invoice_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
+    end
+  end
+end

@@ -11,11 +11,13 @@ class ConfigurationTest < Minitest::Test
     @saved = PennylaneClient.configuration.dup
   end
 
+  # super is WebMock's reset; without it this test's stubs outlive it.
   def teardown
     PennylaneClient.configure do |config|
       config.logger = @saved.logger
       config.on_request = @saved.on_request
     end
+    super
   end
 
   def test_defaults_to_no_logger_and_no_callback

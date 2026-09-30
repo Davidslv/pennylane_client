@@ -13,6 +13,7 @@ How the gem is put together, and why. Written for someone about to change the co
 | `PennylaneClient::Operation` | `lib/pennylane_client/operation.rb` | One Operation as plain data: operationId, verb, path, paginated, largest page size (`max_limit`), body kind, success code, deprecated. |
 | `PennylaneClient::OPERATIONS` | `lib/pennylane_client/operations.rb` | The generated operation table: every Operation in the latest snapshot, one row per line. Every live Operation is Registered here. |
 | `PennylaneClient::Client` | `lib/pennylane_client/client.rb` | Wiring only. `PennylaneClient.new(token:)` composes the middleware; `#call(:operationId, **params)` reaches any Registered operation. |
+| `PennylaneClient::Resources::Resource` and one subclass per resource group | `lib/pennylane_client/resources/` | Named operations. Each public method is a hand-written one-liner over `Client#call` or `#paginate`, e.g. `def finalize(id) = call(:finalizeCustomerInvoice, id:)`. The base class holds the Client and nothing else. `client.customer_invoices` returns one instance per Client. Built so far: `CustomerInvoices`. |
 | `PennylaneClient::Registry` | `lib/pennylane_client/registry.rb` | Frozen lookup from operationId to Operation. An unknown id raises `UnknownOperationError`. |
 | `PennylaneClient::Executor` | `lib/pennylane_client/executor.rb` | Operation + params to Request; Response to a return value or an Error. |
 | `PennylaneClient::Paginator` | `lib/pennylane_client/paginator.rb` | Walks a cursor-paginated list for `client.paginate` and `client.pages`: largest page, every param resent on every page, lazy. |
@@ -59,7 +60,7 @@ What happens on `client.call(:getJournal, id: 42)`:
 
 ### Where the token lives
 
-Only `Middleware::Auth` holds the token, and only `Request#headers` carries it, from Auth inward. `Client`, `Executor`, `Auth` and `Request` override `inspect`, errors are built from the response alone, events are built from the Operation and the URL path, and rate-limit keys are SHA-256 digests. `Request#to_h` and `#headers` do return the raw header, because a Transport needs it; a custom Transport must not log them. A token with whitespace or a line break is refused, when the Client is built or when a provider returns it, because `Net::HTTP` would otherwise raise an error quoting the header. `test/token_secrecy_test.rb` checks all of these.
+Only `Middleware::Auth` holds the token, and only `Request#headers` carries it, from Auth inward. `Client`, `Executor`, `Auth`, `Request` and `Resources::Resource` override `inspect`, errors are built from the response alone, events are built from the Operation and the URL path, and rate-limit keys are SHA-256 digests. `Request#to_h` and `#headers` do return the raw header, because a Transport needs it; a custom Transport must not log them. A token with whitespace or a line break is refused, when the Client is built or when a provider returns it, because `Net::HTTP` would otherwise raise an error quoting the header. `test/token_secrecy_test.rb` checks all of these.
 
 ### Transport interface
 
@@ -82,7 +83,7 @@ From the design diagram, in the order they are built (Epic #1):
 1. **Runtime core.** Built; see above.
 2. **Middleware.** Built; see above.
 3. **Pagination and uploads.** Built; see above.
-4. **Resources.** Hand-written one-liner methods per resource group.
+4. **Resources.** Hand-written one-liner methods per resource group. Customer Invoices is built; the other groups follow, one sub-issue each.
 
 ## Design rationale
 

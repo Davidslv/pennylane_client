@@ -43,6 +43,23 @@ A few operations take a JSON array as their body. Pass it as the second argument
 client.call(:putCustomerCategories, [{ id: 3, weight: "1" }], customer_id: 9)
 ```
 
+## Named methods
+
+Operations marked `named` in [the checklist](api/CHECKLIST.md) also have a Ruby method on a resource. The name stays the same if Pennylane renames the operationId:
+
+```ruby
+invoices = client.customer_invoices
+
+invoices.list(filter: [{ field: "status", operator: "eq", value: "draft" }]).each { |invoice| ... }
+invoice = invoices.create(customer_id: 7, date: Date.today, deadline: Date.today + 30, draft: true,
+                          invoice_lines: [{ label: "Audit", quantity: 1, raw_currency_unit_price: "500", unit: "day",
+                                            vat_rate: "FR_200" }])
+invoices.finalize(invoice[:id])
+invoices.send_by_email(invoice[:id])
+```
+
+Attributes go to Pennylane as you pass them. Lists return every item lazily, as `client.paginate` does. The full list of methods is in `lib/pennylane_client/resources/` and `sig/pennylane_client/resources.rbs`; [the how-to](how-to.md#work-with-customer-invoices) covers the ones you would not guess.
+
 ## When it fails
 
 Every error is a `PennylaneClient::Error` with `#status`, `#code`, `#details` and `#body`:

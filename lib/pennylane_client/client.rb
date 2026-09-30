@@ -65,6 +65,9 @@ module PennylaneClient
     # `next_cursor`).
     def pages(operation_id, **params) = paginator(operation_id, params).pages
 
+    # The named Customer Invoices operations (Resources::CustomerInvoices).
+    def customer_invoices = @customer_invoices ||= Resources::CustomerInvoices.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private
