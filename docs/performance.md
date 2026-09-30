@@ -78,10 +78,10 @@ What the table shows:
 
 `rake "stress[30]"` gives eight threads one client each, on their own tokens, and has them call GET, POST, PUT and DELETE in turn for 30 minutes while the faults take 10 s turns: a 5xx burst, slow answers, resets, malformed JSON, a 429 storm, hangs, then a healthy turn. Memory is sampled every 30 s. The soak fails on an outcome other than success or a documented error class, on more than 3 attempts per call, when fewer than half the calls succeed, or when memory grows by 30 MB or more between the 60 s sample and the end.
 
-Recorded 2026-09-30 on Ruby 4.0.7, arm64-darwin25:
+Recorded 2026-09-30 on Ruby 4.0.7, arm64-darwin25, on the code after the pre-1.0 review fixes. The test suite ran on the same machine for part of the half hour, so the call count is a floor, not a throughput figure:
 
 | Calls | Outcomes | Attempts | Retries | RSS |
 |---|---|---|---|---|
-| 71,831 in 30 min | 71,281 ok, 277 `ServerError`, 130 `Error` (malformed), 87 `ConnectionError`, 56 `TimeoutError` | 72,396 | 565 | 59 MB after the first minute, 53 to 60 MB throughout, 54 MB at the end (-4.5 MB) |
+| 66,770 in 30 min | 66,153 ok, 340 `ServerError`, 130 `Error` (malformed), 79 `ConnectionError`, 68 `TimeoutError` | 67,268 | 498 | 53 MB after the first minute, 53 to 55 MB throughout, 55 MB at the end (+1.8 MB) |
 
 The soak ends with the same leak checks as every scenario, and they passed.
