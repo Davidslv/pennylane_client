@@ -11,8 +11,10 @@ module PennylaneClient
   #
   # - names in the path template (`{id}`) fill the path, escaped;
   # - when the Operation takes a JSON body, everything else is the body,
-  #   unless the caller passes `body:` explicitly (six Operations take a
-  #   JSON array, which keyword params cannot build);
+  #   unless the caller passes the body as the third argument of #call
+  #   (Client#call's second). Six Operations take a JSON array, which keyword
+  #   params cannot build. A `body:` keyword is an ordinary param: it is sent
+  #   as a field named "body";
   # - when the Operation takes a multipart body, everything else is a form
   #   field, and files stream from disk (Multipart). Files the Executor
   #   opened are closed once the call is over;
