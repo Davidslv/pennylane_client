@@ -168,7 +168,7 @@ class CustomerContactsAndCategoriesTest < Minitest::Test
   def test_delete_contact_returns_true_on_no_content
     stub_request(:delete, "#{API}/customers/7/contacts/3").with(body: nil).to_return(status: 204)
 
-    assert customers.delete_contact(7, 3)
+    assert_same true, customers.delete_contact(7, 3)
   end
 
   # names: getCustomerCategories

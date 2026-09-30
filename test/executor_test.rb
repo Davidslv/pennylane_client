@@ -116,11 +116,11 @@ class ExecutorTest < Minitest::Test
   end
 
   def test_returns_true_for_an_empty_success_body
-    assert(executor(ok(204, "")).call(:markAsPaidCustomerInvoice, { id: 1 }))
+    assert_same true, executor(ok(204, "")).call(:markAsPaidCustomerInvoice, { id: 1 })
   end
 
   def test_treats_a_nil_body_from_a_custom_transport_as_empty
-    assert(executor(PennylaneClient::Response.new(status: 204, headers: {}, body: nil)).call(:getMe))
+    assert_same true, executor(PennylaneClient::Response.new(status: 204, headers: {}, body: nil)).call(:getMe)
   end
 
   def test_raises_the_mapped_error_for_a_failure_status

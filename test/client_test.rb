@@ -45,7 +45,7 @@ class ClientTest < Minitest::Test
   def test_put_returning_no_content
     stub_request(:put, "#{API}/customer_invoices/42/mark_as_paid").to_return(status: 204)
 
-    assert client.call(:markAsPaidCustomerInvoice, id: 42)
+    assert_same true, client.call(:markAsPaidCustomerInvoice, id: 42)
   end
 
   def test_delete_with_a_body
@@ -54,8 +54,8 @@ class ClientTest < Minitest::Test
       .with(body: { unbalanced_lettering_strategy: "none", ledger_entry_lines: lines }.to_json)
       .to_return(status: 204)
 
-    assert client.call(:deleteLedgerEntryLinesUnletter, unbalanced_lettering_strategy: "none",
-                                                        ledger_entry_lines: lines)
+    assert_same true, client.call(:deleteLedgerEntryLinesUnletter, unbalanced_lettering_strategy: "none",
+                                                                   ledger_entry_lines: lines)
   end
 
   def test_an_array_body_goes_as_the_second_argument

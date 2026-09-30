@@ -80,7 +80,7 @@ class CustomerInvoicesTest < Minitest::Test
   def test_delete_returns_true_on_no_content
     stub_request(:delete, "#{API}/customer_invoices/42").with(body: nil).to_return(status: 204)
 
-    assert invoices.delete(42)
+    assert_same true, invoices.delete(42)
   end
 
   def test_a_failure_raises_its_error
@@ -108,7 +108,7 @@ class CustomerInvoiceActionsTest < Minitest::Test
   def test_mark_as_paid
     stub_request(:put, "#{API}/customer_invoices/42/mark_as_paid").with(body: nil).to_return(status: 204)
 
-    assert invoices.mark_as_paid(42)
+    assert_same true, invoices.mark_as_paid(42)
   end
 
   # names: markAsPaidCustomerInvoiceInstallment
@@ -117,7 +117,7 @@ class CustomerInvoiceActionsTest < Minitest::Test
       .with(body: nil)
       .to_return(status: 204)
 
-    assert invoices.mark_installment_as_paid(42, 3)
+    assert_same true, invoices.mark_installment_as_paid(42, 3)
   end
 
   # names: sendByEmailCustomerInvoice
@@ -125,13 +125,13 @@ class CustomerInvoiceActionsTest < Minitest::Test
     stub_request(:post, "#{API}/customer_invoices/42/send_by_email")
       .with(body: '{"recipients":["billing@example.com"]}').to_return(status: 204)
 
-    assert invoices.send_by_email(42, recipients: ["billing@example.com"])
+    assert_same true, invoices.send_by_email(42, recipients: ["billing@example.com"])
   end
 
   def test_send_by_email_to_the_customer_by_default
     stub_request(:post, "#{API}/customer_invoices/42/send_by_email").with(body: "{}").to_return(status: 204)
 
-    assert invoices.send_by_email(42)
+    assert_same true, invoices.send_by_email(42)
   end
 
   # Pennylane answers 409 while the PDF is still being generated.
@@ -145,7 +145,7 @@ class CustomerInvoiceActionsTest < Minitest::Test
   def test_send_to_pa
     stub_request(:post, "#{API}/customer_invoices/42/send_to_pa").with(body: nil).to_return(status: 204)
 
-    assert invoices.send_to_pa(42)
+    assert_same true, invoices.send_to_pa(42)
   end
 
   # names: linkCreditNote
