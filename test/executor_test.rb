@@ -81,6 +81,27 @@ class ExecutorTest < Minitest::Test
     assert_equal "application/json", sent.headers["Content-Type"]
   end
 
+  # putCustomerCategories and five others take a JSON array, which keyword
+  # params cannot build.
+  def test_sends_an_explicit_body_as_is
+    executor.call(:putCustomerCategories, { customer_id: 9 }, [{ id: 1, weight: BigDecimal("0.5") }])
+
+    assert_equal "#{BASE}/api/external/v2/customers/9/categories", sent.url
+    assert_equal '[{"id":1,"weight":"0.5"}]', sent.body
+  end
+
+  def test_refuses_extra_params_next_to_an_explicit_body
+    error = assert_raises(ArgumentError) do
+      executor.call(:putCustomerCategories, { customer_id: 9, weight: 1 }, [])
+    end
+
+    assert_equal "unexpected parameters [:weight] for :putCustomerCategories with an explicit body", error.message
+  end
+
+  def test_refuses_an_explicit_body_for_an_operation_without_one
+    assert_raises(ArgumentError) { executor.call(:getMe, {}, []) }
+  end
+
   def test_sends_the_token_and_asks_for_json
     executor.call(:getMe)
     headers = sent.headers

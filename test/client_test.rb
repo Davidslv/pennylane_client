@@ -50,6 +50,13 @@ class ClientTest < Minitest::Test
                                                         ledger_entry_lines: lines)
   end
 
+  def test_an_array_body_goes_as_the_second_argument
+    stub_request(:put, "#{API}/customers/9/categories").with(body: '[{"id":1,"weight":"1"}]')
+                                                       .to_return(status: 200, body: "[]")
+
+    assert_equal [], client.call(:putCustomerCategories, [{ id: 1, weight: "1" }], customer_id: 9)
+  end
+
   def test_a_failure_status_raises_its_error
     stub_request(:get, "#{API}/me").to_return(status: 401, body: '{"error":"unauthorized","message":"Bad token"}')
 

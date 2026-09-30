@@ -25,8 +25,13 @@ module PennylaneClient
 
     # Runs any Registered operation by its Pennylane operationId.
     # Returns a deep-frozen Hash with symbol keys, or true for an empty 2xx.
-    def call(operation_id, **params)
-      @executor.call(operation_id, params)
+    #
+    # Keyword params fill the path, then the JSON body or the query. Pass the
+    # body positionally when it is not an object, e.g. an array:
+    #
+    #   client.call(:putCustomerCategories, [{ id: 1, weight: "1" }], customer_id: 9)
+    def call(operation_id, body = nil, **params)
+      @executor.call(operation_id, params, body)
     end
 
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"

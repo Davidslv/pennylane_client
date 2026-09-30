@@ -10,7 +10,9 @@ module PennylaneClient
   # Parameters are split by where the Operation wants them:
   #
   # - names in the path template (`{id}`) fill the path, escaped;
-  # - when the Operation takes a JSON body, everything else is the body;
+  # - when the Operation takes a JSON body, everything else is the body,
+  #   unless the caller passes `body:` explicitly (six Operations take a
+  #   JSON array, which keyword params cannot build);
   # - otherwise everything else is the query. Structured query values
   #   (Pennylane's `filter` is a JSON array) are sent as JSON strings.
   #
@@ -28,9 +30,9 @@ module PennylaneClient
       @instrumentation = instrumentation
     end
 
-    def call(operation_id, params = {})
+    def call(operation_id, params = {}, body = nil)
       operation = @registry.fetch(operation_id)
-      response = perform(operation, build(operation, params))
+      response = perform(operation, build(operation, params, body))
       handle(response)
     end
 
@@ -38,15 +40,30 @@ module PennylaneClient
 
     private
 
-    def build(operation, params)
+    def build(operation, params, body)
       rest = params.dup
       url = @base_url + fill_path(operation, rest)
 
       case operation.body
-      when :json then json_request(operation, url, rest)
+      when :json then json_request(operation, url, body.nil? ? rest : explicit_body(operation, rest, body))
       when :multipart then raise NotImplementedError, "multipart uploads are not supported yet (#{operation.id})"
-      else Request.new(verb: operation.verb, url: url + query(rest), headers:, body: nil)
+      else query_request(operation, url, rest, body)
       end
+    end
+
+    def query_request(operation, url, params, body)
+      raise ArgumentError, "#{operation.id.inspect} takes no request body" unless body.nil?
+
+      Request.new(verb: operation.verb, url: url + query(params), headers:, body: nil)
+    end
+
+    # A body passed as is, for the Operations whose body is a JSON array.
+    # Every other param must have been a path parameter.
+    def explicit_body(operation, rest, body)
+      return body if rest.empty?
+
+      raise ArgumentError,
+            "unexpected parameters #{rest.keys.inspect} for #{operation.id.inspect} with an explicit body"
     end
 
     def json_request(operation, url, params)
