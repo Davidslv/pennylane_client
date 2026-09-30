@@ -137,6 +137,22 @@ class ExecutorTest < Minitest::Test
     assert_equal 200, error.status
   end
 
+  # Net::HTTP does not follow redirects, so a 3xx reaches the Executor.
+  # An empty 302 must not read as the success of a write.
+  def test_raises_for_an_empty_redirect
+    error = assert_raises(PennylaneClient::Error) do
+      executor(ok(302, "", { "location" => "https://example.com" })).call(:markAsPaidCustomerInvoice, { id: 1 })
+    end
+
+    assert_equal 302, error.status
+  end
+
+  def test_raises_for_not_modified
+    error = assert_raises(PennylaneClient::Error) { executor(ok(304, "")).call(:getMe) }
+
+    assert_equal 304, error.status
+  end
+
   def test_names_the_operation_on_the_request
     executor.call(:getMe)
 
