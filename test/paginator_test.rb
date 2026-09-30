@@ -103,6 +103,13 @@ class PaginatorTest < Minitest::Test
                  queries.map { _1.values_at("start_date", "cursor") })
   end
 
+  def test_refuses_start_date_next_to_a_cursor
+    error = assert_raises(ArgumentError) do
+      paginator(:getCustomerChanges, { start_date: "2026-09-29T10:00:00Z", cursor: "c2" })
+    end
+    assert_match(/start_date/, error.message)
+  end
+
   # getPaRegistrations answers with items, has_more and next_cursor but takes
   # no cursor, so it is one page, sent without cursor or limit.
   def test_reads_a_list_that_takes_no_cursor_as_one_page

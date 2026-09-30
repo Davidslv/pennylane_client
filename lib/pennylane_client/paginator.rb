@@ -10,7 +10,8 @@ module PennylaneClient
   # - sends every param again on every page, next to the `cursor`, because
   #   the cursor does not remember `filter` or `sort`;
   # - except `start_date`, which goes with the first request only: every
-  #   changelog operation answers 400 to `start_date` next to a `cursor`;
+  #   changelog operation answers 400 to `start_date` next to a `cursor`,
+  #   which is also why the caller cannot pass both;
   # - stops when `has_more` is false or `next_cursor` is null.
   #
   # `getPaRegistrations` answers in the same shape but takes no cursor, so
@@ -23,6 +24,7 @@ module PennylaneClient
 
     def initialize(executor:, operation:, params:)
       raise ArgumentError, "#{operation.id.inspect} does not return a list" unless operation.verb == :get
+      raise ArgumentError, "pass start_date or cursor, not both" if params[:start_date] && params[:cursor]
 
       @executor = executor
       @operation = operation

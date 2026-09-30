@@ -428,7 +428,7 @@ export = client.exports.generate_fec(period_start: Date.new(2026, 1, 1), period_
 export[:file_url]   # expires 30 minutes after it is issued
 ```
 
-It reads the export every 5 s for up to 300 s. Change both with `interval:` and `timeout:`. It raises `ExportError` when the export ends in `error` or is still pending at the timeout; `error.export[:id]` lets you check on it later with `find_fec`. `generate_analytical_general_ledger` also takes `mode:` (`"in_line"`, the default, or `"in_column"`).
+It reads the export every 5 s for up to 300 s. Change both with `interval:` and `timeout:`. It raises `ExportError` when the export ends in `error` or is still pending at the timeout; `error.export[:id]` lets you check on it later with `find_fec`. A read that fails on its own (a 5xx after its retries, no response) raises the usual error instead, without the export id; call `create_fec` and `find_fec` yourself if you need to keep the id through that. `generate_analytical_general_ledger` also takes `mode:` (`"in_line"`, the default, or `"in_column"`).
 
 To poll on your own schedule, call the two halves yourself: `create_fec(period_start:, period_end:)` returns the pending export and `find_fec(id)` reads it. The same pairs exist for `general_ledger` and `analytical_general_ledger`.
 

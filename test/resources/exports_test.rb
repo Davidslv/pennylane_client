@@ -27,7 +27,8 @@ class ExportsTest < Minitest::Test
   def export(status, file_url: nil) = JSON.generate({ id: 9, status:, file_url: })
 
   def stub_created(path, body = PERIOD_JSON)
-    stub_request(:post, "#{API}/exports/#{path}").with(body:).to_return(status: 201, body: export("pending"))
+    stub_request(:post, "#{API}/exports/#{path}").with(body:)
+                                                 .to_return(status: 201, body: '{"id":9,"status":"pending"}')
   end
 
   def test_is_one_resource_per_client
@@ -39,7 +40,7 @@ class ExportsTest < Minitest::Test
   def test_create_fec_encodes_the_period
     stub_created("fecs")
 
-    assert_equal({ id: 9, status: "pending", file_url: nil }, exports.create_fec(**PERIOD))
+    assert_equal({ id: 9, status: "pending" }, exports.create_fec(**PERIOD))
   end
 
   # names: getFecExport
@@ -120,6 +121,14 @@ class ExportsTest < Minitest::Test
     assert_equal "pending", error.export[:status]
     assert_equal [3, 3, 3], @slept
     assert_match(/10/, error.message)
+  end
+
+  # AGENTS.md rule 4: a POST is not retried after a 5xx.
+  def test_generate_does_not_retry_a_failed_create
+    stub_request(:post, "#{API}/exports/fecs").to_return(status: 500, body: "oops")
+
+    assert_raises(PennylaneClient::ServerError) { exports.generate_fec(**PERIOD) }
+    assert_requested(:post, "#{API}/exports/fecs", times: 1)
   end
 
   def test_generate_refuses_a_non_positive_interval
