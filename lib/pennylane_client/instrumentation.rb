@@ -18,12 +18,26 @@ module PennylaneClient
       @on_request = on_request
     end
 
+    # Never raises. A failing logger or callback must not turn a request
+    # that reached Pennylane into an error the caller might retry.
     def record(event)
-      log(event) if @logger
-      @on_request&.call(event)
+      guard { log(event) } if @logger
+      guard("on_request failed: ") { @on_request.call(event) } if @on_request
     end
 
     private
+
+    def guard(prefix = "")
+      yield
+    rescue StandardError => e
+      report_failure("pennylane_client #{prefix}#{e.class}: #{e.message}")
+    end
+
+    def report_failure(line)
+      @logger ? @logger.warn(line) : Kernel.warn(line)
+    rescue StandardError
+      Kernel.warn(line)
+    end
 
     def log(event)
       line = "pennylane_client #{event[:operation_id]} #{event[:method]} #{event[:path]}"

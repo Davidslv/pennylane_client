@@ -8,6 +8,8 @@ module PennylaneClient
 
     private
 
+    def guard: (?String prefix) { () -> void } -> void
+    def report_failure: (String line) -> void
     def log: (event event) -> void
   end
 end

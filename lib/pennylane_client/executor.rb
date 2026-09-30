@@ -99,7 +99,7 @@ module PennylaneClient
 
     def handle(response)
       raise Error.from_response(response) unless response.success?
-      return true if response.body.strip.empty?
+      return true if response.body.to_s.strip.empty?
 
       JSON.parse(response.body, symbolize_names: true, freeze: true)
     rescue JSON::ParserError

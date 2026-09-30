@@ -14,7 +14,9 @@ module PennylaneClient
     def initialize(token:, base_url: DEFAULT_BASE_URL, transport: NetHttpTransport.default,
                    logger: PennylaneClient.configuration.logger,
                    on_request: PennylaneClient.configuration.on_request)
-      raise ArgumentError, "token must be a non-empty String" unless token.is_a?(String) && !token.empty?
+      unless token.is_a?(String) && token.match?(/\A[[:graph:]]+\z/)
+        raise ArgumentError, "token must be a non-empty String with no spaces or line breaks"
+      end
 
       @base_url = base_url
       @executor = Executor.new(registry: Registry.default, transport:, token:, base_url:,

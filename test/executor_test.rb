@@ -6,26 +6,26 @@ require "date"
 require "logger"
 require "stringio"
 
-class ExecutorTest < Minitest::Test
-  BASE = "https://app.pennylane.com"
+# Records each Request and answers with a canned Response.
+class FakeTransport
+  attr_reader :requests
 
-  # Records each Request and answers with a canned Response.
-  class FakeTransport
-    attr_reader :requests
-
-    def initialize(*responses)
-      @responses = responses
-      @requests = []
-    end
-
-    def call(request)
-      @requests << request
-      response = @responses.shift
-      raise response if response.is_a?(Exception)
-
-      response
-    end
+  def initialize(*responses)
+    @responses = responses
+    @requests = []
   end
+
+  def call(request)
+    @requests << request
+    response = @responses.shift
+    raise response if response.is_a?(Exception)
+
+    response
+  end
+end
+
+module ExecutorHelpers
+  BASE = "https://app.pennylane.com"
 
   def ok(status = 200, body = "{}", headers = {})
     PennylaneClient::Response.new(status:, headers:, body:)
@@ -39,6 +39,10 @@ class ExecutorTest < Minitest::Test
   end
 
   def sent = @transport.requests.last
+end
+
+class ExecutorTest < Minitest::Test
+  include ExecutorHelpers
 
   def test_fills_path_parameters_and_sends_the_rest_as_the_query
     executor.call(:getCustomerInvoiceMatchedTransactions, customer_invoice_id: 42, limit: 5, cursor: "abc")
@@ -114,6 +118,10 @@ class ExecutorTest < Minitest::Test
     assert(executor(ok(204, "")).call(:markAsPaidCustomerInvoice, id: 1))
   end
 
+  def test_treats_a_nil_body_from_a_custom_transport_as_empty
+    assert(executor(PennylaneClient::Response.new(status: 204, headers: {}, body: nil)).call(:getMe))
+  end
+
   def test_raises_the_mapped_error_for_a_failure_status
     error = assert_raises(PennylaneClient::NotFoundError) do
       executor(ok(404, '{"error":"not_found","message":"Journal not found"}')).call(:getJournal, id: 1)
@@ -127,6 +135,10 @@ class ExecutorTest < Minitest::Test
 
     assert_equal 200, error.status
   end
+end
+
+class ExecutorEventsTest < Minitest::Test
+  include ExecutorHelpers
 
   def test_emits_an_event_for_every_request
     events = []

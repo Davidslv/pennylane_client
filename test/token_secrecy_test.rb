@@ -47,6 +47,13 @@ class TokenSecrecyTest < Minitest::Test
     refute_token_in(assert_raises(PennylaneClient::ConnectionError) { @client.call(:getMe) })
   end
 
+  # Net::HTTP would reject the header with the token in its message.
+  def test_a_token_with_a_line_break_is_refused_without_echoing_it
+    error = assert_raises(ArgumentError) { PennylaneClient.new(token: "#{TOKEN}\nX-Evil: 1") }
+
+    refute_includes error.message, TOKEN
+  end
+
   private
 
   def refute_token_in(error)
