@@ -19,6 +19,11 @@ namespace :contract do
   task :snapshot do
     ruby "tools/snapshot_contract.rb"
   end
+
+  desc "Regenerate lib/pennylane_client/operations.rb from the latest contract snapshot"
+  task :sync do
+    ruby "tools/operation_table.rb"
+  end
 end
 
 task default: %i[test rubocop rbs]

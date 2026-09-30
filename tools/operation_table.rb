@@ -75,7 +75,7 @@ module OperationTable
   end
 
   def self.render(rows, source:)
-    lines = rows.sort_by { _1.id.to_s }.map { |row| "    #{literal(row)}," }
+    lines = rows.sort_by { _1.id.to_s }.map { |row| "    #{literal(row)}" }
     <<~RUBY
       # frozen_string_literal: true
 
@@ -86,7 +86,7 @@ module OperationTable
       module PennylaneClient
         # Every Operation in the contract snapshot, sorted by operationId.
         OPERATIONS = [
-      #{lines.join("\n")}
+      #{lines.join(",\n")}
         ].freeze
       end
     RUBY

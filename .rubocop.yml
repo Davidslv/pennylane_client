@@ -6,6 +6,15 @@ AllCops:
     - "vendor/**/*"
     - "tmp/**/*"
 
+# Generated: one operation per line, so drift reads as one-line diffs.
+Layout/LineLength:
+  Exclude:
+    - "lib/pennylane_client/operations.rb"
+
+Metrics/ModuleLength:
+  Exclude:
+    - "lib/pennylane_client/operations.rb"
+
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
