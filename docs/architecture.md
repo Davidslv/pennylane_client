@@ -12,14 +12,16 @@ How the gem is put together, and why. Written for someone about to change the co
 | `PennylaneClient::VERSION` | `lib/pennylane_client/version.rb` | Gem version. |
 | `PennylaneClient::Operation` | `lib/pennylane_client/operation.rb` | One Operation as plain data: operationId, verb, path, paginated, body kind, success code, deprecated. |
 | `PennylaneClient::OPERATIONS` | `lib/pennylane_client/operations.rb` | The generated operation table: every Operation in the latest snapshot, one row per line. Every live Operation is Registered here. |
-| `PennylaneClient::Client` | `lib/pennylane_client/client.rb` | Wiring only. `PennylaneClient.new(token:)` builds one; `#call(:operationId, **params)` reaches any Registered operation. |
+| `PennylaneClient::Client` | `lib/pennylane_client/client.rb` | Wiring only. `PennylaneClient.new(token:)` composes the middleware; `#call(:operationId, **params)` reaches any Registered operation. |
 | `PennylaneClient::Registry` | `lib/pennylane_client/registry.rb` | Frozen lookup from operationId to Operation. An unknown id raises `UnknownOperationError`. |
 | `PennylaneClient::Executor` | `lib/pennylane_client/executor.rb` | Operation + params to Request; Response to a return value or an Error. |
 | `PennylaneClient::Encoder` | `lib/pennylane_client/encoder.rb` | `BigDecimal` to `to_s("F")`, `Date`/`Time` to ISO 8601, everything else untouched. |
 | `PennylaneClient::Request`, `Response` | `lib/pennylane_client/request.rb`, `response.rb` | Plain values passed to and from a Transport. `Request#inspect` filters the Authorization header. |
+| `PennylaneClient::Middleware::Auth`, `Retry`, `RateLimit`, `Instrument` | `lib/pennylane_client/middleware/` | One policy each, every one `call(request) -> Response` around the next. |
+| `PennylaneClient::Limiter`, `LimiterRegistry` | `lib/pennylane_client/limiter.rb`, `limiter_registry.rb` | The per-token bucket, 25 per 5 s, and the process-wide lookup that shares one per token. |
 | `PennylaneClient::NetHttpTransport` | `lib/pennylane_client/net_http_transport.rb` | The default Transport, on `Net::HTTP`. |
 | `PennylaneClient::Error` and subclasses | `lib/pennylane_client/errors.rb` | One class per documented status, plus `ConnectionError` and `TimeoutError`. |
-| `PennylaneClient::Instrumentation`, `Configuration` | `lib/pennylane_client/instrumentation.rb`, `configuration.rb` | One log line and one `on_request` event per request. `PennylaneClient.configure` sets the defaults. |
+| `PennylaneClient::Instrumentation`, `Configuration` | `lib/pennylane_client/instrumentation.rb`, `configuration.rb` | One log line and one `on_request` event per attempt, retry and rate-limit wait. `PennylaneClient.configure` sets the defaults. |
 | `SnapshotContract` (dev time, not shipped) | `tools/snapshot_contract.rb` | Builds the dated [contract snapshot](api/README.md) in `docs/api/contract/<date>/`. Run by `rake contract:snapshot`. |
 | `OperationTable` (dev time, not shipped) | `tools/operation_table.rb` | Generates `operations.rb` from the latest snapshot. Run by `rake contract:sync`. |
 | `Checklist` (dev time, not shipped) | `tools/checklist.rb` | Generates [`docs/api/CHECKLIST.md`](api/CHECKLIST.md). Run by `rake checklist`. |
@@ -38,17 +40,23 @@ What happens on `client.call(:getJournal, id: 42)`:
    - Otherwise every other param goes into the query. `nil` values are left out. Hash and Array values are sent as JSON strings, because Pennylane's `filter` is a JSON array in a query string.
    - No Operation in the 2026-09-30 snapshot takes both a body and a query.
    - Multipart Operations raise `NotImplementedError` until uploads land (#8).
-   - Headers: `Authorization: Bearer <token>`, `Accept: application/json`, a `User-Agent` naming the gem, and `Content-Type: application/json` when there is a body.
-4. **Transport** sends it. Every Client shares `NetHttpTransport.default`, so building a Client per request or per token opens no new sockets; the token travels in each request, not in the connection. It keeps one keep-alive connection per host per fiber (`Thread#[]` is fiber-local), so threads and fibers never share a socket. Bodies come back as UTF-8. Timeouts are open 5 s, read 30 s, write 30 s. It sets `max_retries = 0`, because `Net::HTTP` otherwise resends an idempotent verb once on a dropped connection, and PUT and DELETE have side effects at Pennylane (D5). No response raises `TimeoutError` or `ConnectionError` and drops the connection.
-5. **Instrumentation** records the attempt: one log line (`info`, or `warn` when no response came) and one frozen `on_request` event: `operation_id`, `method`, `path` (no query), `status`, `error`, `duration` in ms. It never raises: a failing logger or callback is reported and ignored, so a write that reached Pennylane never looks failed to the caller.
-6. **Executor** reads the `Response`:
+   - Headers: `Accept: application/json`, a `User-Agent` naming the gem, and `Content-Type: application/json` when there is a body. No token.
+   - The Request also carries the `operation_id`, for events, and the `retry_policy` (`:always` when the caller passed `retry: :always`, which is never sent).
+4. **Middleware** runs, outermost first. Each is `call(request) -> Response` around the next, and Client composes them:
+   - **Auth** adds `Authorization: Bearer <token>`. The token is a String or a provider (`#call`), asked once per call. A token with whitespace or a line break is refused without echoing it.
+   - **Retry** sends the call again when that is safe (D5): a 429 for any verb, after `retry-after`; 500, 502, 503, 504, `ConnectionError` and `TimeoutError` for GET only, or for any verb with `retry: :always`. At most 3 attempts, full-jitter backoff (a random wait up to 0.5 s, then 1 s), and at most 30 s of waiting per call (`max_retry_wait:`). A wait past the cap is not taken, so a long `retry-after` surfaces as `RateLimitError`. Each retry fires a `:retry` event. It sits outside RateLimit so every attempt takes its own call from the bucket.
+   - **RateLimit** takes a call from the token's `Limiter` before each attempt and waits when the bucket is empty, firing a `:wait` event. Every response's `ratelimit-remaining` and `ratelimit-reset` correct the bucket. Limiters come from a `LimiterRegistry`, keyed by the SHA-256 of the token; `LimiterRegistry.default` is shared by every Client in the process.
+   - **Instrument** records each attempt as a `:request` event, next to the Transport, so `duration` never includes a wait.
+5. **Transport** sends it. Every Client shares `NetHttpTransport.default`, so building a Client per request or per token opens no new sockets; the token travels in each request, not in the connection. It keeps one keep-alive connection per host per fiber (`Thread#[]` is fiber-local), so threads and fibers never share a socket. Bodies come back as UTF-8. Timeouts are open 5 s, read 30 s, write 30 s. It sets `max_retries = 0`, because `Net::HTTP` otherwise resends an idempotent verb once on a dropped connection, and PUT and DELETE have side effects at Pennylane (D5). No response raises `TimeoutError` or `ConnectionError` and drops the connection.
+6. **Instrumentation** takes every event: one log line (`info`, or `warn` for a retry or when no response came) and one frozen `on_request` event. A `:request` event has `operation_id`, `method`, `path` (no query), `status`, `error` and `duration` in ms; a `:retry` event has `attempt`, `wait`, `status` and `error`; a `:wait` event has `wait`. It never raises: a failing logger or callback is reported and ignored, so a write that reached Pennylane never looks failed to the caller.
+7. **Executor** reads the final `Response`:
    - 2xx with an empty body returns `true`.
    - 2xx with a body returns `JSON.parse(..., symbolize_names: true, freeze: true)`: a deep-frozen Hash with symbol keys. A body that is not JSON raises the base `Error`.
    - Any other status raises `Error.from_response`: 400 and 422 `ValidationError`, 401 `AuthenticationError`, 403 `PermissionError`, 404 `NotFoundError`, 409 `ConflictError`, 429 `RateLimitError` (`#retry_after`), any 5xx `ServerError`, anything else the base `Error`. The message comes from the body, which Pennylane sends in three shapes (`{error, message, details}`, `{status, error}`, `{message}`) or as plain text; each is parsed defensively.
 
 ### Where the token lives
 
-Only the Executor holds the token, and only `Request#headers` carries it. `Client`, `Executor` and `Request` override `inspect`, errors are built from the response alone, and events are built from the Operation and the URL path. `Request#to_h` and `#headers` do return the raw header, because a Transport needs it; a custom Transport must not log them. A token with whitespace or a line break is refused when the Client is built, because `Net::HTTP` would otherwise raise an error quoting the header. `test/token_secrecy_test.rb` checks all of these.
+Only `Middleware::Auth` holds the token, and only `Request#headers` carries it, from Auth inward. `Client`, `Executor`, `Auth` and `Request` override `inspect`, errors are built from the response alone, events are built from the Operation and the URL path, and rate-limit keys are SHA-256 digests. `Request#to_h` and `#headers` do return the raw header, because a Transport needs it; a custom Transport must not log them. A token with whitespace or a line break is refused, when the Client is built or when a provider returns it, because `Net::HTTP` would otherwise raise an error quoting the header. `test/token_secrecy_test.rb` checks all of these.
 
 ### Transport interface
 
@@ -59,7 +67,7 @@ A Transport is anything with `call(request) -> Response` that raises `Connection
 From the design diagram, in the order they are built (Epic #1):
 
 1. **Runtime core.** Built; see above.
-2. **Middleware.** `Auth` (token provider), `RateLimit` (25 requests per 5 seconds per token), `Retry` (429 for any method, 5xx for GET only).
+2. **Middleware.** Built; see above.
 3. **Pagination and uploads.** Cursor pagination that re-sends filters on every page; multipart uploads.
 4. **Resources.** Hand-written one-liner methods per resource group.
 
@@ -76,5 +84,7 @@ The reasoning behind each choice is recorded as decisions D1 to D8 in [proposal 
 Honest limits, known before the code exists:
 
 - **Multi-process deployments share one token's budget.** The limiter is per process. Header self-correction and 429 retries absorb the overflow; a shared store needs a limiter you inject yourself.
+- **The bucket follows Pennylane's window, not a sliding one.** It refills in full when the window ends, as `ratelimit-reset` describes. Until the first response arrives, the local window may not line up with Pennylane's; the headers then move it. `ratelimit-reset` is whole seconds, so the local reset can be up to a second off.
+- **D5 rests on an assumption.** A 429 is retried for writes because it should mean the request was not run. That is unconfirmed until a sandbox run (proposal 0001, open questions).
 - **No live verification yet.** The maintainer has no Pennylane account, so behaviour is checked against the documentation, not a sandbox.
 - **Responses are untyped.** Callers convert money and dates themselves.

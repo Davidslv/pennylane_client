@@ -45,21 +45,24 @@ Source: [proposal 0001](../../proposals/0001-pennylane-client-gem.md), accepted 
                                                    └──────────────────────┬───────────────────┘
                                                                           │ Request
                         MIDDLEWARE PIPELINE (each: call(request) → response, injected)
-   ┌────────────────┐   ┌──────────────────────────┐   ┌─────────────────────────────────────┐
-   │ Auth           │──►│ RateLimit                │──►│ Retry                               │──┐
-   │ token provider │   │ token bucket 25 / 5 s    │   │ 429: any method, sleep retry-after  │  │
-   │ String|#call   │   │ keyed by SHA-256(token)  │   │ 5xx/network: GET only (D5)          │  │
-   │ never logged   │   │ ratelimit-* headers      │   │ 3 attempts, full jitter, 30 s cap   │  │
-   └────────────────┘   │ self-correct the bucket  │   │ retry: :always opt-in               │  │
-                        │ clock + sleeper injected │   └─────────────────────────────────────┘  │
-                        └────────────┬─────────────┘                                            │
-                                     │ shared per token, process-wide default                   │
-                                     ▼                                                          ▼
-                        ┌──────────────────────────┐              ┌──────────────────────────────────┐
-                        │ LimiterRegistry          │              │ Transport  (interface)           │
-                        │ injectable (bring your   │              ├──────────────────────────────────┤
-                        │ own, e.g. Redis-backed)  │              │ NetHttpTransport                 │
-                        └──────────────────────────┘              │  keep-alive, connection/thread   │
+   ┌────────────────┐   ┌─────────────────────────────────────┐   ┌──────────────────────────┐
+   │ Auth           │──►│ Retry                               │──►│ RateLimit                │──┐
+   │ token provider │   │ 429: any method, sleep retry-after  │   │ token bucket 25 / 5 s    │  │
+   │ String|#call   │   │ 5xx/network: GET only (D5)          │   │ keyed by SHA-256(token)  │  │
+   │ never logged   │   │ 3 attempts, full jitter, 30 s cap   │   │ ratelimit-* headers      │  │
+   └────────────────┘   │ retry: :always opt-in               │   │ self-correct the bucket  │  │
+                        └─────────────────────────────────────┘   │ clock + sleeper injected │  │
+                                                                  └────────────┬─────────────┘  │
+                        ┌──────────────────────────┐                           │                │
+                        │ LimiterRegistry          │◄──────────────────────────┘                │
+                        │ injectable (bring your   │  shared per token,                         │
+                        │ own, e.g. Redis-backed)  │  process-wide default                      │
+                        └──────────────────────────┘                                            ▼
+                                                                  ┌──────────────────────────────────┐
+                                                                  │ Transport  (interface)           │
+                                                                  ├──────────────────────────────────┤
+                                                                  │ NetHttpTransport                 │
+                                                                  │  keep-alive, connection/thread   │
                                                                   │  timeouts 5/30/30, uploads 300   │
                                                                   ├──────────────────────────────────┤
                                                                   │ FakePennylane (test support)     │
@@ -84,5 +87,5 @@ Source: [proposal 0001](../../proposals/0001-pennylane-client-gem.md), accepted 
 ## How to read it
 
 - **Dev time** never ships in the gem. It turns Pennylane's published docs into a dated contract snapshot, the generated operation table, and `CHECKLIST.md`.
-- **Run time** is one path: `Client` → a hand-written `Resource` method → `Registry` lookup → `Executor` → the middleware pipeline (`Auth` → `RateLimit` → `Retry`) → a `Transport`.
+- **Run time** is one path: `Client` → a hand-written `Resource` method → `Registry` lookup → `Executor` → the middleware pipeline (`Auth` → `Retry` → `RateLimit`) → a `Transport`. Retry sits outside RateLimit so every attempt takes its own call from the bucket and every response corrects it. An `Instrument` middleware next to the Transport records each attempt.
 - Every box below `Client` is injected, so tests, load runs and stress runs swap `NetHttpTransport` for `FakePennylane` without touching anything else.
