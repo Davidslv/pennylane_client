@@ -54,6 +54,7 @@ require_relative "pennylane_client/resources/pa_registrations"
 require_relative "pennylane_client/resources/purchase_requests"
 require_relative "pennylane_client/resources/webhook_subscriptions"
 require_relative "pennylane_client/client"
+require_relative "pennylane_client/webhook"
 
 # Unofficial Ruby client for the Pennylane Company API v2.
 # Not affiliated with Pennylane.
