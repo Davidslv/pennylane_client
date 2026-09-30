@@ -74,3 +74,54 @@ class SnapshotContractFragmentTest < Minitest::Test
     assert_match(/broken\.md: invalid OpenAPI JSON/, error.message)
   end
 end
+
+class SnapshotContractNormaliserTest < Minitest::Test
+  include SnapshotContractFixtures
+
+  def normalise(name)
+    url = "https://pennylane.readme.io/reference/#{name}.md"
+    spec = SnapshotContract::Fragment.extract(page(name), source_url: url)
+    SnapshotContract::Normaliser.operations(spec, source_url: url)
+  end
+
+  def test_keeps_the_fields_the_gem_depends_on_in_a_fixed_order
+    operation = normalise("getjournal").first
+
+    assert_equal %w[operation_id method path summary description tags scopes deprecated
+                    parameters request_body responses source_url], operation.keys
+    assert_equal "getJournal", operation["operation_id"]
+    assert_equal "GET", operation["method"]
+    assert_equal "/api/external/v2/journals/{id}", operation["path"]
+    assert_equal ["Journals"], operation["tags"]
+    assert_equal "https://pennylane.readme.io/reference/getjournal.md", operation["source_url"]
+  end
+
+  def test_scopes_are_every_oauth2_scope_sorted_once
+    assert_equal %w[journals:all journals:readonly], normalise("getjournal").first["scopes"]
+    assert_equal %w[file_attachments:all ledger], normalise("postledgerattachments").first["scopes"]
+  end
+
+  def test_deprecated_defaults_to_false
+    refute normalise("getjournal").first["deprecated"]
+    assert normalise("postledgerattachments").first["deprecated"]
+  end
+
+  def test_request_body_is_nil_when_the_operation_takes_none
+    assert_nil normalise("getjournal").first["request_body"]
+    assert_equal ["multipart/form-data"], normalise("postledgerattachments").first["request_body"]["content"].keys
+  end
+
+  def test_path_level_parameters_come_before_operation_parameters
+    names = normalise("postledgerattachments").first["parameters"].map { _1["name"] }
+
+    assert_equal ["X-Request-Source"], names
+  end
+
+  def test_schema_keys_are_sorted_so_a_reordered_page_makes_no_diff
+    schema = normalise("getjournal").first.dig("responses", "200", "content", "application/json", "schema")
+
+    assert_equal %w[properties required type], schema.keys
+    assert_equal %w[id label], schema["properties"].keys
+    assert_equal %w[label id], schema["required"], "arrays keep the source order"
+  end
+end

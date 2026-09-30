@@ -47,4 +47,56 @@ module SnapshotContract
     end
     private_class_method :fenced_body
   end
+
+  # Turns an OpenAPI document into one flat record per operation. Top-level
+  # fields keep a fixed order for reading; every nested Hash has its keys
+  # sorted, so Pennylane reordering a schema never shows up as drift.
+  module Normaliser
+    HTTP_METHODS = %w[get put post delete patch head options trace].freeze
+
+    def self.operations(spec, source_url:)
+      spec.fetch("paths").flat_map do |path, item|
+        shared = item.fetch("parameters", [])
+        item.slice(*HTTP_METHODS).map do |verb, operation|
+          identity(verb, path, operation)
+            .merge(schemas(operation, shared))
+            .merge("source_url" => source_url)
+        end
+      end
+    end
+
+    def self.identity(verb, path, operation)
+      {
+        "operation_id" => operation.fetch("operationId"),
+        "method" => verb.upcase,
+        "path" => path,
+        "summary" => operation["summary"],
+        "description" => operation["description"],
+        "tags" => operation.fetch("tags", []),
+        "scopes" => scopes(operation),
+        "deprecated" => operation.fetch("deprecated", false)
+      }
+    end
+
+    def self.schemas(operation, shared)
+      {
+        "parameters" => sorted(shared + operation.fetch("parameters", [])),
+        "request_body" => sorted(operation["requestBody"]),
+        "responses" => sorted(operation.fetch("responses", {}))
+      }
+    end
+
+    def self.scopes(operation)
+      operation.fetch("security", []).flat_map { |requirement| requirement.fetch("oauth2", []) }.uniq.sort
+    end
+
+    def self.sorted(value)
+      case value
+      when Hash then value.sort.to_h { |key, child| [key, sorted(child)] }
+      when Array then value.map { |child| sorted(child) }
+      else value
+      end
+    end
+    private_class_method :identity, :schemas, :scopes, :sorted
+  end
 end
