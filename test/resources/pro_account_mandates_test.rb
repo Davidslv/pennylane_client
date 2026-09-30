@@ -31,11 +31,11 @@ class ProAccountMandatesTest < Minitest::Test
   end
 
   # names: postProAccountMandateMailRequests
-  def test_send_request
+  def test_send_request_returns_true
     stub_request(:post, "#{API}/pro_account/mandate_requests").with(body: '{"customer_id":7}')
-                                                              .to_return(status: 201, body: '{"id":9}')
+                                                              .to_return(status: 201, body: "")
 
-    assert_equal({ id: 9 }, mandates.send_request(customer_id: 7))
+    assert mandates.send_request(customer_id: 7)
   end
 
   # names: getProAccountMandateMigrations
@@ -50,10 +50,11 @@ class ProAccountMandatesTest < Minitest::Test
   def test_migrate
     stub_request(:post, "#{API}/pro_account/mandate_migrations")
       .with(body: '{"mandate_type":"SepaMandate","mandate_id":3,"early_execution_date_permitted":true}')
-      .to_return(status: 201, body: '{"id":11}')
+      .to_return(status: 201, body: '{"mandate_migration":{"id":11}}')
 
-    assert_equal({ id: 11 }, mandates.migrate(mandate_type: "SepaMandate", mandate_id: 3,
-                                              early_execution_date_permitted: true))
+    migration = mandates.migrate(mandate_type: "SepaMandate", mandate_id: 3, early_execution_date_permitted: true)
+
+    assert_equal({ mandate_migration: { id: 11 } }, migration)
   end
 
   def test_migrate_without_the_mandate_raises_before_any_request

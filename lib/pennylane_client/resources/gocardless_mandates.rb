@@ -2,8 +2,7 @@
 
 module PennylaneClient
   module Resources
-    # GoCardless mandates: `client.gocardless_mandates`. The company needs
-    # its GoCardless integration; `getCompanyFeatures` shows what it has.
+    # GoCardless mandates: `client.gocardless_mandates`.
     #
     # Attributes go to Pennylane as given, keyword for keyword, through the
     # Encoder. Responses are deep-frozen Hashes.
@@ -31,8 +30,8 @@ module PennylaneClient
       end
 
       # Cancels the mandate. Only a `pending_submission`, `submitted` or
-      # `active` mandate can be cancelled; any other raises ValidationError.
-      # Returns true.
+      # `active` mandate can be cancelled. Pennylane rejects any other with a
+      # 400 or 422, both ValidationError. Returns true.
       def cancel(gocardless_mandate_id) = call(:postGocardlessMandateCancellations, gocardless_mandate_id:)
     end
   end

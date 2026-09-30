@@ -237,7 +237,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `getGocardlessMandate` | GET | `/gocardless_mandates/{id}` | yes | yes | unverified: no sandbox access | `test/resources/gocardless_mandates_test.rb#test_find` |
 | `getProAccountMandateMigrations` | GET | `/pro_account/mandate_migrations` | yes | yes | unverified: no sandbox access | `test/resources/pro_account_mandates_test.rb#test_migration_candidates_walks_every_page` |
 | `postProAccountMandateMigrations` | POST | `/pro_account/mandate_migrations` | yes | yes | unverified: no sandbox access | `test/resources/pro_account_mandates_test.rb#test_migrate` |
-| `postProAccountMandateMailRequests` | POST | `/pro_account/mandate_requests` | yes | yes | unverified: no sandbox access | `test/resources/pro_account_mandates_test.rb#test_send_request` |
+| `postProAccountMandateMailRequests` | POST | `/pro_account/mandate_requests` | yes | yes | unverified: no sandbox access | `test/resources/pro_account_mandates_test.rb#test_send_request_returns_true` |
 | `getProAccountMandates` | GET | `/pro_account/mandates` | yes | yes | unverified: no sandbox access | `test/resources/pro_account_mandates_test.rb#test_list_walks_every_page_resending_the_filter` |
 | `getSepaMandates` | GET | `/sepa_mandates` | yes | yes | unverified: no sandbox access | `test/resources/sepa_mandates_test.rb#test_list_walks_every_page_resending_the_filter` |
 | `postSepaMandates` | POST | `/sepa_mandates` | yes | yes | unverified: no sandbox access | `test/resources/sepa_mandates_test.rb#test_create` |

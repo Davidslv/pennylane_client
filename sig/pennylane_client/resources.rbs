@@ -174,7 +174,7 @@ module PennylaneClient
     class ProAccountMandates < Resource
       def list: (**untyped params) -> Enumerator::Lazy[item, void]
 
-      def send_request: (customer_id: Integer, **untyped fields) -> item
+      def send_request: (customer_id: Integer) -> result
 
       def migration_candidates: (**untyped params) -> Enumerator::Lazy[item, void]
 
