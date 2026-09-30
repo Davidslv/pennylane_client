@@ -235,6 +235,41 @@ client.suppliers.categorize(12, [{ id: 426, weight: "1" }])
 
 Suppliers have `list`, `find`, `create`, `update`, `categories` and `categorize`. `create` needs `name:` and raises `ConflictError` when the supplier already exists.
 
+## Work with mandates
+
+The Mandates operations split into three resources, one per kind of mandate:
+
+```ruby
+client.sepa_mandates          # list, find, create, update, delete
+client.gocardless_mandates    # list, find, send_request, associate, cancel
+client.pro_account_mandates   # list, send_request, migration_candidates, migrate
+```
+
+A SEPA mandate is one you record yourself. `create` needs `customer_id:`, `iban:`, `bic:`, `identifier:` and `signed_at:`:
+
+```ruby
+client.sepa_mandates.create(customer_id: 7, iban: "FR7630006000011234567890189", bic: "AGRIFRPP",
+                            identifier: "MANDATE-1", signed_at: Date.new(2026, 9, 1), sequence_type: "RCUR")
+```
+
+For GoCardless, `send_request` emails a customer a link to set up a mandate; `email:` needs `recipients:`. `associate` links an existing mandate to a customer. `cancel` works only on a `pending_submission`, `submitted` or `active` mandate; Pennylane rejects any other with a 400 or 422, both `ValidationError`. All three return true:
+
+```ruby
+mandates = client.gocardless_mandates
+mandates.send_request(customer_id: 7, email: { recipients: ["billing@acme.example"], subject: "Direct debit" })
+mandates.associate(5, customer_id: 7)
+mandates.cancel(5)
+```
+
+Pro Account mandates need a Pennylane Pro Account and an enabled merchant profile. Without the Pro Account every call raises `NotFoundError`; without the merchant profile, `PermissionError`. `getCompanyFeatures` (`client.call(:getCompanyFeatures)`) is where Pennylane lists company features, but today it reports only `installments`, not the Pro Account or the merchant profile, so the 404 or 403 is the check. `migrate` moves a SEPA or GoCardless mandate to the Pro Account; only a candidate with status `available` can migrate. Its answer wraps the migration in `mandate_migration:`. `send_request` returns true:
+
+```ruby
+pro = client.pro_account_mandates
+pro.migration_candidates(filter: [{ field: "status", operator: "eq", value: "available" }]).first
+pro.migrate(mandate_type: "SepaMandate", mandate_id: 3)[:mandate_migration]   # "Mandate" for a GoCardless one
+pro.send_request(customer_id: 7)
+```
+
 ## Handle a validation error
 
 ```ruby

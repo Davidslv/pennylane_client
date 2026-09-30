@@ -25,6 +25,9 @@ require_relative "pennylane_client/resources/customer_invoices"
 require_relative "pennylane_client/resources/customers"
 require_relative "pennylane_client/resources/supplier_invoices"
 require_relative "pennylane_client/resources/suppliers"
+require_relative "pennylane_client/resources/sepa_mandates"
+require_relative "pennylane_client/resources/gocardless_mandates"
+require_relative "pennylane_client/resources/pro_account_mandates"
 require_relative "pennylane_client/client"
 
 # Unofficial Ruby client for the Pennylane Company API v2.
