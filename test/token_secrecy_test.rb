@@ -28,7 +28,8 @@ class TokenSecrecyTest < Minitest::Test
   end
 
   def test_not_in_a_resource_inspect
-    [@client.customer_invoices, @client.customers, @client.supplier_invoices, @client.suppliers].each do |resource|
+    [@client.customer_invoices, @client.customers, @client.supplier_invoices, @client.suppliers,
+     @client.sepa_mandates, @client.gocardless_mandates, @client.pro_account_mandates].each do |resource|
       refute_includes resource.inspect, TOKEN
       refute_includes PP.pp(resource, +""), TOKEN
     end

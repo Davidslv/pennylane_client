@@ -25,6 +25,12 @@ module PennylaneClient
 
     def suppliers: () -> Resources::Suppliers
 
+    def sepa_mandates: () -> Resources::SepaMandates
+
+    def gocardless_mandates: () -> Resources::GocardlessMandates
+
+    def pro_account_mandates: () -> Resources::ProAccountMandates
+
     def inspect: () -> String
 
     private
@@ -36,6 +42,12 @@ module PennylaneClient
     @supplier_invoices: Resources::SupplierInvoices?
 
     @suppliers: Resources::Suppliers?
+
+    @sepa_mandates: Resources::SepaMandates?
+
+    @gocardless_mandates: Resources::GocardlessMandates?
+
+    @pro_account_mandates: Resources::ProAccountMandates?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end

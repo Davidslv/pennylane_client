@@ -78,6 +78,15 @@ module PennylaneClient
     # The named Suppliers operations (Resources::Suppliers).
     def suppliers = @suppliers ||= Resources::Suppliers.new(self)
 
+    # The named SEPA mandate operations (Resources::SepaMandates).
+    def sepa_mandates = @sepa_mandates ||= Resources::SepaMandates.new(self)
+
+    # The named GoCardless mandate operations (Resources::GocardlessMandates).
+    def gocardless_mandates = @gocardless_mandates ||= Resources::GocardlessMandates.new(self)
+
+    # The named Pro Account mandate operations (Resources::ProAccountMandates).
+    def pro_account_mandates = @pro_account_mandates ||= Resources::ProAccountMandates.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

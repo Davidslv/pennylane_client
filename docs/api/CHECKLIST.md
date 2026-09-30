@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 60 of 177 live |
+| Named | 74 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (0 of 3 named)
@@ -226,24 +226,24 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `putLedgerEntryLinesCategories` | PUT | `/ledger_entry_lines/{ledger_entry_line_id}/categories` | yes | no | unverified: no sandbox access |  |
 | `getLedgerEntryLinesLetteredLedgerEntryLines` | GET | `/ledger_entry_lines/{ledger_entry_line_id}/lettered_ledger_entry_lines` | yes | no | unverified: no sandbox access |  |
 
-## Mandates (0 of 14 named)
+## Mandates (14 of 14 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getGocardlessMandates` | GET | `/gocardless_mandates` | yes | no | unverified: no sandbox access |  |
-| `postGocardlessMandateMailRequests` | POST | `/gocardless_mandates/mail_requests` | yes | no | unverified: no sandbox access |  |
-| `postGocardlessMandateAssociations` | POST | `/gocardless_mandates/{gocardless_mandate_id}/associations` | yes | no | unverified: no sandbox access |  |
-| `postGocardlessMandateCancellations` | POST | `/gocardless_mandates/{gocardless_mandate_id}/cancellations` | yes | no | unverified: no sandbox access |  |
-| `getGocardlessMandate` | GET | `/gocardless_mandates/{id}` | yes | no | unverified: no sandbox access |  |
-| `getProAccountMandateMigrations` | GET | `/pro_account/mandate_migrations` | yes | no | unverified: no sandbox access |  |
-| `postProAccountMandateMigrations` | POST | `/pro_account/mandate_migrations` | yes | no | unverified: no sandbox access |  |
-| `postProAccountMandateMailRequests` | POST | `/pro_account/mandate_requests` | yes | no | unverified: no sandbox access |  |
-| `getProAccountMandates` | GET | `/pro_account/mandates` | yes | no | unverified: no sandbox access |  |
-| `getSepaMandates` | GET | `/sepa_mandates` | yes | no | unverified: no sandbox access |  |
-| `postSepaMandates` | POST | `/sepa_mandates` | yes | no | unverified: no sandbox access |  |
-| `deleteSepaMandate` | DELETE | `/sepa_mandates/{id}` | yes | no | unverified: no sandbox access |  |
-| `getSepaMandate` | GET | `/sepa_mandates/{id}` | yes | no | unverified: no sandbox access |  |
-| `putSepaMandate` | PUT | `/sepa_mandates/{id}` | yes | no | unverified: no sandbox access |  |
+| `getGocardlessMandates` | GET | `/gocardless_mandates` | yes | yes | unverified: no sandbox access | `test/resources/gocardless_mandates_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `postGocardlessMandateMailRequests` | POST | `/gocardless_mandates/mail_requests` | yes | yes | unverified: no sandbox access | `test/resources/gocardless_mandates_test.rb#test_send_request_emails_the_customer_and_returns_true` |
+| `postGocardlessMandateAssociations` | POST | `/gocardless_mandates/{gocardless_mandate_id}/associations` | yes | yes | unverified: no sandbox access | `test/resources/gocardless_mandates_test.rb#test_associate_links_the_mandate_to_a_customer_and_returns_true` |
+| `postGocardlessMandateCancellations` | POST | `/gocardless_mandates/{gocardless_mandate_id}/cancellations` | yes | yes | unverified: no sandbox access | `test/resources/gocardless_mandates_test.rb#test_cancel_returns_true` |
+| `getGocardlessMandate` | GET | `/gocardless_mandates/{id}` | yes | yes | unverified: no sandbox access | `test/resources/gocardless_mandates_test.rb#test_find` |
+| `getProAccountMandateMigrations` | GET | `/pro_account/mandate_migrations` | yes | yes | unverified: no sandbox access | `test/resources/pro_account_mandates_test.rb#test_migration_candidates_walks_every_page` |
+| `postProAccountMandateMigrations` | POST | `/pro_account/mandate_migrations` | yes | yes | unverified: no sandbox access | `test/resources/pro_account_mandates_test.rb#test_migrate` |
+| `postProAccountMandateMailRequests` | POST | `/pro_account/mandate_requests` | yes | yes | unverified: no sandbox access | `test/resources/pro_account_mandates_test.rb#test_send_request` |
+| `getProAccountMandates` | GET | `/pro_account/mandates` | yes | yes | unverified: no sandbox access | `test/resources/pro_account_mandates_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `getSepaMandates` | GET | `/sepa_mandates` | yes | yes | unverified: no sandbox access | `test/resources/sepa_mandates_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `postSepaMandates` | POST | `/sepa_mandates` | yes | yes | unverified: no sandbox access | `test/resources/sepa_mandates_test.rb#test_create` |
+| `deleteSepaMandate` | DELETE | `/sepa_mandates/{id}` | yes | yes | unverified: no sandbox access | `test/resources/sepa_mandates_test.rb#test_delete` |
+| `getSepaMandate` | GET | `/sepa_mandates/{id}` | yes | yes | unverified: no sandbox access | `test/resources/sepa_mandates_test.rb#test_find` |
+| `putSepaMandate` | PUT | `/sepa_mandates/{id}` | yes | yes | unverified: no sandbox access | `test/resources/sepa_mandates_test.rb#test_update` |
 
 ## Numberings (0 of 1 named)
 
