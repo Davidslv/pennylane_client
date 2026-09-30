@@ -155,14 +155,14 @@ class CustomerInvoiceActionsTest < Minitest::Test
       .with(body: '{"transaction_id":9}')
       .to_return(status: 204)
 
-    assert invoices.match_transaction(42, transaction_id: 9)
+    assert_same true, invoices.match_transaction(42, transaction_id: 9)
   end
 
   # names: deleteCustomerInvoiceMatchedTransactions
   def test_unmatch_transaction_returns_true_on_no_content
     stub_request(:delete, "#{API}/customer_invoices/42/matched_transactions/9").with(body: nil).to_return(status: 204)
 
-    assert invoices.unmatch_transaction(42, 9)
+    assert_same true, invoices.unmatch_transaction(42, 9)
   end
 
   # names: updateImportedCustomerInvoice

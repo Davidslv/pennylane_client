@@ -279,9 +279,9 @@ account = client.bank_accounts.create(name: "Main account", iban: "FR76300060000
 tx = client.transactions.create(bank_account_id: account[:id], label: "Card payment", date: Date.today, amount: "-12.50")
 ```
 
-Bank accounts have `list`, `find` and `create`, and no update or delete. A bank account's optional `bank_establishment_id:` is an id from `client.bank_establishments.list`.
+Bank accounts have `list`, `find` and `create`, and no update or delete. `account_type: "current"` is deprecated; use `"checking"`. A bank account's optional `bank_establishment_id:` is an id from `client.bank_establishments.list`.
 
-`update` sets the transaction's third party and nothing else. Pass `customer_id:` or `supplier_id:`, not both:
+`update` sets the transaction's third party and nothing else. Pass `customer_id:` or `supplier_id:`, not both. Both are nullable in the contract, so `nil` sends `null` (not yet checked against the sandbox):
 
 ```ruby
 client.transactions.update(tx[:id], supplier_id: 12)

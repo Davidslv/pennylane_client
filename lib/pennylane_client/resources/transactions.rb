@@ -32,7 +32,8 @@ module PennylaneClient
       def create(**attributes) = call(:createTransaction, **attributes)
 
       # Sets the transaction's third party: pass either `customer_id:` or
-      # `supplier_id:`, not both. Pennylane accepts nothing else here.
+      # `supplier_id:`, not both. Pennylane accepts nothing else here. Both
+      # are nullable in the contract, so `nil` sends `null`.
       def update(id, **attributes) = call(:updateTransaction, id:, **attributes)
 
       # The analytical categories the transaction is split across, as an
