@@ -3,9 +3,9 @@
 ## Current model: solo maintainer (BDFL)
 
 pennylane_client has a single maintainer, David Silva
-([@Davidslv](https://github.com/Davidslv)), who acts as benevolent dictator:
-the maintainer makes all final decisions about the project: features, releases, API
-design, and what gets merged.
+([@Davidslv](https://github.com/Davidslv)), who acts as benevolent dictator.
+The maintainer makes all final decisions about the project, including features,
+releases, API design, and what gets merged.
 
 This is stated plainly because it is the truth. There is no steering committee,
 no voting process, and no formal RFC pipeline. Pretending otherwise would only
@@ -29,7 +29,7 @@ the final call is one person's.
 
 If the project attracts contributors who make sustained, high-quality
 contributions, the maintainer intends to grant commit access and share
-responsibility — see [MAINTAINERS.md](MAINTAINERS.md) for the path. If the
+responsibility. See [MAINTAINERS.md](MAINTAINERS.md) for the path. If the
 maintainer group grows beyond two or three people, this document will be
 revised to describe a genuinely shared decision-making model. Until then, this
 document describes the project as it is, not as it might one day be.

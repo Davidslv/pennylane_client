@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["David Silva"]
   spec.email = ["davidslv@users.noreply.github.com"]
 
-  spec.summary = "Unofficial Ruby client for the Pennylane Company API v2"
+  spec.summary = "Unofficial Ruby client for the Pennylane Company API v2. Not affiliated with Pennylane."
   spec.description = "A zero-dependency Ruby client for the Pennylane Company API v2: every operation " \
                      "reachable, stable Ruby names, client-side rate limiting, safe retries and cursor " \
                      "pagination. Built from Pennylane's public documentation. Not affiliated with Pennylane."
@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = spec.homepage
+  spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main"
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/CHANGELOG.md"
   spec.metadata["bug_tracker_uri"] = "#{spec.homepage}/issues"
   spec.metadata["rubygems_mfa_required"] = "true"

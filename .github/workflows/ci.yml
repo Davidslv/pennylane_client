@@ -12,6 +12,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     name: Ruby ${{ matrix.ruby }}
     strategy:
       fail-fast: false
@@ -37,6 +38,7 @@ jobs:
 
   audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     name: Dependency audit
     steps:
       - uses: actions/checkout@v6

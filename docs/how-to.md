@@ -14,4 +14,6 @@ BigDecimal(invoice[:amount])
 Date.iso8601(invoice[:date])
 ```
 
+On Ruby 3.4 and newer `bigdecimal` is a bundled gem, so add `gem "bigdecimal"` to your own Gemfile. The client itself never requires it.
+
 Send amounts as strings too. Pennylane rejects numeric amounts with a 400.

@@ -22,7 +22,7 @@ class GemspecTest < Minitest::Test
 
   def test_declares_itself_unofficial
     assert_match(/unofficial/i, spec.summary)
-    assert_match(/not affiliated with Pennylane/i, spec.description)
+    assert_match(/not affiliated with Pennylane/i, spec.summary)
   end
 
   def test_requires_mfa_and_points_at_the_repo
@@ -39,5 +39,13 @@ class GemspecTest < Minitest::Test
     assert_empty offenders, "unexpected files in the gem: #{offenders.join(", ")}"
     assert_includes spec.files, "lib/pennylane_client.rb"
     assert_includes spec.files, "sig/pennylane_client.rbs"
+  end
+
+  def test_ships_every_library_file_on_disk
+    root = File.expand_path("..", __dir__)
+    on_disk = Dir.glob("{lib,sig}/**/*.{rb,rbs}", base: root)
+    missing = on_disk - spec.files
+
+    assert_empty missing, "not in the gem (git add them): #{missing.join(", ")}"
   end
 end

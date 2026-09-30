@@ -11,7 +11,7 @@ bundle install
 bundle exec rake
 ```
 
-You need Ruby 3.3 or newer. CI runs on Ruby 3.3, 3.4 and 4.0.
+You need Ruby 3.3 or newer and a recent Bundler (4.x recommended). The Gemfile uses `lockfile false`, which Bundler 2.5, the default on Ruby 3.3, rejects: run `gem install bundler` first. CI runs on Ruby 3.3, 3.4 and 4.0.
 
 `bundle exec rake` is the gate. It runs:
 
@@ -48,7 +48,7 @@ Open an issue first for features, API changes or behaviour changes. Significant 
 
 ## Verifying against a real Pennylane sandbox
 
-The maintainer has no Pennylane account, so the checklist's `live` column starts as unverified. If you have a Pennylane company account with a sandbox, you can help by running the smoke suite once it exists (tracked in the Epic) and submitting the report. Never run load or stress tests against Pennylane's servers, sandbox included.
+The maintainer has no Pennylane account, so no operation has been verified against a live sandbox. The planned checklist (Epic #1) records this per operation in a `live` column. If you have a Pennylane company account with a sandbox, you can help by running the smoke suite once it exists (tracked in the Epic) and submitting the report. Never run load or stress tests against Pennylane's servers, sandbox included.
 
 ## Code of conduct
 
