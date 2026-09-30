@@ -17,7 +17,7 @@ module PennylaneClient
   # `getPaRegistrations` answers in the same shape but takes no cursor, so
   # an Operation that is not paginated is read as one page, sent as given.
   # If that page says `has_more: true`, the rest cannot be asked for, so the
-  # walk raises Error rather than return part of the list.
+  # walk raises Error before handing out any item of that page.
   #
   # Both `items` and `pages` start again from the first page each time they
   # are enumerated.
@@ -45,8 +45,9 @@ module PennylaneClient
         params = @params
         loop do
           page = fetch(params)
+          more = more?(page) # raises before any item of the page is out
           yielder << page
-          break unless more?(page)
+          break unless more
 
           params = @params.except(*FIRST_PAGE_ONLY).merge(cursor: next_cursor(page, params[:cursor]))
         end
