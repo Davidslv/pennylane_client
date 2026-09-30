@@ -57,6 +57,17 @@ bundle exec rake contract:sync checklist
 ```
 
 - `lib/pennylane_client/operations.rb` (`rake contract:sync`): the operation table, one `PennylaneClient::Operation` per operationId, sorted, one per line. A row holds the verb, path, whether it takes a `cursor` (paginated), the request body kind (`:json`, `:multipart` or `nil`), the one documented 2xx code, and the deprecated flag. The generator refuses an operation with an unknown content type or without exactly one 2xx response.
-- [`CHECKLIST.md`](CHECKLIST.md) (`rake checklist`): one row per operation, grouped by Pennylane's tag, with `registered` (in the table), `named` (a behaviour test under `test/resources/` carries `# names: <operationId>`), `live` and the test that proves it.
+- [`CHECKLIST.md`](CHECKLIST.md) (`rake checklist`): one row per operation, grouped by Pennylane's tag, with `registered` (in the table), `named` (a behaviour test under `test/resources/` carries `# names: <operationId>`), `live` (from the sandbox reports below) and the test that proves it.
+- The live-verified count in the top-level `README.md` (`rake checklist`), between the `live-count` markers. Nothing else in the README is generated.
 
-`rake stale` is part of `bundle exec rake`. It regenerates both in memory and fails if the committed files differ. CI also regenerates them on disk and runs `git diff --exit-code`.
+`rake stale` is part of `bundle exec rake`. It regenerates all three in memory and fails if the committed files differ. CI also regenerates them on disk and runs `git diff --exit-code`.
+
+## Sandbox reports
+
+`docs/api/live/<date>-<github-user>.json` is written by `rake smoke` on a contributor's machine and committed by pull request. It is evidence, not generated output: never edit one by hand. A report holds:
+
+- `format` (1), `verified_on`, `by` (a GitHub username), `gem_version` and `contract` (the snapshot date);
+- `operations`: operationId to `pass`, `fail: <status> <error class>` or `not run: <why>`;
+- `checks`: the open questions from proposal 0001 that need a sandbox, each `pass`, `fail: <why>` or `not run[: <why>]`.
+
+`rake checklist` reads every report, oldest first. For each operation the latest report that ran it decides: `pass` sets `sandbox-verified <date> (by @user)`, `fail` leaves it unverified, and `not run` changes nothing. For each check the latest result that ran is shown in a "Sandbox checks" table. A bad date, a missing user or a result that is not a string fails the task. So does an operationId the snapshot does not have, unless the report was taken on an older contract: then that operation is skipped, because reports are never edited. See [CONTRIBUTING.md](../../CONTRIBUTING.md#verifying-against-a-real-pennylane-sandbox) for how to run it.
