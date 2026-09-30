@@ -2,7 +2,7 @@
 
 An unofficial Ruby client for the [Pennylane](https://www.pennylane.com) Company API v2. Not affiliated with Pennylane.
 
-> **Status: in development, not yet released.** The plan is in [proposal 0001](proposals/0001-pennylane-client-gem.md) and delivery is tracked in [Epic #1](https://github.com/Davidslv/pennylane_client/issues/1). Today `client.call(:operationId, **params)` works for every operation, inside the rate limit and with safe retries; `client.paginate` walks any list, and uploads stream from disk. Load and stress results against a local fake are in [docs/performance.md](docs/performance.md). Every live operation has a named method (`client.customer_invoices...`, `client.customers...`, `client.supplier_invoices...`, `client.suppliers...`, `client.sepa_mandates...`, `client.gocardless_mandates...`, `client.pro_account_mandates...`, `client.transactions...`, `client.bank_accounts...`, `client.bank_establishments...`, `client.quotes...`, `client.commercial_documents...`, `client.customer_invoice_templates...`, `client.numberings...`, `client.journals...`, `client.ledger_accounts...`, `client.ledger_entries...`, `client.ledger_entry_lines...`, `client.fiscal_years...`, `client.trial_balance...`, `client.file_attachments...`, `client.categories...`, `client.category_groups...`, `client.products...`, `client.changelogs...`, `client.exports...`, `client.billing_subscriptions...`, `client.purchase_requests...`, `client.webhook_subscriptions...`, `client.users.me`, `client.company.features`, `client.pa_registrations.list`).
+> **Status: 0.1.0, pre-1.0.** Method names may still change before 1.0.0. The plan is in [proposal 0001](proposals/0001-pennylane-client-gem.md) and delivery is tracked in [Epic #1](https://github.com/Davidslv/pennylane_client/issues/1). `client.call(:operationId, **params)` works for every operation, inside the rate limit and with safe retries; `client.paginate` walks any list, and uploads stream from disk. Load and stress results against a local fake are in [docs/performance.md](docs/performance.md). Every live operation has a named method (`client.customer_invoices...`, `client.customers...`, `client.supplier_invoices...`, `client.suppliers...`, `client.sepa_mandates...`, `client.gocardless_mandates...`, `client.pro_account_mandates...`, `client.transactions...`, `client.bank_accounts...`, `client.bank_establishments...`, `client.quotes...`, `client.commercial_documents...`, `client.customer_invoice_templates...`, `client.numberings...`, `client.journals...`, `client.ledger_accounts...`, `client.ledger_entries...`, `client.ledger_entry_lines...`, `client.fiscal_years...`, `client.trial_balance...`, `client.file_attachments...`, `client.categories...`, `client.category_groups...`, `client.products...`, `client.changelogs...`, `client.exports...`, `client.billing_subscriptions...`, `client.purchase_requests...`, `client.webhook_subscriptions...`, `client.users.me`, `client.company.features`, `client.pa_registrations.list`).
 
 ## Why
 
@@ -14,12 +14,14 @@ Pennylane publishes no official Ruby SDK, and the existing community gems predat
 - never retry a request that has side effects;
 - have zero runtime dependencies.
 
-## Planned usage
+## Usage
 
 ```ruby
 # Gemfile
-gem "pennylane_client"
+gem "pennylane_client", "~> 0.1"
 ```
+
+Or `gem install pennylane_client`.
 
 ```ruby
 require "pennylane_client"

@@ -12,6 +12,14 @@ class GemspecTest < Minitest::Test
     assert_match(/\A\d+\.\d+\.\d+(\.[a-z0-9.]+)?\z/, PennylaneClient::VERSION)
   end
 
+  def test_changelog_has_a_dated_entry_for_this_version
+    changelog = File.read(File.expand_path("../CHANGELOG.md", __dir__))
+    version = Regexp.escape(PennylaneClient::VERSION)
+
+    assert_match(/^## \[#{version}\] - \d{4}-\d{2}-\d{2}$/, changelog)
+    assert_match(%r{^\[#{version}\]: https://github.com/Davidslv/pennylane_client/releases/tag/v#{version}$}, changelog)
+  end
+
   def test_has_zero_runtime_dependencies
     assert_empty spec.runtime_dependencies, "pennylane_client must stay stdlib-only"
   end

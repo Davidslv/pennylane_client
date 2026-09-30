@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-30
+
+First release. Every live operation is reachable through `client.call` and has a named method.
+
 ### Added
 
 - Gem skeleton: `PennylaneClient` module, gemspec with zero runtime dependencies, Ruby 3.3+.
@@ -41,5 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `client.paginate` sends `start_date` with the first page only. Pennylane answers 400 to `start_date` next to a `cursor`, so a changelog walk failed on its second page.
 - `rake smoke`, for contributors with a Pennylane sandbox: paced reads of every parameter-free list and its first item, opt-in writes that clean up after themselves, and opt-in checks of the 429-on-a-write assumption and of a captured webhook delivery. It writes a report to `docs/api/live/`; without `PENNYLANE_SMOKE_TOKEN` it skips and exits 0. Not part of the gate.
 - `rake checklist` reads the sandbox reports into the checklist's `live` column and a "Sandbox checks" table, and writes the live-verified count into `README.md`. `rake stale` covers that count.
+- `PennylaneClient::Webhook.verify!(raw_body, signature, secret:)`: checks an inbound webhook's HMAC-SHA256 signature in constant time and its timestamp within 300 s (`tolerance:`), and returns the deep-frozen event. A bad delivery raises `PennylaneClient::SignatureError`.
+- Release workflow: a `v*` tag runs the gate and publishes to RubyGems by Trusted Publishing, with a Sigstore attestation. See `docs/releasing.md`.
+- The gate checks the README's operation counts against `docs/api/CHECKLIST.md`.
 
-[Unreleased]: https://github.com/Davidslv/pennylane_client/commits/main
+[Unreleased]: https://github.com/Davidslv/pennylane_client/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Davidslv/pennylane_client/releases/tag/v0.1.0

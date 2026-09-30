@@ -1,13 +1,15 @@
 # Getting started
 
-> **Not yet released.** This guide describes the planned first release. Each section is filled in as the matching part of [Epic #1](https://github.com/Davidslv/pennylane_client/issues/1) lands.
+> **Version 0.1.0, pre-1.0.** Method names may still change before 1.0.0.
 
 ## Install
 
 ```ruby
 # Gemfile
-gem "pennylane_client"
+gem "pennylane_client", "~> 0.1"
 ```
+
+Or `gem install pennylane_client`.
 
 Ruby 3.3 or newer. No runtime dependencies.
 
