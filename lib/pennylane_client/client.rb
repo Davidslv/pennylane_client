@@ -165,6 +165,9 @@ module PennylaneClient
     # The named Purchase Requests operations (Resources::PurchaseRequests).
     def purchase_requests = @purchase_requests ||= Resources::PurchaseRequests.new(self)
 
+    # The named Webhooks operations (Resources::WebhookSubscriptions).
+    def webhook_subscriptions = @webhook_subscriptions ||= Resources::WebhookSubscriptions.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

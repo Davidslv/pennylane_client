@@ -79,6 +79,8 @@ module PennylaneClient
 
     def purchase_requests: () -> Resources::PurchaseRequests
 
+    def webhook_subscriptions: () -> Resources::WebhookSubscriptions
+
     def inspect: () -> String
 
     private
@@ -144,6 +146,8 @@ module PennylaneClient
     @pa_registrations: Resources::PaRegistrations?
 
     @purchase_requests: Resources::PurchaseRequests?
+
+    @webhook_subscriptions: Resources::WebhookSubscriptions?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end

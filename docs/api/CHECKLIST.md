@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 172 of 177 live |
+| Named | 177 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -348,12 +348,12 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `getMe` | GET | `/me` | yes | yes | unverified: no sandbox access | `test/resources/account_test.rb#test_me` |
 
-## Webhooks (0 of 5 named)
+## Webhooks (5 of 5 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getWebhookSubscriptions` | GET | `/webhook_subscriptions` | yes | no | unverified: no sandbox access |  |
-| `postWebhookSubscriptions` | POST | `/webhook_subscriptions` | yes | no | unverified: no sandbox access |  |
-| `deleteWebhookSubscription` | DELETE | `/webhook_subscriptions/{id}` | yes | no | unverified: no sandbox access |  |
-| `getWebhookSubscription` | GET | `/webhook_subscriptions/{id}` | yes | no | unverified: no sandbox access |  |
-| `putWebhookSubscription` | PUT | `/webhook_subscriptions/{id}` | yes | no | unverified: no sandbox access |  |
+| `getWebhookSubscriptions` | GET | `/webhook_subscriptions` | yes | yes | unverified: no sandbox access | `test/resources/webhook_subscriptions_test.rb#test_list_walks_every_page` |
+| `postWebhookSubscriptions` | POST | `/webhook_subscriptions` | yes | yes | unverified: no sandbox access | `test/resources/webhook_subscriptions_test.rb#test_create_returns_the_secret` |
+| `deleteWebhookSubscription` | DELETE | `/webhook_subscriptions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/webhook_subscriptions_test.rb#test_delete` |
+| `getWebhookSubscription` | GET | `/webhook_subscriptions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/webhook_subscriptions_test.rb#test_find` |
+| `putWebhookSubscription` | PUT | `/webhook_subscriptions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/webhook_subscriptions_test.rb#test_update` |
