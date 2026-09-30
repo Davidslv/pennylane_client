@@ -1,0 +1,27 @@
+module PennylaneClient
+  # Anything that turns a Request into a Response.
+  interface _Transport
+    def call: (Request request) -> Response
+  end
+
+  class NetHttpTransport
+    include _Transport
+
+    VERBS: Hash[Symbol, untyped]
+    TIMEOUT_ERRORS: Array[untyped]
+    CONNECTION_ERRORS: Array[untyped]
+
+    def initialize: (?open_timeout: Numeric, ?read_timeout: Numeric, ?write_timeout: Numeric) -> void
+
+    def close: () -> void
+
+    private
+
+    def connections: () -> Hash[String, untyped]
+    def connection: (untyped uri) -> untyped
+    def build_connection: (untyped uri) -> untyped
+    def build: (Request request, untyped uri) -> untyped
+    def fail_with: (singleton(Error) klass, Exception error, untyped uri) -> bot
+    def drop: (untyped uri) -> void
+  end
+end
