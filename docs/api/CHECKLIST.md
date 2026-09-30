@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 160 of 177 live |
+| Named | 166 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -34,16 +34,16 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `getBankEstablishments` | GET | `/bank_establishments` | yes | yes | unverified: no sandbox access | `test/resources/bank_accounts_test.rb#test_bank_establishments_list_walks_every_page_resending_the_filter` |
 
-## Billing Subscriptions (0 of 6 named)
+## Billing Subscriptions (6 of 6 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getBillingSubscriptions` | GET | `/billing_subscriptions` | yes | no | unverified: no sandbox access |  |
-| `postBillingSubscriptions` | POST | `/billing_subscriptions` | yes | no | unverified: no sandbox access |  |
-| `getBillingSubscriptionInvoiceLineSections` | GET | `/billing_subscriptions/{billing_subscription_id}/invoice_line_sections` | yes | no | unverified: no sandbox access |  |
-| `getBillingSubscriptionInvoiceLines` | GET | `/billing_subscriptions/{billing_subscription_id}/invoice_lines` | yes | no | unverified: no sandbox access |  |
-| `getBillingSubscription` | GET | `/billing_subscriptions/{id}` | yes | no | unverified: no sandbox access |  |
-| `putBillingSubscriptions` | PUT | `/billing_subscriptions/{id}` | yes | no | unverified: no sandbox access |  |
+| `getBillingSubscriptions` | GET | `/billing_subscriptions` | yes | yes | unverified: no sandbox access | `test/resources/billing_subscriptions_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `postBillingSubscriptions` | POST | `/billing_subscriptions` | yes | yes | unverified: no sandbox access | `test/resources/billing_subscriptions_test.rb#test_create_encodes_the_start_date_and_line_prices` |
+| `getBillingSubscriptionInvoiceLineSections` | GET | `/billing_subscriptions/{billing_subscription_id}/invoice_line_sections` | yes | yes | unverified: no sandbox access | `test/resources/billing_subscriptions_test.rb#test_invoice_line_sections` |
+| `getBillingSubscriptionInvoiceLines` | GET | `/billing_subscriptions/{billing_subscription_id}/invoice_lines` | yes | yes | unverified: no sandbox access | `test/resources/billing_subscriptions_test.rb#test_invoice_lines` |
+| `getBillingSubscription` | GET | `/billing_subscriptions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/billing_subscriptions_test.rb#test_find` |
+| `putBillingSubscriptions` | PUT | `/billing_subscriptions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/billing_subscriptions_test.rb#test_update_stops_a_subscription` |
 
 ## Categories (5 of 5 named)
 

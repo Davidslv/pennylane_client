@@ -69,6 +69,8 @@ module PennylaneClient
 
     def exports: () -> Resources::Exports
 
+    def billing_subscriptions: () -> Resources::BillingSubscriptions
+
     def inspect: () -> String
 
     private
@@ -124,6 +126,8 @@ module PennylaneClient
     @changelogs: Resources::Changelogs?
 
     @exports: Resources::Exports?
+
+    @billing_subscriptions: Resources::BillingSubscriptions?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end

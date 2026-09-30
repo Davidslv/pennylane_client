@@ -149,6 +149,10 @@ module PennylaneClient
     # General Ledger (Resources::Exports).
     def exports = @exports ||= Resources::Exports.new(self)
 
+    # The named Billing Subscriptions operations
+    # (Resources::BillingSubscriptions).
+    def billing_subscriptions = @billing_subscriptions ||= Resources::BillingSubscriptions.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

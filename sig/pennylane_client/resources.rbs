@@ -412,5 +412,19 @@ module PennylaneClient
 
       def ready?: (item export) -> bool
     end
+
+    class BillingSubscriptions < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+
+      def invoice_lines: (Integer billing_subscription_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def invoice_line_sections: (Integer billing_subscription_id, **untyped params) -> Enumerator::Lazy[item, void]
+    end
   end
 end
