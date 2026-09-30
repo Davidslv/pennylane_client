@@ -26,4 +26,9 @@ namespace :contract do
   end
 end
 
+desc "Regenerate docs/api/CHECKLIST.md from the snapshot, the operation table and the behaviour tests"
+task :checklist do
+  ruby "tools/checklist.rb"
+end
+
 task default: %i[test rubocop rbs]
