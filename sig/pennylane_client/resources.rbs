@@ -238,5 +238,23 @@ module PennylaneClient
 
       def upload_appendix: (Integer quote_id, file file) -> item
     end
+
+    class CommercialDocuments < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+
+      def invoice_lines: (Integer commercial_document_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def invoice_line_sections: (Integer commercial_document_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def appendices: (Integer commercial_document_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def upload_appendix: (Integer commercial_document_id, file file) -> item
+    end
   end
 end

@@ -39,6 +39,8 @@ module PennylaneClient
 
     def quotes: () -> Resources::Quotes
 
+    def commercial_documents: () -> Resources::CommercialDocuments
+
     def inspect: () -> String
 
     private
@@ -64,6 +66,8 @@ module PennylaneClient
     @transactions: Resources::Transactions?
 
     @quotes: Resources::Quotes?
+
+    @commercial_documents: Resources::CommercialDocuments?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end

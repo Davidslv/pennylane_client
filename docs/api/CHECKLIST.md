@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 99 of 177 live |
+| Named | 107 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -78,18 +78,18 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `getSupplierChanges` | GET | `/changelogs/suppliers` | yes | no | unverified: no sandbox access |  |
 | `getTransactionChanges` | GET | `/changelogs/transactions` | yes | no | unverified: no sandbox access |  |
 
-## Commercial Documents (0 of 8 named)
+## Commercial Documents (8 of 8 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `listCommercialDocuments` | GET | `/commercial_documents` | yes | no | unverified: no sandbox access |  |
-| `postCommercialDocuments` | POST | `/commercial_documents` | yes | no | unverified: no sandbox access |  |
-| `getCommercialDocumentAppendices` | GET | `/commercial_documents/{commercial_document_id}/appendices` | yes | no | unverified: no sandbox access |  |
-| `postCommercialDocumentAppendices` | POST | `/commercial_documents/{commercial_document_id}/appendices` | yes | no | unverified: no sandbox access |  |
-| `getCommercialDocumentInvoiceLineSections` | GET | `/commercial_documents/{commercial_document_id}/invoice_line_sections` | yes | no | unverified: no sandbox access |  |
-| `getCommercialDocumentInvoiceLines` | GET | `/commercial_documents/{commercial_document_id}/invoice_lines` | yes | no | unverified: no sandbox access |  |
-| `getCommercialDocument` | GET | `/commercial_documents/{id}` | yes | no | unverified: no sandbox access |  |
-| `updateCommercialDocument` | PUT | `/commercial_documents/{id}` | yes | no | unverified: no sandbox access |  |
+| `listCommercialDocuments` | GET | `/commercial_documents` | yes | yes | unverified: no sandbox access | `test/resources/commercial_documents_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `postCommercialDocuments` | POST | `/commercial_documents` | yes | yes | unverified: no sandbox access | `test/resources/commercial_documents_test.rb#test_create_encodes_the_dates_and_amounts` |
+| `getCommercialDocumentAppendices` | GET | `/commercial_documents/{commercial_document_id}/appendices` | yes | yes | unverified: no sandbox access | `test/resources/commercial_documents_test.rb#test_appendices_walks_every_page` |
+| `postCommercialDocumentAppendices` | POST | `/commercial_documents/{commercial_document_id}/appendices` | yes | yes | unverified: no sandbox access | `test/resources/commercial_documents_test.rb#test_upload_appendix_streams_the_file` |
+| `getCommercialDocumentInvoiceLineSections` | GET | `/commercial_documents/{commercial_document_id}/invoice_line_sections` | yes | yes | unverified: no sandbox access | `test/resources/commercial_documents_test.rb#test_invoice_line_sections_walks_every_page` |
+| `getCommercialDocumentInvoiceLines` | GET | `/commercial_documents/{commercial_document_id}/invoice_lines` | yes | yes | unverified: no sandbox access | `test/resources/commercial_documents_test.rb#test_invoice_lines_walks_every_page` |
+| `getCommercialDocument` | GET | `/commercial_documents/{id}` | yes | yes | unverified: no sandbox access | `test/resources/commercial_documents_test.rb#test_find` |
+| `updateCommercialDocument` | PUT | `/commercial_documents/{id}` | yes | yes | unverified: no sandbox access | `test/resources/commercial_documents_test.rb#test_update_sends_only_the_given_attributes` |
 
 ## Company (0 of 1 named)
 

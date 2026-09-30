@@ -99,6 +99,10 @@ module PennylaneClient
     # The named Quotes operations (Resources::Quotes).
     def quotes = @quotes ||= Resources::Quotes.new(self)
 
+    # The named Commercial Documents operations: proformas, shipping orders
+    # and purchasing orders (Resources::CommercialDocuments).
+    def commercial_documents = @commercial_documents ||= Resources::CommercialDocuments.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private
