@@ -17,9 +17,13 @@ module PennylaneClient
 
     def pages: (Symbol | String operation_id, **untyped params) -> Enumerator::Lazy[Hash[Symbol, untyped], void]
 
+    def customer_invoices: () -> Resources::CustomerInvoices
+
     def inspect: () -> String
 
     private
+
+    @customer_invoices: Resources::CustomerInvoices?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end
