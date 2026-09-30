@@ -1,0 +1,11 @@
+module PennylaneClient
+  self.@configuration: Configuration?
+
+  def self.configuration: () -> Configuration
+  def self.configure: () { (Configuration) -> void } -> void
+
+  class Configuration
+    attr_accessor logger: untyped
+    attr_accessor on_request: (^(Instrumentation::event) -> void)?
+  end
+end

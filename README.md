@@ -2,7 +2,7 @@
 
 An unofficial Ruby client for the [Pennylane](https://www.pennylane.com) Company API v2. Not affiliated with Pennylane.
 
-> **Status: in development, not yet released.** The plan is in [proposal 0001](proposals/0001-pennylane-client-gem.md) and delivery is tracked in [Epic #1](https://github.com/Davidslv/pennylane_client/issues/1). Nothing below the "Planned usage" heading works yet.
+> **Status: in development, not yet released.** The plan is in [proposal 0001](proposals/0001-pennylane-client-gem.md) and delivery is tracked in [Epic #1](https://github.com/Davidslv/pennylane_client/issues/1). Today `client.call(:operationId, **params)` works for every operation; the named methods (`client.customer_invoices...`), pagination, rate limiting and retries are still to come.
 
 ## Why
 

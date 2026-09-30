@@ -1,0 +1,14 @@
+module PennylaneClient
+  class Request < Data
+    attr_reader verb: Symbol
+    attr_reader url: String
+    attr_reader headers: Hash[String, String]
+    attr_reader body: String?
+
+    def initialize: (verb: Symbol, url: String, headers: Hash[String, String], body: String?) -> void
+
+    def inspect: () -> String
+    def to_s: () -> String
+    def pretty_print: (untyped printer) -> untyped
+  end
+end

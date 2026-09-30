@@ -1,0 +1,26 @@
+module PennylaneClient
+  class Executor
+    PATH_PARAMETER: Regexp
+
+    def initialize: (registry: Registry, transport: _Transport, token: String, base_url: String,
+                     ?instrumentation: Instrumentation) -> void
+
+    def call: (Symbol | String operation_id, ?Hash[Symbol, untyped] params, ?untyped body) -> untyped
+
+    def inspect: () -> String
+
+    private
+
+    def build: (Operation operation, Hash[Symbol, untyped] params, untyped body) -> Request
+    def explicit_body: (Operation operation, Hash[Symbol, untyped] rest, untyped body) -> untyped
+    def json_request: (Operation operation, String url, untyped params) -> Request
+    def query_request: (Operation operation, String url, Hash[Symbol, untyped] params, untyped body) -> Request
+    def fill_path: (Operation operation, Hash[Symbol, untyped] params) -> String
+    def query: (Hash[Symbol, untyped] params) -> String
+    def query_value: (untyped value) -> String
+    def headers: (?json: bool) -> Hash[String, String]
+    def perform: (Operation operation, Request request) -> Response
+    def report: (Operation operation, Request request, Float started, ?status: Integer?, ?error: String?) -> void
+    def handle: (Response response) -> untyped
+  end
+end

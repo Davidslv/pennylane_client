@@ -1,0 +1,6 @@
+module PennylaneClient
+  module Encoder
+    def self?.encode: (untyped value) -> untyped
+    def self?.scalar: (untyped value) -> untyped
+  end
+end

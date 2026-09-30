@@ -1,0 +1,16 @@
+module PennylaneClient
+  class UnknownOperationError < ArgumentError
+  end
+
+  class Registry
+    DEFAULT: Registry
+
+    def self.default: () -> Registry
+
+    def initialize: (Array[Operation] operations) -> void
+
+    def fetch: (Symbol | String id) -> Operation
+
+    def size: () -> Integer
+  end
+end
