@@ -241,20 +241,33 @@ module SnapshotContract
 
   # GET over Net::HTTP. Returns the body, nil for 404 or 410, follows
   # redirects, and raises on anything else so a flaky run never writes a
-  # partial snapshot.
-  module HTTP
+  # partial snapshot. One keep-alive connection per host: a fresh TLS
+  # handshake for each of the ~190 pages made a run take over ten minutes.
+  class HTTP
     REDIRECTS = 5
 
-    def self.get(url, redirects: REDIRECTS)
-      uri = URI(url)
-      response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https",
-                                                     open_timeout: 10, read_timeout: 30) do |http|
-        http.request_get(uri)
-      end
-      handle(url, response, redirects)
+    def initialize
+      @sessions = {}
     end
 
-    def self.handle(url, response, redirects)
+    def get(url, redirects: REDIRECTS)
+      uri = URI(url)
+      handle(url, session(uri).request_get(uri), redirects)
+    end
+
+    def finish
+      @sessions.each_value { |session| session.finish if session.started? }
+      @sessions.clear
+    end
+
+    private
+
+    def session(uri)
+      @sessions[[uri.host, uri.port]] ||=
+        Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 10, read_timeout: 30)
+    end
+
+    def handle(url, response, redirects)
       case response
       when Net::HTTPSuccess then String.new(response.body, encoding: Encoding::UTF_8)
       when Net::HTTPNotFound, Net::HTTPGone then nil
@@ -265,18 +278,20 @@ module SnapshotContract
       else raise Error, "GET #{url}: HTTP #{response.code}"
       end
     end
-    private_class_method :handle
   end
 end
 
 if $PROGRAM_NAME == __FILE__
+  http = SnapshotContract::HTTP.new
   begin
-    result = SnapshotContract.run(fetch: SnapshotContract::HTTP.method(:get),
+    result = SnapshotContract.run(fetch: http.method(:get),
                                   root: File.expand_path("../docs/api/contract", __dir__),
                                   date: Time.now.utc.to_date)
     puts "Wrote #{result[:dir]}"
     puts JSON.pretty_generate(result[:summary])
   rescue SnapshotContract::Error => e
     abort e.message
+  ensure
+    http.finish
   end
 end

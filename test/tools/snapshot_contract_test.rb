@@ -279,10 +279,18 @@ end
 class SnapshotContractHTTPTest < Minitest::Test
   URL = "https://pennylane.readme.io/reference/getjournal.md"
 
+  def setup
+    @http = SnapshotContract::HTTP.new
+  end
+
+  def teardown
+    @http.finish
+  end
+
   def test_returns_the_body_as_utf8
     stub_request(:get, URL).to_return(status: 200, body: "# Journal ℹ️")
 
-    body = SnapshotContract::HTTP.get(URL)
+    body = @http.get(URL)
 
     assert_equal "# Journal ℹ️", body
     assert_equal Encoding::UTF_8, body.encoding
@@ -291,24 +299,24 @@ class SnapshotContractHTTPTest < Minitest::Test
   def test_returns_nil_for_not_found_and_gone
     stub_request(:get, URL).to_return(status: 404)
 
-    assert_nil SnapshotContract::HTTP.get(URL)
+    assert_nil @http.get(URL)
 
     stub_request(:get, URL).to_return(status: 410)
 
-    assert_nil SnapshotContract::HTTP.get(URL)
+    assert_nil @http.get(URL)
   end
 
   def test_follows_a_relative_redirect
     stub_request(:get, URL).to_return(status: 301, headers: { "Location" => "/reference/getjournal-1.md" })
     stub_request(:get, "https://pennylane.readme.io/reference/getjournal-1.md").to_return(status: 200, body: "moved")
 
-    assert_equal "moved", SnapshotContract::HTTP.get(URL)
+    assert_equal "moved", @http.get(URL)
   end
 
   def test_gives_up_on_a_redirect_loop
     stub_request(:get, URL).to_return(status: 302, headers: { "Location" => URL })
 
-    error = assert_raises(SnapshotContract::Error) { SnapshotContract::HTTP.get(URL) }
+    error = assert_raises(SnapshotContract::Error) { @http.get(URL) }
 
     assert_equal "GET #{URL}: too many redirects", error.message
   end
@@ -316,7 +324,7 @@ class SnapshotContractHTTPTest < Minitest::Test
   def test_raises_on_any_other_status
     stub_request(:get, URL).to_return(status: 503)
 
-    error = assert_raises(SnapshotContract::Error) { SnapshotContract::HTTP.get(URL) }
+    error = assert_raises(SnapshotContract::Error) { @http.get(URL) }
 
     assert_equal "GET #{URL}: HTTP 503", error.message
   end
