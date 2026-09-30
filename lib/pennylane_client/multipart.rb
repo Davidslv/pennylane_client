@@ -134,47 +134,71 @@ module PennylaneClient
       def close = nil
     end
 
-    # A file the caller opened, read in the chunks the reader asks for from
-    # the position the caller left it at. It is never closed here.
-    class IOSource
+    # A file part: exactly `size` bytes, the count measured when the form was
+    # built and sent as Content-Length. A file that grows is cut there; one
+    # that shrinks raises, rather than leaving the server waiting.
+    class FileSource
       attr_reader :size
 
-      def initialize(io)
-        raise ArgumentError, "cannot upload #{io.class}: it must respond to #size" unless io.respond_to?(:size)
-
-        @io = io
-        @start = io.respond_to?(:pos) ? io.pos : 0
-        @size = io.size - @start
+      def initialize(size)
+        @size = size
+        @remaining = size
+        # One reused buffer: a new String per chunk would leave the whole
+        # file behind as garbage faster than GC returns it.
         @buffer = String.new
       end
 
-      def filename = @io.respond_to?(:path) && @io.path ? File.basename(@io.path.to_s) : "upload"
+      def read(length)
+        return (length ? nil : "") if @remaining.zero?
 
-      # Into one reused buffer: a new String per chunk would leave the whole
-      # file behind as garbage faster than GC returns it.
-      def read(length) = @io.read(length, @buffer)
-      def rewind = @start.zero? ? @io.rewind : @io.seek(@start)
+        chunk = io.read(length ? [length, @remaining].min : @remaining, @buffer)
+        raise Error, "#{filename} shrank to less than the #{@size} bytes announced for it" if chunk.nil?
+
+        @remaining -= chunk.bytesize
+        chunk
+      end
+
+      def rewind
+        @remaining = @size
+        seek_start
+      end
+    end
+
+    # A file the caller opened, read from the position the caller left it
+    # at. It is never closed here.
+    class IOSource < FileSource
+      def initialize(io)
+        unless io.respond_to?(:read) && io.respond_to?(:size)
+          raise ArgumentError, "cannot upload #{io.class}: it must respond to #read and #size"
+        end
+
+        @io = io
+        @start = io.respond_to?(:pos) ? io.pos : 0
+        super(io.size - @start)
+      end
+
+      attr_reader :io
+
+      def filename = @io.respond_to?(:path) && @io.path ? File.basename(@io.path.to_s) : "upload"
+      def seek_start = @start.zero? ? @io.rewind : @io.seek(@start)
       def close = nil
     end
 
     # A file named by a Pathname: opened on the first read, closed by close.
-    class PathSource
-      attr_reader :size
-
+    # It is checked when the form is built, so a local file error is not
+    # reported as a network one halfway through the request.
+    class PathSource < FileSource
       def initialize(path)
+        size = File.size(path)
+        raise ArgumentError, "cannot upload #{path}: not a readable file" unless path.file? && path.readable?
+
         @path = path
-        @size = File.size(path)
-        @buffer = String.new
+        super(size)
       end
 
       def filename = @path.basename.to_s
-
-      def read(length)
-        @io ||= File.new(@path, "rb")
-        @io.read(length, @buffer)
-      end
-
-      def rewind = @io&.rewind
+      def io = @io ||= File.new(@path, "rb")
+      def seek_start = @io&.rewind
 
       def close
         @io&.close

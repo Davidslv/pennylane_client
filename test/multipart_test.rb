@@ -151,6 +151,38 @@ class MultipartStreamTest < Minitest::Test
     assert_includes form(file: upload).read, 'filename="a%22b%0D%0Ac.pdf"'
   end
 
+  # Content-Length is fixed when the form is built. Sending more would leave
+  # bytes on the keep-alive socket; sending fewer would hang the server.
+  def test_sends_no_more_than_the_size_it_announced
+    io = StringIO.new(+"abc")
+    form = form(file: io)
+    io.string << "grown"
+
+    assert_equal form.size, form.read.bytesize
+  end
+
+  def test_raises_when_a_file_shrinks_before_it_is_sent
+    Dir.mktmpdir do |dir|
+      path = Pathname(dir).join("a.pdf").tap { _1.write("%PDF-1.7") }
+      form = form(file: path)
+      path.write("%")
+
+      error = assert_raises(PennylaneClient::Error) { form.read }
+      assert_match(/a\.pdf/, error.message)
+    end
+  end
+
+  def test_refuses_a_path_it_cannot_read_before_sending
+    Dir.mktmpdir do |dir|
+      assert_raises(ArgumentError) { form(file: Pathname(dir)) }
+      assert_raises(Errno::ENOENT) { form(file: Pathname(dir).join("missing.pdf")) }
+    end
+  end
+
+  def test_refuses_an_upload_of_something_it_cannot_read
+    assert_raises(ArgumentError) { form(file: PennylaneClient::Upload.new("receipt.pdf")) }
+  end
+
   def test_refuses_an_io_whose_size_it_cannot_know
     reader, writer = IO.pipe
     assert_raises(ArgumentError) { form(file: reader) }
