@@ -20,7 +20,7 @@ class LedgerEntryLinesTest < Minitest::Test
 
   # names: getLedgerEntryLines
   def test_list_walks_every_page_resending_the_filter
-    bank = [{ field: "ledger_account_id", operator: "eq", value: "512" }]
+    bank = [{ field: "ledger_account_id", operator: "eq", value: "7" }]
     query = { filter: JSON.generate(bank), sort: "-date", limit: "100" }
     first = JSON.generate({ items: [{ id: 1 }], has_more: true, next_cursor: "c2" })
     stub_request(:get, "#{API}/ledger_entry_lines").with(query:).to_return(status: 200, body: first)
@@ -59,7 +59,7 @@ class LedgerEntryLinesTest < Minitest::Test
   # Pennylane answers 422 when the lettering would not balance under "none".
   def test_letter_unbalanced_raises_validation_error
     stub_request(:post, "#{API}/ledger_entry_lines/lettering")
-      .to_return(status: 422, body: '{"error":"unprocessable_entity","message":"Lettering is unbalanced"}')
+      .to_return(status: 422, body: '{"error":"Entry lines are not balanced","status":422}')
 
     assert_raises(PennylaneClient::ValidationError) do
       lines.letter([{ id: 91 }, { id: 95 }], unbalanced_lettering_strategy: "none")

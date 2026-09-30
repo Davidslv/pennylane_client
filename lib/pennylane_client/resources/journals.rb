@@ -20,7 +20,7 @@ module PennylaneClient
       # Creates a journal. Pennylane requires `code:` (2 to 5 letters) and
       # `label:`.
       #
-      #   journals.create(code: "BQ2", label: "Second bank")
+      #   journals.create(code: "BQB", label: "Second bank")
       def create(**attributes) = call(:postJournals, **attributes)
     end
   end

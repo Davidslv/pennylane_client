@@ -41,10 +41,10 @@ class JournalsAndFiscalYearsTest < Minitest::Test
 
   # names: postJournals
   def test_journals_create
-    stub_request(:post, "#{API}/journals").with(body: '{"code":"BQ2","label":"Second bank"}')
-                                          .to_return(status: 201, body: '{"id":5,"code":"BQ2"}')
+    stub_request(:post, "#{API}/journals").with(body: '{"code":"BQB","label":"Second bank"}')
+                                          .to_return(status: 201, body: '{"id":5,"code":"BQB"}')
 
-    assert_equal({ id: 5, code: "BQ2" }, journals.create(code: "BQ2", label: "Second bank"))
+    assert_equal({ id: 5, code: "BQB" }, journals.create(code: "BQB", label: "Second bank"))
   end
 
   # names: company-fiscal-years

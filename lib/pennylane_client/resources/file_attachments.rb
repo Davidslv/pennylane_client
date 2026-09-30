@@ -6,7 +6,8 @@ module PennylaneClient
     #
     # An uploaded file gets an id that other calls take as
     # `file_attachment_id:`, e.g. `supplier_invoices.import` or
-    # `ledger_entries.create`. It does not go into the DMS. This replaces the
+    # `ledger_entries.create` (where the contract says the field will soon
+    # be deprecated). It does not go into the DMS. This replaces the
     # deprecated `postLedgerAttachments`, which has no named method.
     class FileAttachments < Resource
       # Uploads `file` (a PDF or PNG, JPEG, TIFF, BMP or GIF image: File, IO,

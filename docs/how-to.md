@@ -335,14 +335,14 @@ Both resources list what hangs off one document: `invoice_lines` and `invoice_li
 
 ## Work with the ledger
 
-`client.journals`, `client.ledger_accounts`, `client.ledger_entries`, `client.ledger_entry_lines`, `client.fiscal_years` and `client.trial_balance` name every ledger operation.
+`client.journals`, `client.ledger_accounts`, `client.ledger_entries`, `client.ledger_entry_lines`, `client.fiscal_years`, `client.trial_balance` and `client.file_attachments` name every ledger operation.
 
 A ledger entry needs a journal and balanced lines. Amounts are Strings or BigDecimals. `create` takes the lines as a plain array; `update` takes them as `{ create: [...], update: [...], delete: [...] }`:
 
 ```ruby
 bank = client.ledger_accounts.list(filter: [{ field: "number", operator: "eq", value: "512" }]).first
 entry = client.ledger_entries.create(date: Date.today, label: "Rent", journal_id: 4,
-                                     ledger_entry_lines: [{ debit: "1200", credit: "0", ledger_account_id: 613 },
+                                     ledger_entry_lines: [{ debit: "1200", credit: "0", ledger_account_id: 21 },
                                                           { debit: "0", credit: "1200", ledger_account_id: bank[:id] }])
 client.ledger_entries.update(entry[:id], ledger_entry_lines: { update: [{ id: 91, label: "Rent, March" }] })
 ```

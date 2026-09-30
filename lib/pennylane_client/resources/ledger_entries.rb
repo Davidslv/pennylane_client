@@ -27,8 +27,8 @@ module PennylaneClient
       # not position.
       #
       #   ledger_entries.create(date: Date.today, label: "Rent", journal_id: 4,
-      #                         ledger_entry_lines: [{ debit: "1200", credit: "0", ledger_account_id: 613 },
-      #                                              { debit: "0", credit: "1200", ledger_account_id: 512 }])
+      #                         ledger_entry_lines: [{ debit: "1200", credit: "0", ledger_account_id: 21 },
+      #                                              { debit: "0", credit: "1200", ledger_account_id: 7 }])
       def create(**attributes) = call(:postLedgerEntries, **attributes)
 
       # Updates a ledger entry. Only the attributes you pass change.

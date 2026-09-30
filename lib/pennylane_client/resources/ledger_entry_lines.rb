@@ -14,7 +14,7 @@ module PennylaneClient
       # and `sort` again on every page. The filter takes `id`, `journal_id`,
       # `ledger_account_id` and `date`; `sort:` takes `id` and `date`.
       #
-      #   ledger_entry_lines.list(filter: [{ field: "ledger_account_id", operator: "eq", value: "512" }])
+      #   ledger_entry_lines.list(filter: [{ field: "ledger_account_id", operator: "eq", value: "7" }])
       def list(**params) = paginate(:getLedgerEntryLines, **params)
 
       # One ledger entry line.
