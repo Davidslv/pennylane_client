@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 12 of 177 live |
+| Named | 15 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (0 of 3 named)
@@ -103,15 +103,15 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `getCustomerInvoiceTemplates` | GET | `/customer_invoice_templates` | yes | no | unverified: no sandbox access |  |
 
-## Customer Invoices (11 of 23 named)
+## Customer Invoices (14 of 23 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
 | `getCustomerInvoices` | GET | `/customer_invoices` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_list_walks_every_page_resending_the_filter` |
 | `postCustomerInvoices` | POST | `/customer_invoices` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_create_sends_the_attributes_as_the_json_body` |
-| `createCustomerInvoiceFromQuote` | POST | `/customer_invoices/create_from_quote` | yes | no | unverified: no sandbox access |  |
-| `createCustomerInvoiceEInvoiceImport` | POST | `/customer_invoices/e_invoices/imports` | yes | no | unverified: no sandbox access |  |
-| `importCustomerInvoices` | POST | `/customer_invoices/import` | yes | no | unverified: no sandbox access |  |
+| `createCustomerInvoiceFromQuote` | POST | `/customer_invoices/create_from_quote` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_create_from_quote` |
+| `createCustomerInvoiceEInvoiceImport` | POST | `/customer_invoices/e_invoices/imports` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_import_e_invoice_uploads_the_file_with_json_options` |
+| `importCustomerInvoices` | POST | `/customer_invoices/import` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_import` |
 | `getCustomerInvoiceAppendices` | GET | `/customer_invoices/{customer_invoice_id}/appendices` | yes | no | unverified: no sandbox access |  |
 | `postCustomerInvoiceAppendices` | POST | `/customer_invoices/{customer_invoice_id}/appendices` | yes | no | unverified: no sandbox access |  |
 | `getCustomerInvoiceCategories` | GET | `/customer_invoices/{customer_invoice_id}/categories` | yes | no | unverified: no sandbox access |  |

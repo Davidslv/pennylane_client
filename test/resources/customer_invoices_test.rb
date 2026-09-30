@@ -155,3 +155,44 @@ class CustomerInvoiceActionsTest < Minitest::Test
     assert_equal({ id: 42 }, invoices.update_imported(42, invoice_number: "F-7"))
   end
 end
+
+# The other ways an invoice comes to exist: from a quote, imported with a
+# file already uploaded, or imported from an e-invoice file.
+class CustomerInvoiceImportsTest < Minitest::Test
+  include CustomerInvoicesTestHelper
+
+  # names: createCustomerInvoiceFromQuote
+  def test_create_from_quote
+    stub_request(:post, "#{API}/customer_invoices/create_from_quote")
+      .with(body: '{"quote_id":9,"draft":true}')
+      .to_return(status: 201, body: '{"id":44}')
+
+    assert_equal({ id: 44 }, invoices.create_from_quote(quote_id: 9, draft: true))
+  end
+
+  # names: importCustomerInvoices
+  def test_import
+    body = { file_attachment_id: 5, customer_id: 7, invoice_number: "F-1", date: "2026-09-30",
+             currency_amount: "120.0" }
+    stub_request(:post, "#{API}/customer_invoices/import")
+      .with(body: JSON.generate(body))
+      .to_return(status: 201, body: '{"id":45}')
+
+    assert_equal({ id: 45 }, invoices.import(file_attachment_id: 5, customer_id: 7, invoice_number: "F-1",
+                                             date: Date.new(2026, 9, 30), currency_amount: BigDecimal("120")))
+  end
+
+  # names: createCustomerInvoiceEInvoiceImport
+  def test_import_e_invoice_uploads_the_file_with_json_options
+    file_part = %(name="file"; filename="invoice.xml"\r\nContent-Type: application/xml\r\n\r\n<Invoice/>)
+    options_part = %(name="invoice_options"\r\nContent-Type: application/json\r\n\r\n{"customer_id":12})
+    stub_request(:post, "#{API}/customer_invoices/e_invoices/imports").with do |request|
+      request.headers["Content-Type"].start_with?("multipart/form-data; boundary=") &&
+        request.body.include?(file_part) && request.body.include?(options_part)
+    end.to_return(status: 201, body: '{"id":46}')
+
+    xml = PennylaneClient::Upload.new(StringIO.new("<Invoice/>"), filename: "invoice.xml")
+
+    assert_equal({ id: 46 }, invoices.import_e_invoice(xml, invoice_options: { customer_id: 12 }))
+  end
+end

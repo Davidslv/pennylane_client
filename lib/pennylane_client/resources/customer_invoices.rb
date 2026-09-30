@@ -28,6 +28,21 @@ module PennylaneClient
       # Deletes a draft invoice or draft credit note. Returns true.
       def delete(id) = call(:deleteCustomerInvoices, id:)
 
+      # Creates an invoice from a quote, which gives it its customer and
+      # lines. Pennylane requires `quote_id:` and `draft:`.
+      def create_from_quote(**attributes) = call(:createCustomerInvoiceFromQuote, **attributes)
+
+      # Imports an invoice issued elsewhere, with its PDF already uploaded
+      # (`file_attachment_id:`). Pennylane stores the amounts exactly as
+      # sent, so they must add up.
+      def import(**attributes) = call(:importCustomerInvoices, **attributes)
+
+      # Imports an invoice from an e-invoice file: a Factur-X PDF, or a UBL or
+      # CII XML invoice (alpha at Pennylane). `file` is a File, IO, Pathname
+      # or PennylaneClient::Upload and streams from disk. Hash and Array
+      # fields (`invoice_options:`, `installments:`) go as JSON parts.
+      def import_e_invoice(file, **fields) = call(:createCustomerInvoiceEInvoiceImport, file:, **fields)
+
       # Turns a draft into a finalized invoice, which can no longer be edited.
       def finalize(id) = call(:finalizeCustomerInvoice, id:)
 

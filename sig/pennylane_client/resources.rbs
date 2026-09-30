@@ -28,6 +28,12 @@ module PennylaneClient
 
       def delete: (Integer id) -> result
 
+      def create_from_quote: (**untyped attributes) -> item
+
+      def import: (**untyped attributes) -> item
+
+      def import_e_invoice: (untyped file, **untyped fields) -> item
+
       def finalize: (Integer id) -> item
 
       def mark_as_paid: (Integer id) -> result
