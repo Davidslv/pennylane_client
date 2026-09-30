@@ -96,6 +96,9 @@ module PennylaneClient
     # The named Transactions operations (Resources::Transactions).
     def transactions = @transactions ||= Resources::Transactions.new(self)
 
+    # The named Quotes operations (Resources::Quotes).
+    def quotes = @quotes ||= Resources::Quotes.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

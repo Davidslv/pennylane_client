@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 89 of 177 live |
+| Named | 99 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -274,21 +274,21 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `createPurchaseRequestImport` | POST | `/purchase_requests/imports` | yes | no | unverified: no sandbox access |  |
 | `getPurchaseRequest` | GET | `/purchase_requests/{id}` | yes | no | unverified: no sandbox access |  |
 
-## Quotes (0 of 11 named)
+## Quotes (10 of 11 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
 | `getQuoteChanges` | GET | `/changelogs/quotes` | yes | no | unverified: no sandbox access |  |
-| `listQuotes` | GET | `/quotes` | yes | no | unverified: no sandbox access |  |
-| `postQuotes` | POST | `/quotes` | yes | no | unverified: no sandbox access |  |
-| `getQuote` | GET | `/quotes/{id}` | yes | no | unverified: no sandbox access |  |
-| `updateQuote` | PUT | `/quotes/{id}` | yes | no | unverified: no sandbox access |  |
-| `sendByEmailQuote` | POST | `/quotes/{id}/send_by_email` | yes | no | unverified: no sandbox access |  |
-| `updateStatusQuote` | PUT | `/quotes/{id}/update_status` | yes | no | unverified: no sandbox access |  |
-| `getQuoteAppendices` | GET | `/quotes/{quote_id}/appendices` | yes | no | unverified: no sandbox access |  |
-| `postQuoteAppendices` | POST | `/quotes/{quote_id}/appendices` | yes | no | unverified: no sandbox access |  |
-| `getQuoteInvoiceLineSections` | GET | `/quotes/{quote_id}/invoice_line_sections` | yes | no | unverified: no sandbox access |  |
-| `getQuoteInvoiceLines` | GET | `/quotes/{quote_id}/invoice_lines` | yes | no | unverified: no sandbox access |  |
+| `listQuotes` | GET | `/quotes` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `postQuotes` | POST | `/quotes` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_create_encodes_the_dates_and_amounts` |
+| `getQuote` | GET | `/quotes/{id}` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_find` |
+| `updateQuote` | PUT | `/quotes/{id}` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_update_sends_only_the_given_attributes` |
+| `sendByEmailQuote` | POST | `/quotes/{id}/send_by_email` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_send_by_email_to_given_recipients` |
+| `updateStatusQuote` | PUT | `/quotes/{id}/update_status` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_update_status` |
+| `getQuoteAppendices` | GET | `/quotes/{quote_id}/appendices` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_appendices_walks_every_page` |
+| `postQuoteAppendices` | POST | `/quotes/{quote_id}/appendices` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_upload_appendix_streams_the_file` |
+| `getQuoteInvoiceLineSections` | GET | `/quotes/{quote_id}/invoice_line_sections` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_invoice_line_sections_walks_every_page` |
+| `getQuoteInvoiceLines` | GET | `/quotes/{quote_id}/invoice_lines` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_invoice_lines_walks_every_page` |
 
 ## Supplier Invoices (14 of 14 named)
 
