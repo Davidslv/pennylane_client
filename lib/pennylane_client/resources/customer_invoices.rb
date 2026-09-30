@@ -50,7 +50,7 @@ module PennylaneClient
       #   calls alpha. It may change in a minor release (README, Stability).
       #   A Factur-X PDF is stable.
       def import_e_invoice(file, retry: nil, **fields)
-        call(:createCustomerInvoiceEInvoiceImport, file:, retry:, **fields)
+        call_on(:createCustomerInvoiceEInvoiceImport, { file: }, retry:, **fields)
       end
 
       # Turns a draft into a finalized invoice, which can no longer be edited.

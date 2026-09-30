@@ -22,7 +22,7 @@ module PennylaneClient
       #   file_attachments.upload(Pathname("receipt.pdf"))[:id]
       #   file_attachments.upload(PennylaneClient::Upload.new(io, filename: "receipt.pdf",
       #                                                           content_type: "application/pdf"))
-      def upload(file, retry: nil, **fields) = call(:postFileAttachments, file:, retry:, **fields)
+      def upload(file, retry: nil, **fields) = call_on(:postFileAttachments, { file: }, retry:, **fields)
     end
   end
 end

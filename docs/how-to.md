@@ -192,6 +192,8 @@ xml = PennylaneClient::Upload.new(StringIO.new(File.read("invoice.xml")),
 client.customer_invoices.import_e_invoice(xml, invoice_options: { customer_id: 42 })
 ```
 
+The file is always positional. A `file:` keyword next to it raises `ArgumentError`, as a keyword naming a positional id does.
+
 A file you open stays open; the client closes only what it opened from a `Pathname`. A `Pathname` is checked before anything is sent: a missing file raises `Errno::ENOENT`, and a directory or a file you cannot read raises `ArgumentError`. An IO must respond to `size`, so a pipe cannot be uploaded.
 
 ## Rotate tokens

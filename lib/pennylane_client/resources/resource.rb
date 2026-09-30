@@ -29,7 +29,8 @@ module PennylaneClient
 
       # `path` holds the path parameters, `params` the caller's keywords. A
       # keyword naming a path parameter raises: merged, it would replace the
-      # positional id, and `update(1, id: 2)` would write record 2.
+      # positional id, and `update(1, id: 2)` would write record 2. An
+      # upload passes its positional `file` here too, for the same reason.
       def call_on(operation_id, path, **params)
         @client.call(operation_id, **path, **apart(operation_id, path, params))
       end

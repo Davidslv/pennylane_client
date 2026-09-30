@@ -41,7 +41,7 @@ module PennylaneClient
       #   calls alpha. It may change in a minor release (README, Stability).
       #   A Factur-X PDF is stable.
       def import_e_invoice(file, retry: nil, **fields)
-        call(:createSupplierInvoiceEInvoiceImport, file:, retry:, **fields)
+        call_on(:createSupplierInvoiceEInvoiceImport, { file: }, retry:, **fields)
       end
 
       # Updates a supplier invoice. Only the attributes you pass change.
