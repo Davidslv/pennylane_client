@@ -15,7 +15,7 @@ module PennylaneClient
       # disk. `filename:` overrides the name Pennylane stores.
       #
       #   file_attachments.upload(Pathname("receipt.pdf"))[:id]
-      def upload(file, **fields) = call(:postFileAttachments, file:, **fields)
+      def upload(file, retry: nil, **fields) = call(:postFileAttachments, file:, retry:, **fields)
     end
   end
 end

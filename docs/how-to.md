@@ -63,11 +63,15 @@ A call makes at most 3 attempts, with a random backoff (up to 0.5 s, then 1 s), 
 PennylaneClient.new(token:, max_retry_wait: 10)
 ```
 
-When you know a write is safe to repeat, opt in per call. `retry` is not sent to Pennylane:
+When you know a write is safe to repeat, opt in per call. Every named write (every named method that is not a GET) takes the same `retry:` keyword as `client.call`. It defaults to `nil`, which keeps the rule above; `:always` opts in; anything else raises `ArgumentError`. `retry` is never sent to Pennylane:
 
 ```ruby
+client.category_groups.update(7, label: "Sales", retry: :always)
+client.supplier_invoices.categorize(42, categories, retry: :always)
 client.call(:putCategoryGroup, id: 7, label: "Sales", retry: :always)
 ```
+
+A named read takes no `retry:`: a GET is retried already.
 
 ### Share the budget across processes
 

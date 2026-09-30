@@ -26,12 +26,12 @@ module PennylaneClient
       # only and defaults to "cash_out".
       #
       #   categories.create(label: "Marketing", category_group_id: 3, analytical_code: "MKT")
-      def create(**attributes) = call(:postCategories, **attributes)
+      def create(retry: nil, **attributes) = call(:postCategories, retry:, **attributes)
 
       # Updates a category: `label:`, `analytical_code:` and `direction:`,
       # the only fields Pennylane accepts here. `category_group_id:` is not
       # one of them.
-      def update(id, **attributes) = call_on(:updateCategory, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:updateCategory, { id: }, retry:, **attributes)
     end
   end
 end

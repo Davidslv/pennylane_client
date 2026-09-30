@@ -38,6 +38,8 @@ client.products.find(3)
 client.call(:getMe)   # any operation, by its Pennylane operationId
 ```
 
+A write is never sent twice after a 5xx or a timeout. When one is safe to repeat, pass `retry: :always` to its named method or to `client.call`; see [retries](docs/how-to.md#retries-and-the-rate-limit).
+
 Operations with a Ruby name are marked `named` in the [checklist](docs/api/CHECKLIST.md). Every other operation is reachable through `client.call` until it gets one.
 
 Responses are frozen Hashes with symbol keys, exactly as Pennylane sends them. Money stays a decimal string (`"230.32"`).

@@ -31,13 +31,13 @@ module PennylaneClient
       #                                payment_conditions: "30_days", payment_method: "offline",
       #                                recurring_rule: { type: "monthly", interval: 1, day_of_month: 1 },
       #                                customer_invoice_data: { invoice_lines: [line] })
-      def create(**attributes) = call(:postBillingSubscriptions, **attributes)
+      def create(retry: nil, **attributes) = call(:postBillingSubscriptions, retry:, **attributes)
 
       # Updates a billing subscription. Only the attributes you pass change.
       # `stop: true` stops one in progress and `stop: false` resumes it.
       # Invoice lines and sections change through `create`, `update` and
       # `delete` lists inside `customer_invoice_data:`.
-      def update(id, **attributes) = call_on(:putBillingSubscriptions, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:putBillingSubscriptions, { id: }, retry:, **attributes)
 
       # The invoice lines of a billing subscription, as an
       # Enumerator::Lazy of Hashes.

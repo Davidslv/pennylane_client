@@ -29,12 +29,12 @@ module PennylaneClient
       #   ledger_entries.create(date: Date.today, label: "Rent", journal_id: 4,
       #                         ledger_entry_lines: [{ debit: "1200", credit: "0", ledger_account_id: 21 },
       #                                              { debit: "0", credit: "1200", ledger_account_id: 7 }])
-      def create(**attributes) = call(:postLedgerEntries, **attributes)
+      def create(retry: nil, **attributes) = call(:postLedgerEntries, retry:, **attributes)
 
       # Updates a ledger entry. Only the attributes you pass change.
       # `ledger_entry_lines:` is `{ create: [...], update: [...], delete: [...] }`,
       # not a plain Array, and the result must still balance.
-      def update(id, **attributes) = call_on(:putLedgerEntries, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:putLedgerEntries, { id: }, retry:, **attributes)
 
       # The entry's lines, as an Enumerator::Lazy of Hashes. The filter
       # takes `ledger_account_id`; `sort:` takes `id`.

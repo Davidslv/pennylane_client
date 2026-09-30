@@ -27,14 +27,14 @@ module PennylaneClient
       #
       #   hook = webhook_subscriptions.create(callback_url: "https://example.com/hooks", events: ["dms_file.created"])
       #   store(hook[:secret])
-      def create(**attributes) = call(:postWebhookSubscriptions, **attributes)
+      def create(retry: nil, **attributes) = call(:postWebhookSubscriptions, retry:, **attributes)
 
       # Updates a webhook subscription: `callback_url:`, `events:` or
       # `enabled:`. It takes no secret; a new subscription gets a new one.
-      def update(id, **attributes) = call_on(:putWebhookSubscription, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:putWebhookSubscription, { id: }, retry:, **attributes)
 
       # Deletes a webhook subscription.
-      def delete(id) = call(:deleteWebhookSubscription, id:)
+      def delete(id, retry: nil) = call(:deleteWebhookSubscription, id:, retry:)
     end
   end
 end

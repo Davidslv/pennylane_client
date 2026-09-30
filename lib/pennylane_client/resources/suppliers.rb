@@ -19,10 +19,10 @@ module PennylaneClient
 
       # Creates a supplier. Pennylane requires `name:`. Raises ConflictError
       # when the supplier already exists.
-      def create(**attributes) = call(:postSupplier, **attributes)
+      def create(retry: nil, **attributes) = call(:postSupplier, retry:, **attributes)
 
       # Updates a supplier. Only the attributes you pass change.
-      def update(id, **attributes) = call_on(:putSupplier, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:putSupplier, { id: }, retry:, **attributes)
 
       # The analytical categories the supplier is split across, as an
       # Enumerator::Lazy of Hashes. No `sort:`.
@@ -33,8 +33,8 @@ module PennylaneClient
       # to 1.
       #
       #   suppliers.categorize(12, [{ id: 426, weight: "0.6575" }, { id: 427, weight: "0.3425" }])
-      def categorize(supplier_id, categories)
-        call(:putSupplierCategories, categories, supplier_id:)
+      def categorize(supplier_id, categories, retry: nil)
+        call(:putSupplierCategories, categories, supplier_id:, retry:)
       end
     end
   end

@@ -21,7 +21,7 @@ module PennylaneClient
       # `label:`.
       #
       #   journals.create(code: "BQB", label: "Second bank")
-      def create(**attributes) = call(:postJournals, **attributes)
+      def create(retry: nil, **attributes) = call(:postJournals, retry:, **attributes)
     end
   end
 end

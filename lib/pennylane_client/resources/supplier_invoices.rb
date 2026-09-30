@@ -30,25 +30,27 @@ module PennylaneClient
       # de-duplicates supplier invoice files. It raises ConflictError too
       # while the uploaded file is not ready yet; try again in a few
       # seconds. The client never retries a 409.
-      def import(**attributes) = call(:importSupplierInvoice, **attributes)
+      def import(retry: nil, **attributes) = call(:importSupplierInvoice, retry:, **attributes)
 
       # Imports a supplier invoice from an e-invoice file: a Factur-X PDF, or
       # a UBL or CII XML invoice (alpha at Pennylane). `file` is a File, IO,
       # Pathname or PennylaneClient::Upload and streams from disk. Hash and
       # Array fields (`invoice_options:`, `override_invoice_lines:`) go as
       # JSON parts.
-      def import_e_invoice(file, **fields) = call(:createSupplierInvoiceEInvoiceImport, file:, **fields)
+      def import_e_invoice(file, retry: nil, **fields)
+        call(:createSupplierInvoiceEInvoiceImport, file:, retry:, **fields)
+      end
 
       # Updates a supplier invoice. Only the attributes you pass change.
       # `invoice_lines:` takes `{ create:, update:, delete: }`.
-      def update(id, **attributes) = call_on(:putSupplierInvoice, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:putSupplierInvoice, { id: }, retry:, **attributes)
 
       # Validates the invoice's accounting, which makes it complete.
-      def validate_accounting(id) = call(:ValidateAccountingSupplierInvoice, id:)
+      def validate_accounting(id, retry: nil) = call(:ValidateAccountingSupplierInvoice, id:, retry:)
 
       # Sets the payment status, `"paid"` or `"to_be_paid"`. Returns true.
-      def update_payment_status(supplier_invoice_id, payment_status:)
-        call(:updateSupplierInvoicePaymentStatus, supplier_invoice_id:, payment_status:)
+      def update_payment_status(supplier_invoice_id, payment_status:, retry: nil)
+        call(:updateSupplierInvoicePaymentStatus, supplier_invoice_id:, payment_status:, retry:)
       end
 
       # Moves an invoice received through the PA along its e-invoicing
@@ -58,30 +60,30 @@ module PennylaneClient
       # ValidationError.
       #
       #   invoices.update_e_invoice_status(42, status: "disputed", reason: "incorrect_vat_rate")
-      def update_e_invoice_status(supplier_invoice_id, status:, **fields)
-        call_on(:putSupplierInvoiceEInvoiceStatus, { supplier_invoice_id: }, status:, **fields)
+      def update_e_invoice_status(supplier_invoice_id, status:, retry: nil, **fields)
+        call_on(:putSupplierInvoiceEInvoiceStatus, { supplier_invoice_id: }, status:, retry:, **fields)
       end
 
       # Links one purchase request to the invoice. Call it once per purchase
       # request. Returns true.
-      def link_purchase_request(supplier_invoice_id, purchase_request_id:)
-        call(:postSupplierInvoiceLinkedPurchaseRequests, supplier_invoice_id:, purchase_request_id:)
+      def link_purchase_request(supplier_invoice_id, purchase_request_id:, retry: nil)
+        call(:postSupplierInvoiceLinkedPurchaseRequests, supplier_invoice_id:, purchase_request_id:, retry:)
       end
 
       # Matches one bank transaction to the invoice. Call it once per
       # transaction; a transaction can match several invoices. Returns true.
       #
       #   invoices.match_transaction(42, transaction_id: 9)
-      def match_transaction(supplier_invoice_id, transaction_id:)
-        call(:postSupplierInvoiceMatchedTransactions, supplier_invoice_id:, transaction_id:)
+      def match_transaction(supplier_invoice_id, transaction_id:, retry: nil)
+        call(:postSupplierInvoiceMatchedTransactions, supplier_invoice_id:, transaction_id:, retry:)
       end
 
       # Unmatches the transaction `transaction_id` from the invoice. Returns
       # true.
       #
       #   invoices.unmatch_transaction(42, transaction_id: 9)
-      def unmatch_transaction(supplier_invoice_id, transaction_id:)
-        call(:deleteSupplierInvoiceMatchedTransactions, supplier_invoice_id:, id: transaction_id)
+      def unmatch_transaction(supplier_invoice_id, transaction_id:, retry: nil)
+        call(:deleteSupplierInvoiceMatchedTransactions, supplier_invoice_id:, id: transaction_id, retry:)
       end
 
       # The lists below hang off one invoice. Each returns every item as an
@@ -112,8 +114,8 @@ module PennylaneClient
       # to 1.
       #
       #   invoices.categorize(42, [{ id: 426, weight: "0.6575" }, { id: 427, weight: "0.3425" }])
-      def categorize(supplier_invoice_id, categories)
-        call(:putSupplierInvoiceCategories, categories, supplier_invoice_id:)
+      def categorize(supplier_invoice_id, categories, retry: nil)
+        call(:putSupplierInvoiceCategories, categories, supplier_invoice_id:, retry:)
       end
     end
   end

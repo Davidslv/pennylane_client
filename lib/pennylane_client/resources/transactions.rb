@@ -29,12 +29,12 @@ module PennylaneClient
       # optional.
       #
       #   transactions.create(bank_account_id: 3, label: "Card payment", date: Date.today, amount: "-12.50")
-      def create(**attributes) = call(:createTransaction, **attributes)
+      def create(retry: nil, **attributes) = call(:createTransaction, retry:, **attributes)
 
       # Sets the transaction's third party: pass either `customer_id:` or
       # `supplier_id:`, not both. Pennylane accepts nothing else here. Both
       # are nullable in the contract, so `nil` sends `null`.
-      def update(id, **attributes) = call_on(:updateTransaction, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:updateTransaction, { id: }, retry:, **attributes)
 
       # The analytical categories the transaction is split across, as an
       # Enumerator::Lazy of Hashes. No `sort:`.
@@ -47,8 +47,8 @@ module PennylaneClient
       # to 1, and categories from different groups can be mixed.
       #
       #   transactions.categorize(9, [{ id: 59, weight: "0.5" }, { id: 33, weight: "0.5" }, { id: 65, weight: "1" }])
-      def categorize(transaction_id, categories)
-        call(:putTransactionCategories, categories, transaction_id:)
+      def categorize(transaction_id, categories, retry: nil)
+        call(:putTransactionCategories, categories, transaction_id:, retry:)
       end
 
       # The customer and supplier invoices matched to the transaction, as an

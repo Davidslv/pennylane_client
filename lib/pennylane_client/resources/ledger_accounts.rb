@@ -23,11 +23,11 @@ module PennylaneClient
       # with 411 a company customer.
       #
       #   ledger_accounts.create(number: "6064", label: "Office supplies")
-      def create(**attributes) = call(:postLedgerAccounts, **attributes)
+      def create(retry: nil, **attributes) = call(:postLedgerAccounts, retry:, **attributes)
 
       # Updates a ledger account: `label:` and `letterable:`, the only two
       # fields Pennylane accepts here.
-      def update(id, **attributes) = call_on(:updateLedgerAccount, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:updateLedgerAccount, { id: }, retry:, **attributes)
     end
   end
 end
