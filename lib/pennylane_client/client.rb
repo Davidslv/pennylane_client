@@ -68,6 +68,10 @@ module PennylaneClient
     # The named Customer Invoices operations (Resources::CustomerInvoices).
     def customer_invoices = @customer_invoices ||= Resources::CustomerInvoices.new(self)
 
+    # The named Customers operations, company and individual
+    # (Resources::Customers).
+    def customers = @customers ||= Resources::Customers.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

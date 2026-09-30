@@ -68,5 +68,39 @@ module PennylaneClient
 
       def categorize: (Integer customer_invoice_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
     end
+
+    class Customers < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (customer_type: "company" | "individual", **untyped attributes) -> item
+
+      def create_company: (**untyped attributes) -> item
+
+      def find_company: (Integer id) -> item
+
+      def update_company: (Integer id, **untyped attributes) -> item
+
+      def create_individual: (**untyped attributes) -> item
+
+      def find_individual: (Integer id) -> item
+
+      def update_individual: (Integer id, **untyped attributes) -> item
+
+      def contacts: (Integer customer_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def find_contact: (Integer customer_id, Integer id) -> item
+
+      def create_contact: (Integer customer_id, **untyped attributes) -> item
+
+      def update_contact: (Integer customer_id, Integer id, **untyped attributes) -> item
+
+      def delete_contact: (Integer customer_id, Integer id) -> result
+
+      def categories: (Integer customer_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def categorize: (Integer customer_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
+    end
   end
 end

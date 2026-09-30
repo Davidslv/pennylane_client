@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 24 of 177 live |
+| Named | 40 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (0 of 3 named)
@@ -131,25 +131,25 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `sendToPaCustomerInvoice` | POST | `/customer_invoices/{id}/send_to_pa` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_send_to_pa` |
 | `updateImportedCustomerInvoice` | PUT | `/customer_invoices/{id}/update_imported` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_update_imported` |
 
-## Customers (0 of 15 named)
+## Customers (15 of 15 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `postCompanyCustomer` | POST | `/company_customers` | yes | no | unverified: no sandbox access |  |
-| `getCompanyCustomer` | GET | `/company_customers/{id}` | yes | no | unverified: no sandbox access |  |
-| `putCompanyCustomer` | PUT | `/company_customers/{id}` | yes | no | unverified: no sandbox access |  |
-| `getCustomers` | GET | `/customers` | yes | no | unverified: no sandbox access |  |
-| `getCustomerCategories` | GET | `/customers/{customer_id}/categories` | yes | no | unverified: no sandbox access |  |
-| `putCustomerCategories` | PUT | `/customers/{customer_id}/categories` | yes | no | unverified: no sandbox access |  |
-| `getCustomerContacts` | GET | `/customers/{customer_id}/contacts` | yes | no | unverified: no sandbox access |  |
-| `postCustomerContact` | POST | `/customers/{customer_id}/contacts` | yes | no | unverified: no sandbox access |  |
-| `deleteCustomerContact` | DELETE | `/customers/{customer_id}/contacts/{id}` | yes | no | unverified: no sandbox access |  |
-| `getCustomerContact` | GET | `/customers/{customer_id}/contacts/{id}` | yes | no | unverified: no sandbox access |  |
-| `putCustomerContact` | PUT | `/customers/{customer_id}/contacts/{id}` | yes | no | unverified: no sandbox access |  |
-| `getCustomer` | GET | `/customers/{id}` | yes | no | unverified: no sandbox access |  |
-| `postIndividualCustomer` | POST | `/individual_customers` | yes | no | unverified: no sandbox access |  |
-| `getIndividualCustomer` | GET | `/individual_customers/{id}` | yes | no | unverified: no sandbox access |  |
-| `putIndividualCustomer` | PUT | `/individual_customers/{id}` | yes | no | unverified: no sandbox access |  |
+| `postCompanyCustomer` | POST | `/company_customers` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_create_company` |
+| `getCompanyCustomer` | GET | `/company_customers/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_find_company` |
+| `putCompanyCustomer` | PUT | `/company_customers/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_update_company` |
+| `getCustomers` | GET | `/customers` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `getCustomerCategories` | GET | `/customers/{customer_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_categories_walks_every_page` |
+| `putCustomerCategories` | PUT | `/customers/{customer_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_categorize_sends_the_categories_as_a_bare_array` |
+| `getCustomerContacts` | GET | `/customers/{customer_id}/contacts` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_contacts_walks_every_page` |
+| `postCustomerContact` | POST | `/customers/{customer_id}/contacts` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_create_contact` |
+| `deleteCustomerContact` | DELETE | `/customers/{customer_id}/contacts/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_delete_contact_returns_true_on_no_content` |
+| `getCustomerContact` | GET | `/customers/{customer_id}/contacts/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_find_contact` |
+| `putCustomerContact` | PUT | `/customers/{customer_id}/contacts/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_update_contact` |
+| `getCustomer` | GET | `/customers/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_find` |
+| `postIndividualCustomer` | POST | `/individual_customers` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_create_individual` |
+| `getIndividualCustomer` | GET | `/individual_customers/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_find_individual` |
+| `putIndividualCustomer` | PUT | `/individual_customers/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_update_individual` |
 
 ## Exports (0 of 6 named)
 
@@ -174,12 +174,12 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `company-fiscal-years` | GET | `/fiscal_years` | yes | no | unverified: no sandbox access |  |
 
-## Hidden (1 of 2 named)
+## Hidden (2 of 2 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
 | `markAsPaidCustomerInvoiceInstallment` | PUT | `/customer_invoices/{customer_invoice_id}/installments/{id}/mark_as_paid` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_mark_installment_as_paid` |
-| `postCustomer` | POST | `/customers` | yes | no | unverified: no sandbox access |  |
+| `postCustomer` | POST | `/customers` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_create_sends_the_customer_type_with_the_attributes` |
 
 ## Journals (0 of 3 named)
 

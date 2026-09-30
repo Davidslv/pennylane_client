@@ -19,11 +19,15 @@ module PennylaneClient
 
     def customer_invoices: () -> Resources::CustomerInvoices
 
+    def customers: () -> Resources::Customers
+
     def inspect: () -> String
 
     private
 
     @customer_invoices: Resources::CustomerInvoices?
+
+    @customers: Resources::Customers?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end

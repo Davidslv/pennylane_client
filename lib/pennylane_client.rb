@@ -22,6 +22,7 @@ require_relative "pennylane_client/paginator"
 require_relative "pennylane_client/configuration"
 require_relative "pennylane_client/resources/resource"
 require_relative "pennylane_client/resources/customer_invoices"
+require_relative "pennylane_client/resources/customers"
 require_relative "pennylane_client/client"
 
 # Unofficial Ruby client for the Pennylane Company API v2.
