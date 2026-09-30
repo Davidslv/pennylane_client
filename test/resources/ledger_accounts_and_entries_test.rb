@@ -9,6 +9,9 @@ require "date"
 # operation's reference page.
 class LedgerAccountsAndEntriesTest < Minitest::Test
   API = "https://app.pennylane.com/api/external/v2"
+  # A balanced pair of lines as the Encoder sends BigDecimal amounts.
+  SENT_LINES = [{ debit: "1200.5", credit: "0.0", ledger_account_id: 613 },
+                { debit: "0.0", credit: "1200.5", ledger_account_id: 512 }].freeze
 
   def client = @client ||= PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new)
   def accounts = client.ledger_accounts
@@ -80,17 +83,17 @@ class LedgerAccountsAndEntriesTest < Minitest::Test
 
   # names: postLedgerEntries
   def test_entries_create_encodes_the_date_and_amounts
-    lines = [{ debit: "1200.5", credit: "0.0", ledger_account_id: 613 },
-             { debit: "0.0", credit: "1200.5", ledger_account_id: 512 }]
-    body = { date: "2026-03-31", label: "Rent", journal_id: 4, ledger_entry_lines: lines }
-    stub_request(:post, "#{API}/ledger_entries").with(body: JSON.generate(body)).to_return(status: 201, body: '{"id":30}')
+    body = { date: "2026-03-31", label: "Rent", journal_id: 4, ledger_entry_lines: SENT_LINES }
+    stub_request(:post, "#{API}/ledger_entries").with(body: JSON.generate(body))
+                                                .to_return(status: 201, body: '{"id":30}')
 
     amount = BigDecimal("1200.5")
+    zero = BigDecimal(0)
+    given = [{ debit: amount, credit: zero, ledger_account_id: 613 },
+             { debit: zero, credit: amount, ledger_account_id: 512 }]
+
     assert_equal({ id: 30 }, entries.create(date: Date.new(2026, 3, 31), label: "Rent", journal_id: 4,
-                                            ledger_entry_lines: [
-                                              { debit: amount, credit: BigDecimal(0), ledger_account_id: 613 },
-                                              { debit: BigDecimal(0), credit: amount, ledger_account_id: 512 }
-                                            ]))
+                                            ledger_entry_lines: given))
   end
 
   # names: putLedgerEntries
@@ -104,8 +107,8 @@ class LedgerAccountsAndEntriesTest < Minitest::Test
 
   # names: getLedgerEntriesLedgerEntryLines
   def test_entries_lines_walks_every_page
-    stub_request(:get, "#{API}/ledger_entries/30/ledger_entry_lines").with(query: { sort: "id", limit: "100" })
-                                                                      .to_return(status: 200, body: page(91, 92))
+    stub_request(:get, "#{API}/ledger_entries/30/ledger_entry_lines")
+      .with(query: { sort: "id", limit: "100" }).to_return(status: 200, body: page(91, 92))
 
     assert_equal [91, 92], entries.lines(30, sort: "id").map { _1[:id] }.to_a
   end

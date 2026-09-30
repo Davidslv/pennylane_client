@@ -129,6 +129,9 @@ module PennylaneClient
     # (Resources::LedgerEntryLines).
     def ledger_entry_lines = @ledger_entry_lines ||= Resources::LedgerEntryLines.new(self)
 
+    # The named Trial balance operation (Resources::TrialBalance).
+    def trial_balance = @trial_balance ||= Resources::TrialBalance.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

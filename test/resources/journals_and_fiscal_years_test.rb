@@ -9,6 +9,7 @@ class JournalsAndFiscalYearsTest < Minitest::Test
   API = "https://app.pennylane.com/api/external/v2"
 
   def client = @client ||= PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new)
+  def journals = client.journals
 
   # One page of items with ids, the last one.
   def page(*ids) = JSON.generate({ items: ids.map { { id: _1 } }, has_more: false, next_cursor: nil })
@@ -28,14 +29,14 @@ class JournalsAndFiscalYearsTest < Minitest::Test
     stub_request(:get, "#{API}/journals").with(query:).to_return(status: 200, body: first)
     stub_request(:get, "#{API}/journals").with(query: query.merge(cursor: "c2")).to_return(status: 200, body: page(2))
 
-    assert_equal [1, 2], client.journals.list(filter: bank, sort: "-id").map { _1[:id] }.to_a
+    assert_equal [1, 2], journals.list(filter: bank, sort: "-id").map { _1[:id] }.to_a
   end
 
   # names: getJournal
   def test_journals_find
     stub_request(:get, "#{API}/journals/4").to_return(status: 200, body: '{"id":4,"code":"HA"}')
 
-    assert_equal({ id: 4, code: "HA" }, client.journals.find(4))
+    assert_equal({ id: 4, code: "HA" }, journals.find(4))
   end
 
   # names: postJournals
@@ -43,7 +44,7 @@ class JournalsAndFiscalYearsTest < Minitest::Test
     stub_request(:post, "#{API}/journals").with(body: '{"code":"BQ2","label":"Second bank"}')
                                           .to_return(status: 201, body: '{"id":5,"code":"BQ2"}')
 
-    assert_equal({ id: 5, code: "BQ2" }, client.journals.create(code: "BQ2", label: "Second bank"))
+    assert_equal({ id: 5, code: "BQ2" }, journals.create(code: "BQ2", label: "Second bank"))
   end
 
   # names: company-fiscal-years

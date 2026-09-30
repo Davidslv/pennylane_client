@@ -322,5 +322,9 @@ module PennylaneClient
 
       def categorize: (Integer ledger_entry_line_id, Array[{ id: Integer, weight: untyped }] categories) -> item
     end
+
+    class TrialBalance < Resource
+      def list: (period_start: untyped, period_end: untyped, **untyped params) -> Enumerator::Lazy[item, void]
+    end
   end
 end

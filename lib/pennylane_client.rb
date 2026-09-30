@@ -41,6 +41,7 @@ require_relative "pennylane_client/resources/file_attachments"
 require_relative "pennylane_client/resources/ledger_accounts"
 require_relative "pennylane_client/resources/ledger_entries"
 require_relative "pennylane_client/resources/ledger_entry_lines"
+require_relative "pennylane_client/resources/trial_balance"
 require_relative "pennylane_client/client"
 
 # Unofficial Ruby client for the Pennylane Company API v2.
