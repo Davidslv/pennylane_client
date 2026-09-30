@@ -87,14 +87,14 @@ module SnapshotContract
       spec.fetch("paths").flat_map do |path, item|
         shared = item.fetch("parameters", [])
         item.slice(*HTTP_METHODS).map do |verb, operation|
-          identity(verb, path, operation)
+          identity(verb, path, operation, source_url)
             .merge(schemas(operation, shared))
             .merge("source_url" => source_url)
         end
       end
     end
 
-    def self.identity(verb, path, operation)
+    def self.identity(verb, path, operation, source_url)
       {
         "operation_id" => operation.fetch("operationId"),
         "method" => verb.upcase,
@@ -102,7 +102,7 @@ module SnapshotContract
         "summary" => operation["summary"],
         "description" => operation["description"],
         "tags" => operation.fetch("tags", []),
-        "scopes" => scopes(operation),
+        "scopes" => scopes(operation, source_url),
         "deprecated" => operation.fetch("deprecated", false)
       }
     end
@@ -115,8 +115,19 @@ module SnapshotContract
       }
     end
 
-    def self.scopes(operation)
-      operation.fetch("security", []).flat_map { |requirement| requirement.fetch("oauth2", []) }.uniq.sort
+    # One sorted group per security requirement, in source order. The groups
+    # are alternatives; flattening them would lose which scopes go together.
+    # Pages only use the oauth2 scheme, so any other name is refused rather
+    # than dropped.
+    def self.scopes(operation, source_url)
+      operation.fetch("security", []).map do |requirement|
+        unknown = requirement.keys - ["oauth2"]
+        unless unknown.empty?
+          raise Error, "#{source_url}: #{operation["operationId"]} uses unknown security scheme #{unknown.join(", ")}"
+        end
+
+        requirement.fetch("oauth2", []).sort
+      end
     end
 
     def self.sorted(value)
@@ -192,9 +203,17 @@ module SnapshotContract
       body = @fetch.call(FULL_SPEC_URL)
       return @warn.call("#{FULL_SPEC_URL} is gone; skipping the cross-check") unless body
 
-      full = Normaliser.operations(JSON.parse(body), source_url: FULL_SPEC_URL)
-      difference = CrossCheck.diff(documented, full)
+      full = parse_full_spec(body) or return
+      difference = CrossCheck.diff(documented, Normaliser.operations(full, source_url: FULL_SPEC_URL))
       raise Error, difference if difference
+    end
+
+    # A moved URL can answer 200 with an HTML page; treat that as gone too.
+    def parse_full_spec(body)
+      JSON.parse(body)
+    rescue JSON::ParserError
+      @warn.call("#{FULL_SPEC_URL} is not JSON; skipping the cross-check")
+      nil
     end
   end
 
@@ -273,6 +292,7 @@ module SnapshotContract
       when Net::HTTPNotFound, Net::HTTPGone then nil
       when Net::HTTPRedirection
         raise Error, "GET #{url}: too many redirects" if redirects.zero?
+        raise Error, "GET #{url}: redirect without a Location header" unless response["location"]
 
         get(URI.join(url, response["location"]).to_s, redirects: redirects - 1)
       else raise Error, "GET #{url}: HTTP #{response.code}"

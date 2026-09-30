@@ -16,7 +16,9 @@ Dated folders are kept, so "what did 0.3.0 target?" always has an answer.
 1. The documented surface: `https://pennylane.readme.io/llms.txt`, then every `/reference/*.md` page it lists, then the OpenAPI fragment embedded in each page. This is the primary source.
 2. `https://pennylane.readme.io/openapi/accounting.json`, the full spec. The docs do not link to it, so it is a cross-check only. If the operation sets differ the tool fails and prints both sides. If the URL is gone it warns and carries on.
 
-Nested keys are sorted, so Pennylane reordering a schema never shows as drift. A second run on the same day is byte-identical.
+Nested keys are sorted, so Pennylane reordering a schema never shows as drift. A second run on the same day is byte-identical unless Pennylane changed a page in between.
+
+`scopes` holds one group per security requirement. The groups are alternatives: any one group grants access. Operations are sorted by operationId with a plain byte sort, so the PascalCase `ValidateAccountingSupplierInvoice` comes first.
 
 ## Taking a new snapshot
 

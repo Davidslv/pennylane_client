@@ -51,7 +51,7 @@ class SnapshotContractFragmentTest < Minitest::Test
     assert_equal ["/api/external/v2/journals/{id}"], spec.fetch("paths").keys
   end
 
-  def test_extracts_the_fragment_from_a_four_backtick_fence_that_wraps_a_three_backtick_one
+  def test_extracts_the_fragment_from_a_four_backtick_fence_after_a_three_backtick_sample
     spec = SnapshotContract::Fragment.extract(page("postjournals"), source_url: "postjournals.md")
     operation = spec.dig("paths", "/api/external/v2/journals", "post")
 
@@ -109,9 +109,19 @@ class SnapshotContractNormaliserTest < Minitest::Test
     assert_equal "https://pennylane.readme.io/reference/getjournal.md", operation["source_url"]
   end
 
-  def test_scopes_are_every_oauth2_scope_sorted_once
-    assert_equal %w[journals:all journals:readonly], normalise("getjournal").first["scopes"]
-    assert_equal %w[file_attachments:all ledger], normalise("postledgerattachments").first["scopes"]
+  def test_scopes_keep_one_group_per_security_requirement
+    assert_equal [%w[journals:all journals:readonly]], normalise("getjournal").first["scopes"]
+    assert_equal [%w[ledger], %w[file_attachments:all ledger]], normalise("postledgerattachments").first["scopes"]
+  end
+
+  def test_refuses_a_security_scheme_other_than_oauth2
+    spec = { "paths" => { "/x" => { "get" => { "operationId" => "getX", "security" => [{ "apiKey" => [] }] } } } }
+
+    error = assert_raises(SnapshotContract::Error) do
+      SnapshotContract::Normaliser.operations(spec, source_url: "x.md")
+    end
+
+    assert_equal "x.md: getX uses unknown security scheme apiKey", error.message
   end
 
   def test_deprecated_defaults_to_false
@@ -208,6 +218,13 @@ class SnapshotContractSnapshotTest < Minitest::Test
 
     assert_equal 3, snapshot(served).operations.size
     assert_equal ["#{SnapshotContract::FULL_SPEC_URL} is gone; skipping the cross-check"], @warnings
+  end
+
+  def test_warns_and_carries_on_when_accounting_json_is_not_json
+    served = site.merge(SnapshotContract::FULL_SPEC_URL => "<html>Page not found</html>")
+
+    assert_equal 3, snapshot(served).operations.size
+    assert_equal ["#{SnapshotContract::FULL_SPEC_URL} is not JSON; skipping the cross-check"], @warnings
   end
 end
 
@@ -319,6 +336,14 @@ class SnapshotContractHTTPTest < Minitest::Test
     error = assert_raises(SnapshotContract::Error) { @http.get(URL) }
 
     assert_equal "GET #{URL}: too many redirects", error.message
+  end
+
+  def test_raises_on_a_redirect_without_a_location
+    stub_request(:get, URL).to_return(status: 301)
+
+    error = assert_raises(SnapshotContract::Error) { @http.get(URL) }
+
+    assert_equal "GET #{URL}: redirect without a Location header", error.message
   end
 
   def test_raises_on_any_other_status
