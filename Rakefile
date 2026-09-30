@@ -14,4 +14,11 @@ task :rbs do
   sh "rbs", "-I", "sig", "validate"
 end
 
+namespace :contract do
+  desc "Snapshot the Pennylane API contract into docs/api/contract/<date>/ (reaches pennylane.readme.io)"
+  task :snapshot do
+    ruby "tools/snapshot_contract.rb"
+  end
+end
+
 task default: %i[test rubocop rbs]

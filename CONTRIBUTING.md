@@ -21,6 +21,8 @@ You need Ruby 3.3 or newer and a recent Bundler (4.x recommended). The Gemfile u
 
 The repository does not commit a `Gemfile.lock`, as recommended for gems.
 
+`bundle exec rake contract:snapshot` takes a new [contract snapshot](docs/api/README.md) from Pennylane's docs site. It is not part of the gate and is the only task that reaches the network.
+
 ## What every change needs
 
 - **A test first.** Write the failing test, then the code. A change without a test is not done.
