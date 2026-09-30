@@ -119,6 +119,67 @@ class ChecklistNamedTestsTest < Minitest::Test
   end
 end
 
+# A marker is only true when its test sends the Operation. The suite checks
+# that (test/support/named_trace.rb), so a marker above `assert true` fails
+# the gate instead of counting as Named.
+class ChecklistNamedTraceTest < Minitest::Test
+  ROOT = File.expand_path("../..", __dir__)
+
+  FIXTURE = <<~RUBY
+    require "test_helper"
+
+    class JournalsTest < Minitest::Test
+      API = "https://app.pennylane.com/api/external/v2"
+
+      def client = PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new)
+
+      # names: getJournal
+      def test_find_that_sends_nothing
+        assert true
+      end
+
+      # names: getJournal
+      def test_find
+        stub_request(:get, "\#{API}/journals/7").to_return(status: 200, body: '{"id":7}')
+
+        assert_equal({ id: 7 }, client.journals.find(7))
+      end
+
+      # names: getJournal
+      def test_find_that_sends_another_operation
+        stub_request(:get, "\#{API}/journals?limit=100").to_return(status: 200, body: '{"items":[],"has_more":false}')
+
+        assert_empty client.journals.list.to_a
+      end
+    end
+  RUBY
+
+  def test_markers_lists_the_operations_each_test_names
+    source = "# names: getJournals\n# names: getJournal\ndef test_a\nend\n\ndef test_b\nend\n"
+
+    assert_equal({ "test_a" => %w[getJournals getJournal] }, Checklist::NamedTests.markers(source, "x_test.rb"))
+  end
+
+  def run_fixture
+    Dir.mktmpdir do |dir|
+      file = File.join(dir, "test/resources/journals_test.rb")
+      FileUtils.mkdir_p(File.dirname(file))
+      File.write(file, FIXTURE)
+      IO.popen([RbConfig.ruby, "-I#{ROOT}/lib", "-I#{ROOT}/test", file], err: %i[child out], &:read)
+    end
+  end
+
+  def test_a_marked_test_that_does_not_send_its_operation_fails
+    output = run_fixture
+
+    assert_match(/3 runs, .* 2 failures, 0 errors/, output)
+    assert_match(/JournalsTest#test_find_that_sends_nothing .*\n.*names getJournal but did not send it/, output)
+    assert_match(/JournalsTest#test_find_that_sends_another_operation .*\n.*names getJournal but did not send it/,
+                 output)
+    refute_match(/JournalsTest#test_find \[/, output)
+  end
+end
+
 class ChecklistLiveReportsTest < Minitest::Test
   KNOWN = %w[getJournal getJournals postJournals].freeze
 

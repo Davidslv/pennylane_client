@@ -59,6 +59,6 @@ class WebhookSubscriptionsTest < Minitest::Test
   def test_delete
     stub_request(:delete, "#{API}/webhook_subscriptions/6").with(body: nil).to_return(status: 204)
 
-    assert webhooks.delete(6)
+    assert_same true, webhooks.delete(6)
   end
 end

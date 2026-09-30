@@ -40,6 +40,14 @@ class ChangelogsTest < Minitest::Test
     assert_equal [1, 2], ids(changelogs.customer_invoices(since: SINCE))
   end
 
+  # Resuming from a parsed processed_at must not start up to a second early.
+  def test_since_keeps_the_microseconds_of_a_processed_at
+    since = { start_date: "2025-06-25T11:54:18.589480Z", limit: "1000" }
+    stub_request(:get, "#{API}/changelogs/transactions").with(query: since).to_return(status: 200, body: page(3))
+
+    assert_equal [3], ids(changelogs.transactions(since: Time.parse("2025-06-25T11:54:18.589480Z")))
+  end
+
   def test_without_since_starts_from_the_oldest_change
     stub_request(:get, "#{API}/changelogs/customer_invoices").with(query: { limit: "1000" })
                                                              .to_return(status: 200, body: page(1))

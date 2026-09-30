@@ -116,11 +116,11 @@ class ExecutorTest < Minitest::Test
   end
 
   def test_returns_true_for_an_empty_success_body
-    assert(executor(ok(204, "")).call(:markAsPaidCustomerInvoice, { id: 1 }))
+    assert_same true, executor(ok(204, "")).call(:markAsPaidCustomerInvoice, { id: 1 })
   end
 
   def test_treats_a_nil_body_from_a_custom_transport_as_empty
-    assert(executor(PennylaneClient::Response.new(status: 204, headers: {}, body: nil)).call(:getMe))
+    assert_same true, executor(PennylaneClient::Response.new(status: 204, headers: {}, body: nil)).call(:getMe)
   end
 
   def test_raises_the_mapped_error_for_a_failure_status
@@ -135,6 +135,22 @@ class ExecutorTest < Minitest::Test
     error = assert_raises(PennylaneClient::Error) { executor(ok(200, "<html>")).call(:getMe) }
 
     assert_equal 200, error.status
+  end
+
+  # Net::HTTP does not follow redirects, so a 3xx reaches the Executor.
+  # An empty 302 must not read as the success of a write.
+  def test_raises_for_an_empty_redirect
+    error = assert_raises(PennylaneClient::Error) do
+      executor(ok(302, "", { "location" => "https://example.com" })).call(:markAsPaidCustomerInvoice, { id: 1 })
+    end
+
+    assert_equal 302, error.status
+  end
+
+  def test_raises_for_not_modified
+    error = assert_raises(PennylaneClient::Error) { executor(ok(304, "")).call(:getMe) }
+
+    assert_equal 304, error.status
   end
 
   def test_names_the_operation_on_the_request

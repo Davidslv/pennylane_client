@@ -117,7 +117,7 @@ xml = PennylaneClient::Upload.new(io, filename: "invoice.xml", content_type: "ap
 client.call(:createCustomerInvoiceEInvoiceImport, file: xml, invoice_options: { customer_id: 12 })
 ```
 
-An upload gets 300 s to read and write. Change it with `PennylaneClient::NetHttpTransport.new(upload_timeout: 600)`, passed as `transport:`. A file you open stays open; the client closes only what it opened from a `Pathname`. An IO must respond to `size`, so a pipe cannot be uploaded.
+An upload gets 300 s to read and write. Change it with `PennylaneClient::NetHttpTransport.new(upload_timeout: 600)`, passed as `transport:`. A file you open stays open; the client closes only what it opened from a `Pathname`. A `Pathname` is checked before anything is sent: a missing file raises `Errno::ENOENT`, and a directory or a file you cannot read raises `ArgumentError`. An IO must respond to `size`, so a pipe cannot be uploaded.
 
 ## Work with customer invoices
 
@@ -410,7 +410,7 @@ end
 
 Pennylane keeps four weeks of changes. A `since:` older than that raises `ValidationError` (422). Without `since:` the feed starts at the oldest change kept. `since:` is sent with the first page only, because Pennylane answers 400 to `start_date` next to a `cursor`.
 
-To resume where the last run stopped, keep the `processed_at` of the last change you handled and pass it as `since:` next time. The last page's `next_cursor` is null, so it cannot carry you forward. The contract does not say whether `start_date` includes a change at that exact time, so handle a repeat of the last change:
+To resume where the last run stopped, keep the `processed_at` of the last change you handled and pass it as `since:` next time. The last page's `next_cursor` is null, so it cannot carry you forward. `processed_at` carries microseconds. Pass it back as the String, or as a Time parsed from it: a Time is sent with its microseconds (`2025-06-25T11:54:18.589480Z`), so the feed does not restart earlier in that second. The contract does not say whether `start_date` includes a change at that exact time, so handle a repeat of the last change:
 
 ```ruby
 last_seen = nil

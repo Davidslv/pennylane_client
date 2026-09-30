@@ -22,6 +22,23 @@ class EncoderTest < Minitest::Test
     assert_equal "2026-01-31T09:05:00+01:00", encode(Time.new(2026, 1, 31, 9, 5, 0, "+01:00"))
   end
 
+  # Pennylane's processed_at and start_date carry microseconds. Dropping
+  # them would move a changelog resume up to a second earlier.
+  def test_keeps_the_microseconds_of_a_time
+    assert_equal "2025-06-25T11:54:18.589480Z", encode(Time.parse("2025-06-25T11:54:18.589480Z"))
+    assert_equal "2025-06-25T11:54:18.589480+02:00", encode(Time.parse("2025-06-25T11:54:18.589480+02:00"))
+  end
+
+  # Microseconds are Pennylane's precision. Truncating never moves a time later.
+  def test_truncates_below_microseconds
+    assert_equal "2025-06-25T11:54:18.589480Z", encode(Time.at(1_750_852_458, 589_480_999, :nsec).utc)
+  end
+
+  def test_keeps_the_microseconds_of_a_date_time
+    assert_equal "2025-06-25T11:54:18.589480+00:00", encode(DateTime.parse("2025-06-25T11:54:18.589480Z"))
+    assert_equal "2025-06-25T11:54:18+00:00", encode(DateTime.new(2025, 6, 25, 11, 54, 18))
+  end
+
   def test_encodes_values_nested_in_hashes_and_arrays
     payload = { amount: BigDecimal("12.5"), lines: [{ date: Date.new(2026, 2, 1), label: "Rent" }] }
 

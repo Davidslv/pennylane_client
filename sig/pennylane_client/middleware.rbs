@@ -15,6 +15,9 @@ module PennylaneClient
 
       private
 
+      @app: _Transport
+      @token: token
+
       def current_token: () -> String
       def valid?: (untyped token) -> bool
     end
@@ -35,6 +38,14 @@ module PennylaneClient
 
       private
 
+      @app: _Transport
+      @instrumentation: Instrumentation
+      @max_attempts: Integer
+      @base_delay: Numeric
+      @max_wait: Numeric
+      @sleeper: ^(Float) -> void
+      @random: _Rand
+
       def send_once: (Request request) -> [Response?, Error?]
       def finish: (Response? response, Error? error) -> Response
       def delay: (Request request, Response? response, Error? error, Integer attempt) -> Float?
@@ -51,6 +62,10 @@ module PennylaneClient
 
       private
 
+      @app: _Transport
+      @limiters: _LimiterRegistry
+      @instrumentation: Instrumentation
+
       def key: (Request request) -> String
       def correct: (_Limiter limiter, Hash[String, String] headers) -> void
       def report: (Request request, Float waited) -> void
@@ -62,6 +77,9 @@ module PennylaneClient
       def initialize: (_Transport app, Instrumentation instrumentation) -> void
 
       private
+
+      @app: _Transport
+      @instrumentation: Instrumentation
 
       def report: (Request request, Float started, ?status: Integer?, ?error: String?) -> void
     end

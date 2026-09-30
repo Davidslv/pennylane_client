@@ -133,7 +133,7 @@ class SupplierInvoiceActionsTest < Minitest::Test
       .with(body: '{"payment_status":"paid"}')
       .to_return(status: 204)
 
-    assert invoices.update_payment_status(42, payment_status: "paid")
+    assert_same true, invoices.update_payment_status(42, payment_status: "paid")
   end
 
   # names: putSupplierInvoiceEInvoiceStatus
@@ -163,7 +163,7 @@ class SupplierInvoiceActionsTest < Minitest::Test
       .with(body: '{"purchase_request_id":8}')
       .to_return(status: 204)
 
-    assert invoices.link_purchase_request(42, purchase_request_id: 8)
+    assert_same true, invoices.link_purchase_request(42, purchase_request_id: 8)
   end
 
   # names: postSupplierInvoiceMatchedTransactions

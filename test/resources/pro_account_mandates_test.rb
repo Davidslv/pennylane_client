@@ -35,7 +35,7 @@ class ProAccountMandatesTest < Minitest::Test
     stub_request(:post, "#{API}/pro_account/mandate_requests").with(body: '{"customer_id":7}')
                                                               .to_return(status: 201, body: "")
 
-    assert mandates.send_request(customer_id: 7)
+    assert_same true, mandates.send_request(customer_id: 7)
   end
 
   # names: getProAccountMandateMigrations

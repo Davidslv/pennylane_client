@@ -59,6 +59,6 @@ class SepaMandatesTest < Minitest::Test
   def test_delete
     stub_request(:delete, "#{API}/sepa_mandates/3").with(body: nil).to_return(status: 204)
 
-    assert mandates.delete(3)
+    assert_same true, mandates.delete(3)
   end
 end

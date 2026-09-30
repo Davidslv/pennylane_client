@@ -85,6 +85,10 @@ module PennylaneClient
 
     private
 
+    @base_url: String
+
+    @executor: Executor
+
     @customer_invoices: Resources::CustomerInvoices?
 
     @customers: Resources::Customers?

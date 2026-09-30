@@ -1,6 +1,10 @@
 module PennylaneClient
   module Encoder
+    FRACTION_DIGITS: Integer
+
     def self?.encode: (untyped value) -> untyped
     def self?.scalar: (untyped value) -> untyped
+    def self?.timestamp: (Time | Date value) -> String
+    def self?.fraction_digits: (Numeric fraction) -> Integer
   end
 end

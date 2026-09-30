@@ -16,6 +16,15 @@ module PennylaneClient
 
     private
 
+    @limit: Integer
+    @period: Float
+    @clock: ^() -> Float
+    @sleeper: ^(Float) -> void
+    @lock: Thread::Mutex
+    @remaining: Integer
+    @reset_at: Float?
+    @waiting: Integer
+
     def sleep_for: (Float wait) -> void
     def take: () -> Float
     def plausible?: (Float reset_at, Float now) -> bool

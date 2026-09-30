@@ -7,7 +7,10 @@
 # Why: "complete" has to be something CI checks, not something we claim.
 # Every column is derived: registered from the operation table, named from
 # behaviour tests that name the operationId, live from the reports
-# `rake smoke` writes. Nothing is ticked by hand, so the checklist cannot lie.
+# `rake smoke` writes. Nothing is ticked by hand. A marker is read from the
+# source; the suite checks that its test sends the Operation
+# (test/support/named_trace.rb), so the gate refuses a marker that proves
+# nothing.
 #
 # Standard library only. Run it with `bundle exec rake checklist`.
 
@@ -48,6 +51,15 @@ module Checklist
         end
       end
       named.to_h
+    end
+
+    # Returns { test name => [operationId, ...] } for one test file, read
+    # with the same rules as scan. The suite uses it to check that each
+    # marked test sends the Operations it names (test/support/named_trace.rb).
+    def self.markers(source, file)
+      marked = Hash.new { |hash, test| hash[test] = [] }
+      each_marker(source, file) { |id, test| marked[test] |= [id] }
+      marked.to_h
     end
 
     # Yields [operationId, test name] for each marker. Markers wait in
@@ -100,7 +112,7 @@ module Checklist
       Contract snapshot of #{date}. One row per Operation, grouped by resource group (Pennylane's tag). Paths are relative to `#{PREFIX}`.
 
       - **registered**: in the generated operation table, so `client.call` can reach it.
-      - **named**: a behaviour test in `test/resources/` names the operationId with `# names: <operationId>` directly above it. The contract test never counts.
+      - **named**: a behaviour test in `test/resources/` names the operationId with `# names: <operationId>` directly above it, and the suite checks that the test sends it. The contract test never counts.
       - **live**: `sandbox-verified <date> (by @user)` when the latest sandbox report in `docs/api/live/` that ran it passed (`rake smoke`), `#{UNVERIFIED}`, or `#{DEPRECATED}`.
     MARKDOWN
   end

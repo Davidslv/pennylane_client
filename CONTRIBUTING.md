@@ -15,7 +15,7 @@ You need Ruby 3.3 or newer and a recent Bundler (4.x recommended). The Gemfile u
 
 `bundle exec rake` is the gate. It runs:
 
-1. the Minitest suite (`test/`), which stubs all HTTP with WebMock and never reaches Pennylane;
+1. the Minitest suite (`test/`), which stubs all HTTP with WebMock and never reaches Pennylane. It includes `test/signatures_test.rb`, which fails when `sig/` drifts from the code: a method with no signature, a public method whose signature takes other parameters, or an instance variable that is not declared;
 2. RuboCop;
 3. `rbs validate` on `sig/`;
 4. `rake stale`, which fails if `lib/pennylane_client/operations.rb`, `docs/api/CHECKLIST.md` or the live-verified count in `README.md` differs from what its generator writes.
@@ -37,13 +37,13 @@ A behaviour test names an Operation with a marker comment directly above the tes
 def test_finalize
 ```
 
-Only tests under `test/resources/` are read. The marker must name an operationId in the snapshot and sit directly above a `def test_` line (other comments in between are fine), or `rake checklist` fails.
+Only tests under `test/resources/` are read. The marker must name an operationId in the snapshot and sit directly above a `def test_` line (other comments in between are fine), or `rake checklist` fails. The test must also send that Operation: the suite records the operationId of every request that reaches the transport during a test under `test/resources/`, and fails a passing test that did not send an Operation its markers name (`test/support/named_trace.rb`).
 
 ## What every change needs
 
 - **A test first.** Write the failing test, then the code. A change without a test is not done.
 - **Stubbed HTTP only.** New HTTP interactions get WebMock stubs, never live calls.
-- **RBS for public methods.** Anything public gets a signature in `sig/`.
+- **RBS for every method.** Every method in `lib/` gets a signature in `sig/` and every instance variable is declared; `test/signatures_test.rb` checks it.
 - **Docs in the same change.** If public behaviour changes, update `README.md` and `docs/`. If internals change in a way that invalidates `docs/architecture.md`, fix it too.
 
 ## The clean-room rule

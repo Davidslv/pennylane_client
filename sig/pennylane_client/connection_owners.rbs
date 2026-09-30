@@ -1,5 +1,8 @@
 module PennylaneClient
   class ConnectionOwners
+    @owners: untyped # ObjectSpace::WeakMap[Fiber, Hash[String, untyped]]
+    @lock: Thread::Mutex
+
     def initialize: () -> void
 
     def register: (Hash[String, untyped] connections) -> Hash[String, untyped]

@@ -41,8 +41,8 @@ class GocardlessMandatesTest < Minitest::Test
       .with(body: '{"customer_id":7,"email":{"recipients":["billing@acme.example"],"subject":"Direct debit"}}')
       .to_return(status: 204)
 
-    assert mandates.send_request(customer_id: 7, email: { recipients: ["billing@acme.example"],
-                                                          subject: "Direct debit" })
+    assert_same true, mandates.send_request(customer_id: 7, email: { recipients: ["billing@acme.example"],
+                                                                     subject: "Direct debit" })
   end
 
   def test_send_request_without_recipients_raises_before_any_request
@@ -55,14 +55,14 @@ class GocardlessMandatesTest < Minitest::Test
     stub_request(:post, "#{API}/gocardless_mandates/5/associations").with(body: '{"customer_id":7}')
                                                                     .to_return(status: 200, body: "")
 
-    assert mandates.associate(5, customer_id: 7)
+    assert_same true, mandates.associate(5, customer_id: 7)
   end
 
   # names: postGocardlessMandateCancellations
   def test_cancel_returns_true
     stub_request(:post, "#{API}/gocardless_mandates/5/cancellations").with(body: nil).to_return(status: 204)
 
-    assert mandates.cancel(5)
+    assert_same true, mandates.cancel(5)
   end
 
   # Only a pending_submission, submitted or active mandate can be cancelled.
