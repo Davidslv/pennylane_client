@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 109 of 177 live |
+| Named | 131 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -162,17 +162,17 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `exportGeneralLedger` | POST | `/exports/general_ledgers` | yes | no | unverified: no sandbox access |  |
 | `getGeneralLedgerExport` | GET | `/exports/general_ledgers/{id}` | yes | no | unverified: no sandbox access |  |
 
-## File Attachments (0 of 1 named)
+## File Attachments (1 of 1 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `postFileAttachments` | POST | `/file_attachments` | yes | no | unverified: no sandbox access |  |
+| `postFileAttachments` | POST | `/file_attachments` | yes | yes | unverified: no sandbox access | `test/resources/journals_and_fiscal_years_test.rb#test_file_attachments_upload_streams_the_file_with_its_filename` |
 
-## Fiscal years (0 of 1 named)
+## Fiscal years (1 of 1 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `company-fiscal-years` | GET | `/fiscal_years` | yes | no | unverified: no sandbox access |  |
+| `company-fiscal-years` | GET | `/fiscal_years` | yes | yes | unverified: no sandbox access | `test/resources/journals_and_fiscal_years_test.rb#test_fiscal_years_list_walks_every_page` |
 
 ## Hidden (2 of 2 named)
 
@@ -181,22 +181,22 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `markAsPaidCustomerInvoiceInstallment` | PUT | `/customer_invoices/{customer_invoice_id}/installments/{id}/mark_as_paid` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_mark_installment_as_paid` |
 | `postCustomer` | POST | `/customers` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_create_sends_the_customer_type_with_the_attributes` |
 
-## Journals (0 of 3 named)
+## Journals (3 of 3 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getJournals` | GET | `/journals` | yes | no | unverified: no sandbox access |  |
-| `postJournals` | POST | `/journals` | yes | no | unverified: no sandbox access |  |
-| `getJournal` | GET | `/journals/{id}` | yes | no | unverified: no sandbox access |  |
+| `getJournals` | GET | `/journals` | yes | yes | unverified: no sandbox access | `test/resources/journals_and_fiscal_years_test.rb#test_journals_list_walks_every_page_resending_the_filter` |
+| `postJournals` | POST | `/journals` | yes | yes | unverified: no sandbox access | `test/resources/journals_and_fiscal_years_test.rb#test_journals_create` |
+| `getJournal` | GET | `/journals/{id}` | yes | yes | unverified: no sandbox access | `test/resources/journals_and_fiscal_years_test.rb#test_journals_find` |
 
-## Ledger Accounts (0 of 4 named)
+## Ledger Accounts (4 of 4 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getLedgerAccounts` | GET | `/ledger_accounts` | yes | no | unverified: no sandbox access |  |
-| `postLedgerAccounts` | POST | `/ledger_accounts` | yes | no | unverified: no sandbox access |  |
-| `getLedgerAccount` | GET | `/ledger_accounts/{id}` | yes | no | unverified: no sandbox access |  |
-| `updateLedgerAccount` | PUT | `/ledger_accounts/{id}` | yes | no | unverified: no sandbox access |  |
+| `getLedgerAccounts` | GET | `/ledger_accounts` | yes | yes | unverified: no sandbox access | `test/resources/ledger_accounts_and_entries_test.rb#test_accounts_list_asks_for_the_largest_page_and_resends_the_filter` |
+| `postLedgerAccounts` | POST | `/ledger_accounts` | yes | yes | unverified: no sandbox access | `test/resources/ledger_accounts_and_entries_test.rb#test_accounts_create` |
+| `getLedgerAccount` | GET | `/ledger_accounts/{id}` | yes | yes | unverified: no sandbox access | `test/resources/ledger_accounts_and_entries_test.rb#test_accounts_find` |
+| `updateLedgerAccount` | PUT | `/ledger_accounts/{id}` | yes | yes | unverified: no sandbox access | `test/resources/ledger_accounts_and_entries_test.rb#test_accounts_update_sends_only_the_given_attributes` |
 
 ## Ledger Attachments (0 of 0 named)
 
@@ -204,27 +204,27 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `postLedgerAttachments` | POST | `/ledger_attachments` | yes | no | skipped: deprecated |  |
 
-## Ledger Entries (0 of 5 named)
+## Ledger Entries (5 of 5 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getLedgerEntries` | GET | `/ledger_entries` | yes | no | unverified: no sandbox access |  |
-| `postLedgerEntries` | POST | `/ledger_entries` | yes | no | unverified: no sandbox access |  |
-| `getLedgerEntry` | GET | `/ledger_entries/{id}` | yes | no | unverified: no sandbox access |  |
-| `putLedgerEntries` | PUT | `/ledger_entries/{id}` | yes | no | unverified: no sandbox access |  |
-| `getLedgerEntriesLedgerEntryLines` | GET | `/ledger_entries/{ledger_entry_id}/ledger_entry_lines` | yes | no | unverified: no sandbox access |  |
+| `getLedgerEntries` | GET | `/ledger_entries` | yes | yes | unverified: no sandbox access | `test/resources/ledger_accounts_and_entries_test.rb#test_entries_list_walks_every_page_resending_the_filter` |
+| `postLedgerEntries` | POST | `/ledger_entries` | yes | yes | unverified: no sandbox access | `test/resources/ledger_accounts_and_entries_test.rb#test_entries_create_encodes_the_date_and_amounts` |
+| `getLedgerEntry` | GET | `/ledger_entries/{id}` | yes | yes | unverified: no sandbox access | `test/resources/ledger_accounts_and_entries_test.rb#test_entries_find` |
+| `putLedgerEntries` | PUT | `/ledger_entries/{id}` | yes | yes | unverified: no sandbox access | `test/resources/ledger_accounts_and_entries_test.rb#test_entries_update_takes_lines_as_create_update_delete` |
+| `getLedgerEntriesLedgerEntryLines` | GET | `/ledger_entries/{ledger_entry_id}/ledger_entry_lines` | yes | yes | unverified: no sandbox access | `test/resources/ledger_accounts_and_entries_test.rb#test_entries_lines_walks_every_page` |
 
-## Ledger Entry Lines (0 of 7 named)
+## Ledger Entry Lines (7 of 7 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getLedgerEntryLines` | GET | `/ledger_entry_lines` | yes | no | unverified: no sandbox access |  |
-| `deleteLedgerEntryLinesUnletter` | DELETE | `/ledger_entry_lines/lettering` | yes | no | unverified: no sandbox access |  |
-| `postLedgerEntryLinesLetter` | POST | `/ledger_entry_lines/lettering` | yes | no | unverified: no sandbox access |  |
-| `getLedgerEntryLine` | GET | `/ledger_entry_lines/{id}` | yes | no | unverified: no sandbox access |  |
-| `getLedgerEntryLinesCategories` | GET | `/ledger_entry_lines/{ledger_entry_line_id}/categories` | yes | no | unverified: no sandbox access |  |
-| `putLedgerEntryLinesCategories` | PUT | `/ledger_entry_lines/{ledger_entry_line_id}/categories` | yes | no | unverified: no sandbox access |  |
-| `getLedgerEntryLinesLetteredLedgerEntryLines` | GET | `/ledger_entry_lines/{ledger_entry_line_id}/lettered_ledger_entry_lines` | yes | no | unverified: no sandbox access |  |
+| `getLedgerEntryLines` | GET | `/ledger_entry_lines` | yes | yes | unverified: no sandbox access | `test/resources/ledger_entry_lines_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `deleteLedgerEntryLinesUnletter` | DELETE | `/ledger_entry_lines/lettering` | yes | yes | unverified: no sandbox access | `test/resources/ledger_entry_lines_test.rb#test_unletter_sends_a_body_with_the_delete` |
+| `postLedgerEntryLinesLetter` | POST | `/ledger_entry_lines/lettering` | yes | yes | unverified: no sandbox access | `test/resources/ledger_entry_lines_test.rb#test_letter_returns_every_line_of_the_new_lettering` |
+| `getLedgerEntryLine` | GET | `/ledger_entry_lines/{id}` | yes | yes | unverified: no sandbox access | `test/resources/ledger_entry_lines_test.rb#test_find` |
+| `getLedgerEntryLinesCategories` | GET | `/ledger_entry_lines/{ledger_entry_line_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/ledger_entry_lines_test.rb#test_categories_walks_every_page` |
+| `putLedgerEntryLinesCategories` | PUT | `/ledger_entry_lines/{ledger_entry_line_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/ledger_entry_lines_test.rb#test_categorize_sends_the_bare_array` |
+| `getLedgerEntryLinesLetteredLedgerEntryLines` | GET | `/ledger_entry_lines/{ledger_entry_line_id}/lettered_ledger_entry_lines` | yes | yes | unverified: no sandbox access | `test/resources/ledger_entry_lines_test.rb#test_lettered_lines_walks_every_page` |
 
 ## Mandates (14 of 14 named)
 
@@ -336,11 +336,11 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `putTransactionCategories` | PUT | `/transactions/{transaction_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/transactions_test.rb#test_categorize_sends_the_categories_as_a_bare_array` |
 | `getTransactionMatchedInvoices` | GET | `/transactions/{transaction_id}/matched_invoices` | yes | yes | unverified: no sandbox access | `test/resources/transactions_test.rb#test_matched_invoices_walks_every_page` |
 
-## Trial balance (0 of 1 named)
+## Trial balance (1 of 1 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getTrialBalance` | GET | `/trial_balance` | yes | no | unverified: no sandbox access |  |
+| `getTrialBalance` | GET | `/trial_balance` | yes | yes | unverified: no sandbox access | `test/resources/trial_balance_test.rb#test_list_encodes_the_period_and_walks_every_page` |
 
 ## Users (0 of 1 named)
 

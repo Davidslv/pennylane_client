@@ -110,6 +110,28 @@ module PennylaneClient
     # The named Numberings operation (Resources::Numberings).
     def numberings = @numberings ||= Resources::Numberings.new(self)
 
+    # The named Journals operations (Resources::Journals).
+    def journals = @journals ||= Resources::Journals.new(self)
+
+    # The named Fiscal years operation (Resources::FiscalYears).
+    def fiscal_years = @fiscal_years ||= Resources::FiscalYears.new(self)
+
+    # The named File Attachments operation (Resources::FileAttachments).
+    def file_attachments = @file_attachments ||= Resources::FileAttachments.new(self)
+
+    # The named Ledger Accounts operations (Resources::LedgerAccounts).
+    def ledger_accounts = @ledger_accounts ||= Resources::LedgerAccounts.new(self)
+
+    # The named Ledger Entries operations (Resources::LedgerEntries).
+    def ledger_entries = @ledger_entries ||= Resources::LedgerEntries.new(self)
+
+    # The named Ledger Entry Lines operations, lettering included
+    # (Resources::LedgerEntryLines).
+    def ledger_entry_lines = @ledger_entry_lines ||= Resources::LedgerEntryLines.new(self)
+
+    # The named Trial balance operation (Resources::TrialBalance).
+    def trial_balance = @trial_balance ||= Resources::TrialBalance.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

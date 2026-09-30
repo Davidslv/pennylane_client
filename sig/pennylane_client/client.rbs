@@ -45,6 +45,20 @@ module PennylaneClient
 
     def numberings: () -> Resources::Numberings
 
+    def journals: () -> Resources::Journals
+
+    def fiscal_years: () -> Resources::FiscalYears
+
+    def file_attachments: () -> Resources::FileAttachments
+
+    def ledger_accounts: () -> Resources::LedgerAccounts
+
+    def ledger_entries: () -> Resources::LedgerEntries
+
+    def ledger_entry_lines: () -> Resources::LedgerEntryLines
+
+    def trial_balance: () -> Resources::TrialBalance
+
     def inspect: () -> String
 
     private
@@ -76,6 +90,20 @@ module PennylaneClient
     @customer_invoice_templates: Resources::CustomerInvoiceTemplates?
 
     @numberings: Resources::Numberings?
+
+    @journals: Resources::Journals?
+
+    @fiscal_years: Resources::FiscalYears?
+
+    @file_attachments: Resources::FileAttachments?
+
+    @ledger_accounts: Resources::LedgerAccounts?
+
+    @ledger_entries: Resources::LedgerEntries?
+
+    @ledger_entry_lines: Resources::LedgerEntryLines?
+
+    @trial_balance: Resources::TrialBalance?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end
