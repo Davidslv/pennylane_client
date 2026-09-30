@@ -301,6 +301,38 @@ client.supplier_invoices.match_transaction(51, transaction_id: tx[:id])   # also
 client.transactions.categorize(tx[:id], [{ id: 59, weight: "0.5" }, { id: 33, weight: "0.5" }, { id: 65, weight: "1" }])
 ```
 
+## Work with quotes and commercial documents
+
+`client.quotes` and `client.commercial_documents` name every Quotes and Commercial Documents operation. A commercial document is a proforma, a shipping order or a purchasing order; `document_type:` says which, and it cannot change later:
+
+```ruby
+lines = [{ label: "Audit", quantity: 2, raw_currency_unit_price: "450", unit: "day", vat_rate: "FR_200" }]
+
+quote = client.quotes.create(customer_id: 7, date: Date.today, deadline: Date.today + 30, invoice_lines: lines)
+client.commercial_documents.create(document_type: "proforma", customer_id: 7, date: Date.today,
+                                   deadline: Date.today + 30, invoice_lines: lines)
+```
+
+Pennylane numbers each document from the company's numbering for its type, and refuses one with no numbering. `client.numberings.list` shows what is configured: `estimate` for quotes, `proforma`, `shipping_order` and `purchasing_order` for commercial documents, `invoice` for finalizing a customer invoice:
+
+```ruby
+client.numberings.list.map { _1[:document_type] }   # => ["invoice", "estimate", ...]
+```
+
+`update` takes `invoice_lines:` as `{ create: [...], update: [...], delete: [...] }`, not a plain array. A commercial document's `invoice_line_sections:` works the same way.
+
+A quote has a status. `update_status` sets it to `"pending"`, `"accepted"`, `"denied"`, `"invoiced"` or `"expired"`. `send_by_email` works like the invoice one: it returns true, and raises `ConflictError` while Pennylane is still generating the PDF:
+
+```ruby
+client.quotes.update_status(quote[:id], status: "accepted")
+client.quotes.send_by_email(quote[:id], recipients: ["billing@example.com"])
+client.customer_invoices.create_from_quote(quote_id: quote[:id], draft: true)
+```
+
+Both resources list what hangs off one document: `invoice_lines` and `invoice_line_sections` (both take `sort:`) and `appendices` (no `sort:`). `upload_appendix(id, file)` attaches a PDF or image, streamed like any [upload](#upload-a-file).
+
+`client.customer_invoice_templates.list` lists the invoice templates made in Pennylane. It is read only.
+
 ## Handle a validation error
 
 ```ruby
