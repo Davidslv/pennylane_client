@@ -26,7 +26,7 @@ module PennylaneClient
       def create(**attributes) = call(:postProducts, **attributes)
 
       # Updates a product. Only the attributes you pass change.
-      def update(id, **attributes) = call(:putProduct, id:, **attributes)
+      def update(id, **attributes) = call_on(:putProduct, { id: }, **attributes)
     end
   end
 end

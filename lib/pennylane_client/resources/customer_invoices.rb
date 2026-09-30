@@ -23,7 +23,7 @@ module PennylaneClient
       def create(**attributes) = call(:postCustomerInvoices, **attributes)
 
       # Updates a customer invoice. Only the attributes you pass change.
-      def update(id, **attributes) = call(:updateCustomerInvoice, id:, **attributes)
+      def update(id, **attributes) = call_on(:updateCustomerInvoice, { id: }, **attributes)
 
       # Deletes a draft invoice or draft credit note. Returns true.
       def delete(id) = call(:deleteCustomerInvoices, id:)
@@ -60,7 +60,7 @@ module PennylaneClient
       # Pennylane uses the customer's addresses. Raises ConflictError while
       # the PDF is still being generated; try again in a few minutes.
       # Returns true.
-      def send_by_email(id, **fields) = call(:sendByEmailCustomerInvoice, id:, **fields)
+      def send_by_email(id, **fields) = call_on(:sendByEmailCustomerInvoice, { id: }, **fields)
 
       # Sends an e-invoice to the Partner Dematerialization Platform (PA).
       # Raises ConflictError while an e-invoice import is still processing;
@@ -88,7 +88,7 @@ module PennylaneClient
       end
 
       # Updates an imported invoice or credit note (not a draft).
-      def update_imported(id, **attributes) = call(:updateImportedCustomerInvoice, id:, **attributes)
+      def update_imported(id, **attributes) = call_on(:updateImportedCustomerInvoice, { id: }, **attributes)
 
       # The lists below hang off one invoice. Each returns every item as an
       # Enumerator::Lazy of Hashes, like `list`, and takes `sort:` or a
@@ -96,32 +96,32 @@ module PennylaneClient
 
       # The invoice's lines. Takes `sort:`.
       def invoice_lines(customer_invoice_id, **params)
-        paginate(:getCustomerInvoiceInvoiceLines, customer_invoice_id:, **params)
+        paginate_on(:getCustomerInvoiceInvoiceLines, { customer_invoice_id: }, **params)
       end
 
       # The sections that group the invoice's lines. Takes `sort:`.
       def invoice_line_sections(customer_invoice_id, **params)
-        paginate(:getCustomerInvoiceInvoiceLineSections, customer_invoice_id:, **params)
+        paginate_on(:getCustomerInvoiceInvoiceLineSections, { customer_invoice_id: }, **params)
       end
 
       # Payments received against the invoice. Takes `sort:`.
       def payments(customer_invoice_id, **params)
-        paginate(:getCustomerInvoicePayments, customer_invoice_id:, **params)
+        paginate_on(:getCustomerInvoicePayments, { customer_invoice_id: }, **params)
       end
 
       # Bank transactions matched to the invoice. Takes `sort:`.
       def matched_transactions(customer_invoice_id, **params)
-        paginate(:getCustomerInvoiceMatchedTransactions, customer_invoice_id:, **params)
+        paginate_on(:getCustomerInvoiceMatchedTransactions, { customer_invoice_id: }, **params)
       end
 
       # The invoice's custom header fields. Takes `sort:`.
       def custom_header_fields(customer_invoice_id, **params)
-        paginate(:getCustomerInvoiceCustomHeaderFields, customer_invoice_id:, **params)
+        paginate_on(:getCustomerInvoiceCustomHeaderFields, { customer_invoice_id: }, **params)
       end
 
       # Files attached to the invoice as appendices (not in the DMS). No `sort:`.
       def appendices(customer_invoice_id, **params)
-        paginate(:getCustomerInvoiceAppendices, customer_invoice_id:, **params)
+        paginate_on(:getCustomerInvoiceAppendices, { customer_invoice_id: }, **params)
       end
 
       # Attaches `file` (a PDF or image: File, IO, Pathname or
@@ -132,7 +132,7 @@ module PennylaneClient
 
       # The analytical categories the invoice is split across. No `sort:`.
       def categories(customer_invoice_id, **params)
-        paginate(:getCustomerInvoiceCategories, customer_invoice_id:, **params)
+        paginate_on(:getCustomerInvoiceCategories, { customer_invoice_id: }, **params)
       end
 
       # Replaces the invoice's categories. `categories` is an Array of

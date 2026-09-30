@@ -22,11 +22,11 @@ module PennylaneClient
       def create(**attributes) = call(:postSupplier, **attributes)
 
       # Updates a supplier. Only the attributes you pass change.
-      def update(id, **attributes) = call(:putSupplier, id:, **attributes)
+      def update(id, **attributes) = call_on(:putSupplier, { id: }, **attributes)
 
       # The analytical categories the supplier is split across, as an
       # Enumerator::Lazy of Hashes. No `sort:`.
-      def categories(supplier_id, **params) = paginate(:getSupplierCategories, supplier_id:, **params)
+      def categories(supplier_id, **params) = paginate_on(:getSupplierCategories, { supplier_id: }, **params)
 
       # Replaces the supplier's categories. `categories` is an Array of
       # `{ id:, weight: }`; within one category group the weights must add up

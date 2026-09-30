@@ -37,18 +37,18 @@ module PennylaneClient
       # `stop: true` stops one in progress and `stop: false` resumes it.
       # Invoice lines and sections change through `create`, `update` and
       # `delete` lists inside `customer_invoice_data:`.
-      def update(id, **attributes) = call(:putBillingSubscriptions, id:, **attributes)
+      def update(id, **attributes) = call_on(:putBillingSubscriptions, { id: }, **attributes)
 
       # The invoice lines of a billing subscription, as an
       # Enumerator::Lazy of Hashes.
       def invoice_lines(billing_subscription_id, **params)
-        paginate(:getBillingSubscriptionInvoiceLines, billing_subscription_id:, **params)
+        paginate_on(:getBillingSubscriptionInvoiceLines, { billing_subscription_id: }, **params)
       end
 
       # The invoice line sections of a billing subscription, as an
       # Enumerator::Lazy of Hashes.
       def invoice_line_sections(billing_subscription_id, **params)
-        paginate(:getBillingSubscriptionInvoiceLineSections, billing_subscription_id:, **params)
+        paginate_on(:getBillingSubscriptionInvoiceLineSections, { billing_subscription_id: }, **params)
       end
     end
   end

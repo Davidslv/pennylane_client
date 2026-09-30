@@ -42,13 +42,13 @@ module PennylaneClient
       # The lines lettered to this one, as an Enumerator::Lazy of Hashes.
       # `sort:` takes `id` and `date`.
       def lettered_lines(ledger_entry_line_id, **params)
-        paginate(:getLedgerEntryLinesLetteredLedgerEntryLines, ledger_entry_line_id:, **params)
+        paginate_on(:getLedgerEntryLinesLetteredLedgerEntryLines, { ledger_entry_line_id: }, **params)
       end
 
       # The analytical categories the line is split across, as an
       # Enumerator::Lazy of Hashes. `sort:` takes `id`.
       def categories(ledger_entry_line_id, **params)
-        paginate(:getLedgerEntryLinesCategories, ledger_entry_line_id:, **params)
+        paginate_on(:getLedgerEntryLinesCategories, { ledger_entry_line_id: }, **params)
       end
 
       # Replaces the line's categories. `categories` is an Array of

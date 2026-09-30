@@ -1,6 +1,7 @@
 module PennylaneClient
   class Executor
     PATH_PARAMETER: Regexp
+    DOT_SEGMENTS: Array[String]
 
     def initialize: (registry: Registry, transport: _Transport, base_url: String) -> void
 
@@ -13,13 +14,16 @@ module PennylaneClient
 
     def build: (Operation operation, Hash[Symbol, untyped] params, untyped body) -> Request
     def explicit_body: (Operation operation, Hash[Symbol, untyped] rest, untyped body) -> untyped
+    def refuse_path_keys: (Operation operation, Hash[untyped, untyped] body) -> void
     def json_request: (Operation operation, String url, untyped params) -> Request
     def multipart_request: (Operation operation, String url, Hash[Symbol, untyped] params, untyped body) -> Request
     def query_request: (Operation operation, String url, Hash[Symbol, untyped] params, untyped body) -> Request
     def fill_path: (Operation operation, Hash[Symbol, untyped] params) -> String
+    def path_segment: (Operation operation, Symbol name, untyped value) -> String
     def query: (Hash[Symbol, untyped] params) -> String
     def query_value: (untyped value) -> String
     def headers: (?json: bool) -> Hash[String, String]
     def handle: (Response response) -> untyped
+    def unreadable: (Response response, String reason) -> Error
   end
 end

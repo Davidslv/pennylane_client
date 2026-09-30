@@ -29,7 +29,7 @@ module PennylaneClient
       # the type and number never do. `invoice_lines:` and
       # `invoice_line_sections:` are `{ create: [...], update: [...],
       # delete: [...] }`, not plain Arrays.
-      def update(id, **attributes) = call(:updateCommercialDocument, id:, **attributes)
+      def update(id, **attributes) = call_on(:updateCommercialDocument, { id: }, **attributes)
 
       # The lists below hang off one document. Each returns every item as an
       # Enumerator::Lazy of Hashes, like `list`, and takes a smaller
@@ -37,18 +37,18 @@ module PennylaneClient
 
       # The document's lines. Takes `sort:`.
       def invoice_lines(commercial_document_id, **params)
-        paginate(:getCommercialDocumentInvoiceLines, commercial_document_id:, **params)
+        paginate_on(:getCommercialDocumentInvoiceLines, { commercial_document_id: }, **params)
       end
 
       # The sections that group the document's lines. Takes `sort:`.
       def invoice_line_sections(commercial_document_id, **params)
-        paginate(:getCommercialDocumentInvoiceLineSections, commercial_document_id:, **params)
+        paginate_on(:getCommercialDocumentInvoiceLineSections, { commercial_document_id: }, **params)
       end
 
       # Files attached to the document as appendices (not in the DMS). No
       # `sort:`.
       def appendices(commercial_document_id, **params)
-        paginate(:getCommercialDocumentAppendices, commercial_document_id:, **params)
+        paginate_on(:getCommercialDocumentAppendices, { commercial_document_id: }, **params)
       end
 
       # Attaches `file` (a PDF or image: File, IO, Pathname or

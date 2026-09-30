@@ -22,7 +22,7 @@ module PennylaneClient
       def create(**attributes) = call(:postSepaMandates, **attributes)
 
       # Updates a SEPA mandate. Only the attributes you pass change.
-      def update(id, **attributes) = call(:putSepaMandate, id:, **attributes)
+      def update(id, **attributes) = call_on(:putSepaMandate, { id: }, **attributes)
 
       # Deletes a SEPA mandate. Returns true.
       def delete(id) = call(:deleteSepaMandate, id:)

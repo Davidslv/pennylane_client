@@ -24,12 +24,12 @@ module PennylaneClient
 
       # Updates a quote. Only the attributes you pass change. `invoice_lines:`
       # is `{ create: [...], update: [...], delete: [...] }`, not a plain Array.
-      def update(id, **attributes) = call(:updateQuote, id:, **attributes)
+      def update(id, **attributes) = call_on(:updateQuote, { id: }, **attributes)
 
       # Emails the quote. With no `recipients:`, Pennylane uses the
       # customer's addresses. Raises ConflictError while the PDF is still
       # being generated; try again in a few minutes. Returns true.
-      def send_by_email(id, **fields) = call(:sendByEmailQuote, id:, **fields)
+      def send_by_email(id, **fields) = call_on(:sendByEmailQuote, { id: }, **fields)
 
       # Sets the quote's status: "pending", "accepted", "denied", "invoiced"
       # or "expired".
@@ -42,15 +42,15 @@ module PennylaneClient
       # `limit:`.
 
       # The quote's lines. Takes `sort:`.
-      def invoice_lines(quote_id, **params) = paginate(:getQuoteInvoiceLines, quote_id:, **params)
+      def invoice_lines(quote_id, **params) = paginate_on(:getQuoteInvoiceLines, { quote_id: }, **params)
 
       # The sections that group the quote's lines. Takes `sort:`.
       def invoice_line_sections(quote_id, **params)
-        paginate(:getQuoteInvoiceLineSections, quote_id:, **params)
+        paginate_on(:getQuoteInvoiceLineSections, { quote_id: }, **params)
       end
 
       # Files attached to the quote as appendices (not in the DMS). No `sort:`.
-      def appendices(quote_id, **params) = paginate(:getQuoteAppendices, quote_id:, **params)
+      def appendices(quote_id, **params) = paginate_on(:getQuoteAppendices, { quote_id: }, **params)
 
       # Attaches `file` (a PDF or image: File, IO, Pathname or
       # PennylaneClient::Upload) as an appendix. It streams from disk.

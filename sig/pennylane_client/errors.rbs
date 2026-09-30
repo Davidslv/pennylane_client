@@ -14,7 +14,8 @@ module PennylaneClient
 
     private
 
-    def parse: (String? body) -> untyped
+    def parse: () -> untyped
+    def readable_body: () -> String
     def describe: (untyped parsed) -> [String?, String?]
     def plain_text: () -> String?
     def summary: (String? text) -> String

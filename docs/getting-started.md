@@ -45,6 +45,8 @@ A few operations take a JSON array as their body. Pass it as the second argument
 client.call(:putCustomerCategories, [{ id: 3, weight: "1" }], customer_id: 9)
 ```
 
+A Hash passed that way may not also name a path parameter: `client.call(:putProduct, { id: 2 }, id: 1)` raises `ArgumentError`.
+
 ## Named methods
 
 Operations marked `named` in [the checklist](api/CHECKLIST.md) also have a Ruby method on a resource. The name stays the same if Pennylane renames the operationId:
@@ -60,7 +62,7 @@ invoices.finalize(invoice[:id])
 invoices.send_by_email(invoice[:id])
 ```
 
-Attributes go to Pennylane as you pass them. Lists return every item lazily, as `client.paginate` does. The full list of methods is in `lib/pennylane_client/resources/` and `sig/pennylane_client/resources.rbs`; the how-to covers the ones you would not guess, for [customer invoices](how-to.md#work-with-customer-invoices), [customers](how-to.md#work-with-customers), [supplier invoices and suppliers](how-to.md#work-with-supplier-invoices-and-suppliers), [mandates](how-to.md#work-with-mandates), [transactions and bank accounts](how-to.md#work-with-transactions-and-bank-accounts), [quotes and commercial documents](how-to.md#work-with-quotes-and-commercial-documents), and [the ledger](how-to.md#work-with-the-ledger).
+Attributes go to Pennylane as you pass them. A method takes its ids positionally, so a keyword naming one raises `ArgumentError` rather than change which record is written: `products.update(1, id: 2)` raises, and so does `products.update(1, **fetched_product)`. Lists return every item lazily, as `client.paginate` does. The full list of methods is in `lib/pennylane_client/resources/` and `sig/pennylane_client/resources.rbs`; the how-to covers the ones you would not guess, for [customer invoices](how-to.md#work-with-customer-invoices), [customers](how-to.md#work-with-customers), [supplier invoices and suppliers](how-to.md#work-with-supplier-invoices-and-suppliers), [mandates](how-to.md#work-with-mandates), [transactions and bank accounts](how-to.md#work-with-transactions-and-bank-accounts), [quotes and commercial documents](how-to.md#work-with-quotes-and-commercial-documents), and [the ledger](how-to.md#work-with-the-ledger).
 
 ## When it fails
 
@@ -77,6 +79,8 @@ Every error is a `PennylaneClient::Error` with `#status`, `#code`, `#details` an
 | `ServerError` | 5xx |
 | `ConnectionError`, `TimeoutError` | no response arrived |
 | `ExportError` | an export failed or was not ready in time; `#export` is the export as last read |
+
+A 2xx body that is not JSON, or not valid UTF-8, raises the base `Error`. An error body in another encoding, such as a proxy's Latin-1 5xx page, still raises the class for its status.
 
 An unknown operationId raises `PennylaneClient::UnknownOperationError`, an `ArgumentError`.
 

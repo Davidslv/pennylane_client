@@ -41,7 +41,7 @@ module PennylaneClient
 
       # Updates a supplier invoice. Only the attributes you pass change.
       # `invoice_lines:` takes `{ create:, update:, delete: }`.
-      def update(id, **attributes) = call(:putSupplierInvoice, id:, **attributes)
+      def update(id, **attributes) = call_on(:putSupplierInvoice, { id: }, **attributes)
 
       # Validates the invoice's accounting, which makes it complete.
       def validate_accounting(id) = call(:ValidateAccountingSupplierInvoice, id:)
@@ -59,7 +59,7 @@ module PennylaneClient
       #
       #   invoices.update_e_invoice_status(42, status: "disputed", reason: "incorrect_vat_rate")
       def update_e_invoice_status(supplier_invoice_id, status:, **fields)
-        call(:putSupplierInvoiceEInvoiceStatus, supplier_invoice_id:, status:, **fields)
+        call_on(:putSupplierInvoiceEInvoiceStatus, { supplier_invoice_id: }, status:, **fields)
       end
 
       # Links one purchase request to the invoice. Call it once per purchase
@@ -87,22 +87,22 @@ module PennylaneClient
 
       # The invoice's lines. Takes `sort:`.
       def invoice_lines(supplier_invoice_id, **params)
-        paginate(:getSupplierInvoiceLines, supplier_invoice_id:, **params)
+        paginate_on(:getSupplierInvoiceLines, { supplier_invoice_id: }, **params)
       end
 
       # Payments made against the invoice. Takes `sort:`.
       def payments(supplier_invoice_id, **params)
-        paginate(:getSupplierInvoicePayments, supplier_invoice_id:, **params)
+        paginate_on(:getSupplierInvoicePayments, { supplier_invoice_id: }, **params)
       end
 
       # Bank transactions matched to the invoice. Takes `sort:`.
       def matched_transactions(supplier_invoice_id, **params)
-        paginate(:getSupplierInvoiceMatchedTransactions, supplier_invoice_id:, **params)
+        paginate_on(:getSupplierInvoiceMatchedTransactions, { supplier_invoice_id: }, **params)
       end
 
       # The analytical categories the invoice is split across. No `sort:`.
       def categories(supplier_invoice_id, **params)
-        paginate(:getSupplierInvoiceCategories, supplier_invoice_id:, **params)
+        paginate_on(:getSupplierInvoiceCategories, { supplier_invoice_id: }, **params)
       end
 
       # Replaces the invoice's categories. `categories` is an Array of

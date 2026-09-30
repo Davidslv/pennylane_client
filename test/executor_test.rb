@@ -151,6 +151,44 @@ class ExecutorTest < Minitest::Test
   end
 end
 
+# Path parameters that would change which Operation the path names.
+class ExecutorPathTest < Minitest::Test
+  include ExecutorHelpers
+
+  # A nil or empty id would leave an empty segment, so GET /customer_invoices/
+  # would answer with the list as if it were one invoice.
+  def test_refuses_a_nil_or_empty_path_parameter_without_sending_anything
+    [nil, ""].each do |id|
+      executor = executor()
+      error = assert_raises(ArgumentError) { executor.call(:getCustomerInvoice, { id: }) }
+
+      assert_equal "path parameter :id for :getCustomerInvoice is empty", error.message
+      assert_empty @transport.requests
+    end
+  end
+
+  # "." and ".." would be dot segments: /customer_invoices/5/matched_transactions/..
+  # normalises to /customer_invoices/5, another Operation on the same verb.
+  def test_refuses_a_dot_segment_path_parameter_without_sending_anything
+    [".", ".."].each do |id|
+      executor = executor()
+      error = assert_raises(ArgumentError) do
+        executor.call(:deleteCustomerInvoiceMatchedTransactions, { customer_invoice_id: 5, id: })
+      end
+
+      assert_equal "path parameter :id for :deleteCustomerInvoiceMatchedTransactions cannot be #{id.inspect}",
+                   error.message
+      assert_empty @transport.requests
+    end
+  end
+
+  def test_still_sends_dots_inside_a_path_parameter
+    executor.call(:getJournal, { id: "a.b..c" })
+
+    assert_equal "#{BASE}/api/external/v2/journals/a.b..c", sent.url
+  end
+end
+
 class ExecutorMultipartTest < Minitest::Test
   include ExecutorHelpers
 

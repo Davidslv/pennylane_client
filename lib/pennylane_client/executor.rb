@@ -11,8 +11,10 @@ module PennylaneClient
   #
   # - names in the path template (`{id}`) fill the path, escaped;
   # - when the Operation takes a JSON body, everything else is the body,
-  #   unless the caller passes `body:` explicitly (six Operations take a
-  #   JSON array, which keyword params cannot build);
+  #   unless the caller passes the body as the third argument of #call
+  #   (Client#call's second). Six Operations take a JSON array, which keyword
+  #   params cannot build. A `body:` keyword is an ordinary param: it is sent
+  #   as a field named "body";
   # - when the Operation takes a multipart body, everything else is a form
   #   field, and files stream from disk (Multipart). Files the Executor
   #   opened are closed once the call is over;
@@ -24,6 +26,7 @@ module PennylaneClient
   # The transport is usually the middleware pipeline Client composes.
   class Executor
     PATH_PARAMETER = /\{(\w+)\}/
+    DOT_SEGMENTS = %w[. ..].freeze
 
     def initialize(registry:, transport:, base_url:)
       @registry = registry
@@ -71,11 +74,23 @@ module PennylaneClient
 
     # A body passed as is, for the Operations whose body is a JSON array.
     # Every other param must have been a path parameter.
+    # A Hash body may not name a path parameter too: which id was meant?
     def explicit_body(operation, rest, body)
-      return body if rest.empty?
+      unless rest.empty?
+        raise ArgumentError,
+              "unexpected parameters #{rest.keys.inspect} for #{operation.id.inspect} with an explicit body"
+      end
+      refuse_path_keys(operation, body) if body.is_a?(Hash)
+      body
+    end
+
+    def refuse_path_keys(operation, body)
+      names = operation.path.scan(PATH_PARAMETER).flatten
+      clashes = body.keys.select { names.include?(_1.to_s) }
+      return if clashes.empty?
 
       raise ArgumentError,
-            "unexpected parameters #{rest.keys.inspect} for #{operation.id.inspect} with an explicit body"
+            "the body names the path parameter #{clashes.inspect} of #{operation.id.inspect}; pass it only as a keyword"
     end
 
     def json_request(operation, url, params)
@@ -90,8 +105,21 @@ module PennylaneClient
           raise ArgumentError, "missing path parameter #{name.inspect} for #{operation.id.inspect}"
         end
 
-        URI.encode_uri_component(Encoder.encode(params.delete(name)).to_s)
+        path_segment(operation, name, params.delete(name))
       end
+    end
+
+    # One escaped path segment. An empty value would leave an empty segment
+    # (GET /customer_invoices/ is the list), and "." or ".." a dot segment
+    # that a server may resolve to another Operation, so both are refused.
+    def path_segment(operation, name, value)
+      text = Encoder.encode(value).to_s
+      raise ArgumentError, "path parameter #{name.inspect} for #{operation.id.inspect} is empty" if text.empty?
+      if DOT_SEGMENTS.include?(text)
+        raise ArgumentError, "path parameter #{name.inspect} for #{operation.id.inspect} cannot be #{text.inspect}"
+      end
+
+      URI.encode_uri_component(text)
     end
 
     def query(params)
@@ -110,15 +138,24 @@ module PennylaneClient
       headers
     end
 
+    # A 2xx body that is not valid UTF-8 raises Error, as a body that is not
+    # JSON does (JSON is UTF-8, RFC 8259). It is not scrubbed: a record read
+    # with U+FFFD in place of its bytes could be written back that way.
     def handle(response)
       raise Error.from_response(response) unless response.success?
-      return true if response.body.to_s.strip.empty?
 
-      JSON.parse(response.body, symbolize_names: true, freeze: true)
+      body = response.body.to_s
+      raise unreadable(response, "is not valid UTF-8") unless body.valid_encoding?
+      return true if body.strip.empty?
+
+      JSON.parse(body, symbolize_names: true, freeze: true)
     rescue JSON::ParserError
-      raise Error.new("#{response.status}: the response body is not JSON", status: response.status,
-                                                                           body: response.body,
-                                                                           headers: response.headers)
+      raise unreadable(response, "is not JSON")
+    end
+
+    def unreadable(response, reason)
+      Error.new("#{response.status}: the response body #{reason}",
+                status: response.status, body: response.body, headers: response.headers)
     end
   end
 end
