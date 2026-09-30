@@ -11,7 +11,7 @@ module PennylaneClient
   class Client
     DEFAULT_BASE_URL = "https://app.pennylane.com"
 
-    def initialize(token:, base_url: DEFAULT_BASE_URL, transport: NetHttpTransport.new,
+    def initialize(token:, base_url: DEFAULT_BASE_URL, transport: NetHttpTransport.default,
                    logger: PennylaneClient.configuration.logger,
                    on_request: PennylaneClient.configuration.on_request)
       raise ArgumentError, "token must be a non-empty String" unless token.is_a?(String) && !token.empty?

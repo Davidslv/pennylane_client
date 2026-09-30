@@ -48,6 +48,32 @@ class NetHttpTransportTest < Minitest::Test
     assert_equal 2, opened
   end
 
+  def test_clients_share_one_default_transport
+    assert_same PennylaneClient::NetHttpTransport.default, PennylaneClient::NetHttpTransport.default
+    stub_request(:get, "#{BASE}/me").to_return(status: 200, body: "{}")
+    opened = count_connections do
+      PennylaneClient.new(token: "a").call(:getMe)
+      PennylaneClient.new(token: "b").call(:getMe)
+    end
+
+    assert_operator opened, :<=, 1
+  end
+
+  def test_returns_the_body_as_utf8
+    stub_request(:get, "#{BASE}/me").to_return(status: 401, body: "Non autorisé".b)
+
+    body = transport.call(request).body
+
+    assert_equal Encoding::UTF_8, body.encoding
+    assert_equal "Non autorisé", body
+  end
+
+  def test_a_corrupt_compressed_body_becomes_a_connection_error
+    stub_request(:get, "#{BASE}/me").to_raise(Zlib::DataError)
+
+    assert_raises(PennylaneClient::ConnectionError) { transport.call(request) }
+  end
+
   def test_uses_the_documented_timeouts_by_default
     http = transport.send(:connection, URI(BASE))
 

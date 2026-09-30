@@ -10,6 +10,9 @@ module PennylaneClient
     VERBS: Hash[Symbol, untyped]
     TIMEOUT_ERRORS: Array[untyped]
     CONNECTION_ERRORS: Array[untyped]
+    DEFAULT: NetHttpTransport
+
+    def self.default: () -> NetHttpTransport
 
     def initialize: (?open_timeout: Numeric, ?read_timeout: Numeric, ?write_timeout: Numeric) -> void
 
@@ -21,6 +24,7 @@ module PennylaneClient
     def connection: (untyped uri) -> untyped
     def build_connection: (untyped uri) -> untyped
     def build: (Request request, untyped uri) -> untyped
+    def to_response: (untyped response) -> Response
     def fail_with: (singleton(Error) klass, Exception error, untyped uri) -> bot
     def drop: (untyped uri) -> void
   end

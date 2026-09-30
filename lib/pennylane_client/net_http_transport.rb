@@ -2,6 +2,7 @@
 
 require "net/http"
 require "openssl"
+require "zlib"
 
 module PennylaneClient
   # A Transport turns a Request into a Response. Anything with
@@ -13,8 +14,11 @@ module PennylaneClient
   #
   # NetHttpTransport is the default, on Net::HTTP from the standard library:
   #
-  # - Keep-alive, with one connection per host per thread, so threads never
-  #   share a socket and no lock is needed.
+  # - Keep-alive, with one connection per host per fiber (Thread#[] is
+  #   fiber-local), so threads and fibers never share a socket and no lock
+  #   is needed. Clients share NetHttpTransport.default, so building a
+  #   Client per request or per token opens no new sockets; the token
+  #   travels in each request, not in the connection.
   # - Timeouts: open 5 s, read 30 s, write 30 s (proposal 0001).
   # - Never retries. Net::HTTP retries idempotent verbs once by default,
   #   and PUT and DELETE have side effects at Pennylane (D5).
@@ -23,7 +27,10 @@ module PennylaneClient
 
     TIMEOUT_ERRORS = [Timeout::Error].freeze
     CONNECTION_ERRORS = [IOError, SystemCallError, SocketError, OpenSSL::SSL::SSLError, Net::ProtocolError,
-                         Net::HTTPBadResponse].freeze
+                         Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Zlib::Error].freeze
+
+    # The process-wide transport every Client uses unless given another.
+    def self.default = DEFAULT
 
     def initialize(open_timeout: 5, read_timeout: 30, write_timeout: 30)
       @open_timeout = open_timeout
@@ -36,8 +43,7 @@ module PennylaneClient
       uri = URI(request.url)
       http = connection(uri)
       http.start unless http.started?
-      response = http.request(build(request, uri))
-      Response.new(status: response.code.to_i, headers: response.each_header.to_h, body: response.body.to_s)
+      to_response(http.request(build(request, uri)))
     rescue *TIMEOUT_ERRORS => e
       fail_with(TimeoutError, e, uri)
     rescue *CONNECTION_ERRORS => e
@@ -76,6 +82,12 @@ module PennylaneClient
       http_request
     end
 
+    # Net::HTTP returns the body as bytes; Pennylane sends UTF-8.
+    def to_response(response)
+      body = response.body.to_s.dup.force_encoding(Encoding::UTF_8)
+      Response.new(status: response.code.to_i, headers: response.each_header.to_h, body:)
+    end
+
     def fail_with(klass, error, uri)
       drop(uri)
       raise klass, "#{error.class}: #{error.message} (#{uri.host})"
@@ -88,4 +100,6 @@ module PennylaneClient
       nil
     end
   end
+
+  NetHttpTransport::DEFAULT = NetHttpTransport.new
 end
