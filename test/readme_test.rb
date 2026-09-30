@@ -24,7 +24,7 @@ class ReadmeTest < Minitest::Test
     assert_equal [live], quoted.uniq
   end
 
-  def test_says_every_live_operation_is_named_only_when_the_checklist_does
+  def test_every_live_operation_is_named_as_the_readme_says
     live = checklist_count("Live (not deprecated)")
 
     assert_includes readme, "Every live operation has a named method"

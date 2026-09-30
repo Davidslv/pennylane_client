@@ -8,7 +8,7 @@ Done once per gem, by the maintainer.
 
 1. Turn on MFA on the rubygems.org account.
 2. On rubygems.org, add a **pending trusted publisher** (Profile > OIDC > Pending trusted publishers) for gem `pennylane_client`: repository owner `Davidslv`, repository `pennylane_client`, workflow `release.yml`, environment `release`. After the first release it becomes the gem's trusted publisher.
-3. On GitHub, create the `release` environment (Settings > Environments). Optionally require the maintainer's approval and limit it to `v*` tags.
+3. On GitHub, create the `release` environment (Settings > Environments). Require the maintainer's approval and add a deployment rule that allows only `v*` tags. Without these, anyone who can push a `v*` tag can publish.
 
 ## Each release
 
@@ -23,13 +23,13 @@ Done once per gem, by the maintainer.
    git push origin vX.Y.Z
    ```
 
-5. The Release workflow checks the tag matches `VERSION`, runs the gate, then publishes. Approve the `release` environment if it asks.
+5. The Release workflow checks the tag matches `VERSION`, runs the gate, installs the built gem and loads it outside the repo, then publishes. Approve the `release` environment if it asks.
 
 ## Check the release
 
 ```sh
 gem install pennylane_client -v X.Y.Z
-gem specification pennylane_client -v X.Y.Z dependencies   # []
+gem dependency pennylane_client -v X.Y.Z   # no runtime dependencies listed
 ```
 
 The attestation shows on the version's page on rubygems.org and under the repository's **Attestations**. `gh attestation verify pennylane_client-X.Y.Z.gem --repo Davidslv/pennylane_client` checks a downloaded `.gem`.
