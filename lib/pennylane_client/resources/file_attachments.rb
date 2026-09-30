@@ -14,7 +14,14 @@ module PennylaneClient
       # Pathname or PennylaneClient::Upload, up to 100 MB). It streams from
       # disk. `filename:` overrides the name Pennylane stores.
       #
+      # The file part's content type comes from the file's extension. An IO
+      # with no path, such as a StringIO, has none, so it is sent as
+      # application/octet-stream; the `filename:` field does not change
+      # that. Wrap it to set both:
+      #
       #   file_attachments.upload(Pathname("receipt.pdf"))[:id]
+      #   file_attachments.upload(PennylaneClient::Upload.new(io, filename: "receipt.pdf",
+      #                                                           content_type: "application/pdf"))
       def upload(file, retry: nil, **fields) = call(:postFileAttachments, file:, retry:, **fields)
     end
   end
