@@ -45,6 +45,18 @@ class FakePennylaneServerTest < Minitest::Test
     assert_operator client.call(:postFileAttachments, file:).fetch(:received), :>, 300_000
   end
 
+  # The transport keeps idle connections for 10 s (NetHttpTransport). One the server has
+  # closed meanwhile must be replaced, not written to: a write is not
+  # retried, so writing to a dead socket would fail the call.
+  def test_a_connection_the_server_closed_is_replaced_before_a_write
+    client.call(:getMe)
+    @server.close_connections
+
+    assert @server.idle?(within: 2)
+    assert_equal 1, client.call(:postJournals, code: "X", label: "Y").fetch(:id)
+    assert_equal [1, 2], [@fake.count("POST 200"), @server.connections_opened]
+  end
+
   def test_a_reset_is_a_connection_error
     @fake.inject(:reset, times: 1)
 

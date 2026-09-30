@@ -50,6 +50,12 @@ class FakePennylane
       end
     end
 
+    # Closes every open connection, as a server does to idle ones, and keeps
+    # listening.
+    def close_connections
+      @lock.synchronize { @connections.keys }.each(&:close)
+    end
+
     def connections_opened = @lock.synchronize { @opened }
     def open_connections = @lock.synchronize { @connections.size }
     def peak_connections = @lock.synchronize { @peak }

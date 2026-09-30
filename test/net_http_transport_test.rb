@@ -91,8 +91,10 @@ class NetHttpTransportTest < Minitest::Test
 
   # Net::HTTP drops a connection idle for 2 s by default, and a rate-limit
   # wait lasts up to 5 s, so a busy token would reconnect after every wait.
-  def test_keeps_an_idle_connection_for_30_seconds
-    assert_equal 30, transport.send(:connection, URI(BASE)).keep_alive_timeout
+  # 10 s: past one window, and short enough to be under most servers' own
+  # idle timeouts, so a write rarely races a server closing the connection.
+  def test_keeps_an_idle_connection_for_10_seconds
+    assert_equal 10, transport.send(:connection, URI(BASE)).keep_alive_timeout
     assert_equal 9, PennylaneClient::NetHttpTransport.new(keep_alive_timeout: 9)
                                                      .send(:connection, URI(BASE)).keep_alive_timeout
   end
