@@ -26,6 +26,10 @@ module OperationTableFixtures
     { "in" => "query", "name" => "cursor", "schema" => { "type" => "string" } }
   end
 
+  def limit(maximum)
+    { "in" => "query", "name" => "limit", "schema" => { "type" => "integer", "minimum" => 1, "maximum" => maximum } }
+  end
+
   def document(*records)
     { "retrieved_on" => "2026-09-30", "operations" => records }
   end
@@ -43,7 +47,7 @@ class OperationTableRowsTest < Minitest::Test
 
     assert_equal PennylaneClient::Operation.new(
       id: :getJournal, verb: :get, path: "/api/external/v2/journals/{id}",
-      paginated: false, body: nil, success: 200, deprecated: false
+      paginated: false, max_limit: nil, body: nil, success: 200, deprecated: false
     ), row
   end
 
@@ -54,14 +58,30 @@ class OperationTableRowsTest < Minitest::Test
   end
 
   def test_an_operation_is_paginated_when_it_takes_a_cursor_in_the_query
-    assert row_for(record("getJournals", "parameters" => [cursor])).paginated
+    assert row_for(record("getJournals", "parameters" => [cursor, limit(100)])).paginated
     refute row_for(record("getJournals", "parameters" => [cursor.merge("in" => "header")])).paginated
   end
 
   def test_returning_cursor_fields_without_taking_a_cursor_is_not_paginated
-    limit = { "in" => "query", "name" => "limit" }
+    row = row_for(record("getPaRegistrations"))
 
-    refute row_for(record("getPaRegistrations", "parameters" => [limit])).paginated
+    refute row.paginated
+    assert_nil row.max_limit
+  end
+
+  def test_a_paginated_operation_carries_its_largest_page_size
+    assert_equal 100, row_for(record("getJournals", "parameters" => [cursor, limit(100)])).max_limit
+    assert_equal 1000, row_for(record("getLedgerAccounts", "parameters" => [cursor, limit(1000)])).max_limit
+  end
+
+  def test_refuses_a_paginated_operation_without_a_largest_page_size
+    unbounded = { "in" => "query", "name" => "limit", "schema" => { "type" => "integer" } }
+
+    assert_raises(OperationTable::Error) { row_for(record("getJournals", "parameters" => [cursor])) }
+    error = assert_raises(OperationTable::Error) do
+      row_for(record("getJournals", "parameters" => [cursor, unbounded]))
+    end
+    assert_match(/getJournals.*limit/, error.message)
   end
 
   def test_reads_the_body_kind_from_the_request_content_type
@@ -108,7 +128,7 @@ class OperationTableRenderTest < Minitest::Test
     OperationTable.rows(document(
                           record("getJournal", path: "/api/external/v2/journals/{id}"),
                           record("company-fiscal-years", path: "/api/external/v2/fiscal_years",
-                                                         "parameters" => [cursor]),
+                                                         "parameters" => [cursor, limit(100)]),
                           record("postFileAttachments", method: "POST", path: "/api/external/v2/file_attachments",
                                                         "request_body" => multipart_body,
                                                         "responses" => { "201" => {} })

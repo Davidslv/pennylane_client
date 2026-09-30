@@ -13,6 +13,14 @@ module PennylaneClient
 
     def call: (Symbol | String operation_id, ?untyped body, **untyped params) -> untyped
 
+    def paginate: (Symbol | String operation_id, **untyped params) -> Enumerator::Lazy[Hash[Symbol, untyped], void]
+
+    def pages: (Symbol | String operation_id, **untyped params) -> Enumerator::Lazy[Hash[Symbol, untyped], void]
+
     def inspect: () -> String
+
+    private
+
+    def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end
 end

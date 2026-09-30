@@ -3,7 +3,8 @@
 module PennylaneClient
   # What the Executor hands the middleware and then a Transport: a
   # lower-case verb Symbol, the full URL String, the headers, and the
-  # encoded body String (nil for none).
+  # encoded body: a String, a Multipart for an upload (it reads like an IO:
+  # `read`, `rewind`, `size`), or nil for none.
   #
   # `operation_id` names the Operation for events. `retry_policy` is
   # `:default`, or `:always` when the caller passed `retry: :always`.

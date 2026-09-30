@@ -40,15 +40,30 @@ module OperationTable
 
   def self.row(record)
     id = record.fetch("operation_id")
+    max_limit = max_limit(id, record.fetch("parameters"))
     PennylaneClient::Operation.new(
-      id: id.to_sym,
-      verb: record.fetch("method").downcase.to_sym,
-      path: record.fetch("path"),
-      paginated: record.fetch("parameters").any? { _1["in"] == "query" && _1["name"] == "cursor" },
+      id: id.to_sym, verb: record.fetch("method").downcase.to_sym, path: record.fetch("path"),
+      paginated: !max_limit.nil?, max_limit:,
       body: body_kind(id, record["request_body"]),
       success: success_code(id, record.fetch("responses")),
       deprecated: record.fetch("deprecated")
     )
+  end
+
+  def self.query_parameter(parameters, name)
+    parameters.find { _1["in"] == "query" && _1["name"] == name }
+  end
+
+  # An operation is paginated when it takes a cursor in the query. The
+  # Paginator asks for the largest page, so a paginated operation must
+  # document one. Nil when the operation is not paginated.
+  def self.max_limit(id, parameters)
+    return unless query_parameter(parameters, "cursor")
+
+    maximum = query_parameter(parameters, "limit")&.dig("schema", "maximum")
+    raise Error, "#{id}: paginated, but its limit parameter has no maximum" unless maximum.is_a?(Integer)
+
+    maximum
   end
 
   def self.body_kind(id, request_body)
@@ -66,7 +81,7 @@ module OperationTable
 
     Integer(codes.first)
   end
-  private_class_method :row, :body_kind, :success_code
+  private_class_method :row, :query_parameter, :max_limit, :body_kind, :success_code
 
   # The Ruby source of one row, on one line.
   def self.literal(row)

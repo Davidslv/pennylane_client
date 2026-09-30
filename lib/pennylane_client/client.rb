@@ -53,6 +53,28 @@ module PennylaneClient
       @executor.call(operation_id, params, body, retry_policy:)
     end
 
+    # Every item of a list operation, as an Enumerator::Lazy of Hashes. It
+    # follows `next_cursor` as far as the caller reads and sends `filter`
+    # and `sort` again on every page (Paginator):
+    #
+    #   client.paginate(:getCustomerInvoices, filter: [{ field: "status", operator: "eq", value: "draft" }])
+    #         .each { |invoice| puts invoice[:invoice_number] }
+    def paginate(operation_id, **params) = paginator(operation_id, params).items
+
+    # The same walk as `paginate`, one Hash per page (`items`, `has_more`,
+    # `next_cursor`).
+    def pages(operation_id, **params) = paginator(operation_id, params).pages
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
+
+    private
+
+    # A list is a GET, which Retry already retries; `retry` would otherwise
+    # be sent to Pennylane as a query param.
+    def paginator(operation_id, params)
+      raise ArgumentError, "paginate takes no retry policy: a GET is retried already" if params.key?(:retry)
+
+      Paginator.new(executor: @executor, operation: Registry.default.fetch(operation_id), params:)
+    end
   end
 end

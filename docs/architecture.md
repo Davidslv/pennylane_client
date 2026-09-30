@@ -10,11 +10,13 @@ How the gem is put together, and why. Written for someone about to change the co
 |---|---|---|
 | `PennylaneClient` | `lib/pennylane_client.rb` | The namespace. |
 | `PennylaneClient::VERSION` | `lib/pennylane_client/version.rb` | Gem version. |
-| `PennylaneClient::Operation` | `lib/pennylane_client/operation.rb` | One Operation as plain data: operationId, verb, path, paginated, body kind, success code, deprecated. |
+| `PennylaneClient::Operation` | `lib/pennylane_client/operation.rb` | One Operation as plain data: operationId, verb, path, paginated, largest page size (`max_limit`), body kind, success code, deprecated. |
 | `PennylaneClient::OPERATIONS` | `lib/pennylane_client/operations.rb` | The generated operation table: every Operation in the latest snapshot, one row per line. Every live Operation is Registered here. |
 | `PennylaneClient::Client` | `lib/pennylane_client/client.rb` | Wiring only. `PennylaneClient.new(token:)` composes the middleware; `#call(:operationId, **params)` reaches any Registered operation. |
 | `PennylaneClient::Registry` | `lib/pennylane_client/registry.rb` | Frozen lookup from operationId to Operation. An unknown id raises `UnknownOperationError`. |
 | `PennylaneClient::Executor` | `lib/pennylane_client/executor.rb` | Operation + params to Request; Response to a return value or an Error. |
+| `PennylaneClient::Paginator` | `lib/pennylane_client/paginator.rb` | Walks a cursor-paginated list for `client.paginate` and `client.pages`: largest page, every param resent on every page, lazy. |
+| `PennylaneClient::Multipart`, `Upload` | `lib/pennylane_client/multipart.rb` | A multipart/form-data body that streams its files; `Upload` sets a file's filename and content type. |
 | `PennylaneClient::Encoder` | `lib/pennylane_client/encoder.rb` | `BigDecimal` to `to_s("F")`, `Date`/`Time` to ISO 8601, everything else untouched. |
 | `PennylaneClient::Request`, `Response` | `lib/pennylane_client/request.rb`, `response.rb` | Plain values passed to and from a Transport. `Request#inspect` filters the Authorization header. |
 | `PennylaneClient::Middleware::Auth`, `Retry`, `RateLimit`, `Instrument` | `lib/pennylane_client/middleware/` | One policy each, every one `call(request) -> Response` around the next. |
@@ -39,15 +41,15 @@ What happens on `client.call(:getJournal, id: 42)`:
    - Six Operations (`putCustomerCategories` and its siblings) take a JSON array, which keywords cannot build. The caller passes the body as the second argument, `client.call(:putCustomerCategories, [...], customer_id: 9)`; keywords then fill only the path, and any left over raise `ArgumentError`.
    - Otherwise every other param goes into the query. `nil` values are left out. Hash and Array values are sent as JSON strings, because Pennylane's `filter` is a JSON array in a query string.
    - No Operation in the 2026-09-30 snapshot takes both a body and a query.
-   - Multipart Operations raise `NotImplementedError` until uploads land (#8).
-   - Headers: `Accept: application/json`, a `User-Agent` naming the gem, and `Content-Type: application/json` when there is a body. No token.
+   - If the Operation takes a multipart body (the 7 uploads), every other param is a form field of a `Multipart` body. A File, IO, Pathname or `Upload` is a file part, streamed from disk; a Hash or Array is an `application/json` part; anything else is text. The body's size is known up front, so it goes with a `Content-Length`. Files the Executor opened from a Pathname are closed when the call is over.
+   - Headers: `Accept: application/json`, a `User-Agent` naming the gem, and `Content-Type: application/json` (or `multipart/form-data` with its boundary) when there is a body. No token.
    - The Request also carries the `operation_id`, for events, and the `retry_policy` (`:always` when the caller passed `retry: :always`, which is never sent).
 4. **Middleware** runs, outermost first. Each is `call(request) -> Response` around the next, and Client composes them:
    - **Auth** adds `Authorization: Bearer <token>`. The token is a String or a provider (`#call`), asked once per call. A token with whitespace or a line break is refused without echoing it.
    - **Retry** sends the call again when that is safe (D5): a 429 for any verb, after `retry-after`; 500, 502, 503, 504, `ConnectionError` and `TimeoutError` for GET only, or for any verb with `retry: :always`. At most 3 attempts, full-jitter backoff (a random wait up to 0.5 s, then 1 s), and at most 30 s of waiting per call (`max_retry_wait:`). A wait past the cap is not taken, so a long `retry-after` surfaces as `RateLimitError`. Each retry fires a `:retry` event. It sits outside RateLimit so every attempt takes its own call from the bucket.
    - **RateLimit** takes a call from the token's `Limiter` before each attempt and waits when the bucket is empty, firing a `:wait` event. Every response's `ratelimit-remaining` and `ratelimit-reset` correct the bucket. Limiters come from a `LimiterRegistry`, keyed by the SHA-256 of the token; `LimiterRegistry.default` is shared by every Client in the process.
    - **Instrument** records each attempt as a `:request` event, next to the Transport, so `duration` never includes a wait.
-5. **Transport** sends it. Every Client shares `NetHttpTransport.default`, so building a Client per request or per token opens no new sockets; the token travels in each request, not in the connection. It keeps one keep-alive connection per host per fiber (`Thread#[]` is fiber-local), so threads and fibers never share a socket. Bodies come back as UTF-8. Timeouts are open 5 s, read 30 s, write 30 s. It sets `max_retries = 0`, because `Net::HTTP` otherwise resends an idempotent verb once on a dropped connection, and PUT and DELETE have side effects at Pennylane (D5). No response raises `TimeoutError` or `ConnectionError` and drops the connection.
+5. **Transport** sends it. Every Client shares `NetHttpTransport.default`, so building a Client per request or per token opens no new sockets; the token travels in each request, not in the connection. It keeps one keep-alive connection per host per fiber (`Thread#[]` is fiber-local), so threads and fibers never share a socket. Bodies come back as UTF-8. Timeouts are open 5 s, read 30 s, write 30 s; an upload gets 300 s to read and write, and the connection goes back to 30 s afterwards (`upload_timeout:`). A `Multipart` body is rewound, so a retry after a 429 sends the file from its first byte, and handed to `Net::HTTP` as `body_stream`, which reads it in 16 KB chunks. It sets `max_retries = 0`, because `Net::HTTP` otherwise resends an idempotent verb once on a dropped connection, and PUT and DELETE have side effects at Pennylane (D5). No response raises `TimeoutError` or `ConnectionError` and drops the connection.
 6. **Instrumentation** takes every event: one log line (`info`, or `warn` for a retry or when no response came) and one frozen `on_request` event. A `:request` event has `operation_id`, `method`, `path` (no query), `status`, `error` and `duration` in ms; a `:retry` event has `attempt`, `wait`, `status` and `error`; a `:wait` event has `wait`. It never raises: a failing logger or callback is reported and ignored, so a write that reached Pennylane never looks failed to the caller.
 7. **Executor** reads the final `Response`:
    - 2xx with an empty body returns `true`.
@@ -60,7 +62,17 @@ Only `Middleware::Auth` holds the token, and only `Request#headers` carries it, 
 
 ### Transport interface
 
-A Transport is anything with `call(request) -> Response` that raises `ConnectionError` or `TimeoutError` when no response arrives and never raises for an HTTP status. Pass one as `PennylaneClient.new(token:, transport:)`.
+A Transport is anything with `call(request) -> Response` that raises `ConnectionError` or `TimeoutError` when no response arrives and never raises for an HTTP status. Pass one as `PennylaneClient.new(token:, transport:)`. `Request#body` is a String, nil, or for an upload a `Multipart`, which reads like an IO (`read`, `rewind`, `size`); rewind it before sending.
+
+### Pagination
+
+`client.paginate(:getCustomerInvoices, filter: [...])` builds a **Paginator** around the Executor. Each page is an ordinary call through the whole pipeline, so each page takes its own call from the rate limit and GETs retry as usual.
+
+- It asks for the Operation's largest page (`max_limit`, 100 or 1000, read from the contract by the generator) unless the caller passed a smaller `limit`. A larger one raises `ArgumentError` before anything is sent.
+- The cursor does not remember `filter` or `sort` (`guides/cursor-pagination.md`), so every param goes again on every page, next to `cursor`.
+- It stops when `has_more` is false or `next_cursor` is null.
+- It returns an `Enumerator::Lazy`: reading the first ten items sends one request. Enumerating it again starts again from the first page. `client.pages` gives the page Hashes instead of the items.
+- `getPaRegistrations` answers with `items`, `has_more` and `next_cursor` but takes no cursor, so an Operation that is not paginated is read as one page. A response without `items` raises `Error`; an Operation that is not a GET raises `ArgumentError`.
 
 ## Planned components
 
@@ -68,7 +80,7 @@ From the design diagram, in the order they are built (Epic #1):
 
 1. **Runtime core.** Built; see above.
 2. **Middleware.** Built; see above.
-3. **Pagination and uploads.** Cursor pagination that re-sends filters on every page; multipart uploads.
+3. **Pagination and uploads.** Built; see above.
 4. **Resources.** Hand-written one-liner methods per resource group.
 
 ## Design rationale

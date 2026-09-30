@@ -135,3 +135,73 @@ class ClientTest < Minitest::Test
     assert_equal({ url: "http://localhost:9292/api/external/v2/me" }, custom.call(:getMe))
   end
 end
+
+# Uploads end to end, with WebMock as Pennylane.
+class ClientUploadTest < Minitest::Test
+  API = ClientTest::API
+
+  def client = @client ||= PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new)
+
+  def test_uploads_a_file_with_its_filename
+    stub_request(:post, "#{API}/file_attachments")
+      .with { _1.body.include?(%(name="file"; filename="receipt.pdf")) && _1.body.include?("%PDF-1.7") }
+      .to_return(status: 201, body: '{"id":5}')
+
+    upload = PennylaneClient::Upload.new(StringIO.new("%PDF-1.7"), filename: "receipt.pdf")
+
+    assert_equal({ id: 5 }, client.call(:postFileAttachments, file: upload))
+  end
+
+  # A 429 means Pennylane did not run the upload, so Retry sends it again,
+  # and the file must go again from its first byte.
+  def test_a_retried_upload_sends_the_whole_file_again
+    bodies = []
+    stub_request(:post, "#{API}/file_attachments").with { bodies << _1.body }
+                                                  .to_return({ status: 429, headers: { "Retry-After" => "0" } },
+                                                             { status: 201, body: '{"id":5}' })
+
+    client.call(:postFileAttachments, file: StringIO.new("%PDF-1.7"))
+
+    assert_equal 2, bodies.size
+    assert_equal bodies.first, bodies.last
+    assert_includes bodies.last, "%PDF-1.7"
+  end
+end
+
+# client.paginate and client.pages end to end, with WebMock as Pennylane.
+class ClientPaginationTest < Minitest::Test
+  API = ClientTest::API
+  DRAFTS = [{ field: "status", operator: "eq", value: "draft" }].freeze
+
+  def client = @client ||= PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new)
+
+  # Matches only a request carrying the filter, the sort and the page size.
+  def stub_page(cursor, ids, next_cursor)
+    query = { filter: JSON.generate(DRAFTS), sort: "-id", limit: "100", cursor: }.compact
+    body = JSON.generate({ items: ids.map { { id: _1 } }, has_more: !next_cursor.nil?, next_cursor: })
+    stub_request(:get, "#{API}/customer_invoices").with(query:).to_return(status: 200, body:)
+  end
+
+  def test_paginate_follows_three_pages_sending_the_filter_on_each
+    pages = [stub_page(nil, [1, 2], "c2"), stub_page("c2", [3], "c3"), stub_page("c3", [4], nil)]
+
+    items = client.paginate(:getCustomerInvoices, filter: DRAFTS, sort: "-id")
+
+    assert_equal [1, 2, 3, 4], items.map { _1[:id] }.to_a
+    pages.each { assert_requested(_1, times: 1) }
+  end
+
+  # A GET is retried already, and `retry` must never reach Pennylane.
+  def test_paginate_refuses_a_retry_policy
+    assert_raises(ArgumentError) { client.paginate(:getCustomerInvoices, retry: :always) }
+  end
+
+  def test_pages_gives_each_page
+    stub_page(nil, [1], "c2")
+    stub_page("c2", [2], nil)
+
+    pages = client.pages(:getCustomerInvoices, filter: DRAFTS, sort: "-id").to_a
+
+    assert_equal([[{ id: 1 }], [{ id: 2 }]], pages.map { _1[:items] })
+  end
+end

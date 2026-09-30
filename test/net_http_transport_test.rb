@@ -2,6 +2,7 @@
 
 require "test_helper"
 require "minitest/mock"
+require "stringio"
 
 class NetHttpTransportTest < Minitest::Test
   BASE = "https://app.pennylane.com/api/external/v2"
@@ -123,5 +124,49 @@ class NetHttpTransportTest < Minitest::Test
     original = Net::HTTP.method(:new)
     Net::HTTP.stub(:new, ->(*args) { count += 1; original.call(*args) }, &) # rubocop:disable Style/Semicolon
     count
+  end
+end
+
+class NetHttpTransportUploadTest < Minitest::Test
+  URL = "#{NetHttpTransportTest::BASE}/file_attachments".freeze
+
+  def transport = @transport ||= PennylaneClient::NetHttpTransport.new
+
+  def form = PennylaneClient::Multipart.new(file: StringIO.new("%PDF"))
+
+  def upload_request(form)
+    PennylaneClient::Request.new(verb: :post, url: URL, body: form,
+                                 headers: { "Content-Type" => form.content_type, "Content-Length" => form.size.to_s })
+  end
+
+  # WebMock reads the stream the way Net::HTTP would. The test reads it
+  # first, so the transport must rewind it before sending.
+  def test_streams_a_multipart_body_from_its_start
+    form = self.form
+    expected = form.read
+    stub_request(:post, URL).with(headers: { "Content-Type" => form.content_type }) { _1.body == expected }
+                            .to_return(status: 201)
+
+    assert_equal 201, transport.call(upload_request(form)).status
+  end
+
+  def test_gives_an_upload_300_seconds_then_restores_the_timeouts
+    http = transport.send(:connection, URI(URL))
+    during = nil
+    stub_request(:post, URL).to_return { (during = [http.read_timeout, http.write_timeout]) && { status: 201 } }
+    transport.call(upload_request(form))
+
+    assert_equal [300, 300], during
+    assert_equal [30, 30], [http.read_timeout, http.write_timeout]
+  end
+
+  def test_the_upload_timeout_is_configurable
+    transport = PennylaneClient::NetHttpTransport.new(upload_timeout: 60)
+    http = transport.send(:connection, URI(URL))
+    during = nil
+    stub_request(:post, URL).to_return { (during = http.read_timeout) && { status: 201 } }
+    transport.call(upload_request(form))
+
+    assert_equal 60, during
   end
 end

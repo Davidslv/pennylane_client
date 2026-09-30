@@ -24,5 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Retries: 429 for any verb after `retry-after`; 500, 502, 503, 504 and no response for GET only. At most 3 attempts, full jitter, 30 s of waiting per call (`max_retry_wait:`). `client.call(..., retry: :always)` opts a write in.
 - Events now carry `type:` (`:request`, `:retry` or `:wait`); every attempt, retry and rate-limit wait fires one.
 - Weekly contract drift workflow and `rake contract:drift`: any difference between Pennylane's docs and the committed snapshot opens or updates one issue labelled `drift`.
+- Cursor pagination: `client.paginate(:operationId, **params)` returns every item as an `Enumerator::Lazy`, following `next_cursor` and resending `filter` and `sort` on every page, at the operation's largest page size. `client.pages` gives the pages. `Operation#max_limit` records the largest page size.
+- Multipart uploads for the 7 upload operations: pass a `File`, IO, `Pathname` or `PennylaneClient::Upload`. Files stream from disk; uploads get 300 s timeouts (`upload_timeout:`).
 
 [Unreleased]: https://github.com/Davidslv/pennylane_client/commits/main

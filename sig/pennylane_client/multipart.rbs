@@ -1,0 +1,99 @@
+module PennylaneClient
+  class Upload
+    attr_reader source: untyped
+    attr_reader filename: String?
+    attr_reader content_type: String?
+
+    def initialize: (untyped source, ?filename: String?, ?content_type: String?) -> void
+
+    def inspect: () -> String
+  end
+
+  class Multipart
+    interface _Source
+      def size: () -> Integer
+      def read: (Integer? length) -> String?
+      def rewind: () -> untyped
+      def close: () -> untyped
+    end
+
+    CONTENT_TYPES: Hash[String, String]
+    DEFAULT_CONTENT_TYPE: String
+    CRLF: String
+
+    @boundary: String
+    @fields: Array[Symbol | String]
+    @parts: Array[_Source]
+    @index: Integer
+
+    attr_reader content_type: String
+    attr_reader size: Integer
+
+    def initialize: (Hash[Symbol | String, untyped] fields) -> void
+
+    def read: (?Integer? length, ?String? outbuf) -> String?
+
+    def rewind: () -> Integer
+
+    def close: () -> Array[_Source]
+
+    def inspect: () -> String
+
+    private
+
+    def fill: (String out, Integer? length) -> void
+    def part: (String name, untyped value) -> Array[_Source]
+    def file_part: (String name, untyped value) -> Array[_Source]
+    def type_of: (String filename) -> String
+    def head: (String name, ?String? type, ?filename: String?) -> String
+    def escape: (untyped value) -> String
+    def text: (String string) -> TextSource
+
+    class TextSource
+      @io: StringIO
+
+      def initialize: (String string) -> void
+      def size: () -> Integer
+      def read: (Integer? length) -> String?
+      def rewind: () -> Integer
+      def close: () -> nil
+    end
+
+    class FileSource
+      @remaining: Integer
+      @buffer: String
+
+      attr_reader size: Integer
+
+      def initialize: (Integer size) -> void
+      def read: (Integer? length) -> String?
+      def rewind: () -> untyped
+      def io: () -> untyped
+      def filename: () -> String
+      def seek_start: () -> untyped
+    end
+
+    class IOSource < FileSource
+      @io: untyped
+      @start: Integer
+
+      attr_reader io: untyped
+
+      def initialize: (untyped io) -> void
+      def filename: () -> String
+      def seek_start: () -> untyped
+      def close: () -> nil
+    end
+
+    class PathSource < FileSource
+      @path: Pathname
+      @io: File?
+
+      def initialize: (Pathname path) -> void
+      def filename: () -> String
+      def io: () -> File
+      def seek_start: () -> Integer?
+      def close: () -> nil
+    end
+  end
+end

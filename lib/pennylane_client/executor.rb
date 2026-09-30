@@ -13,6 +13,9 @@ module PennylaneClient
   # - when the Operation takes a JSON body, everything else is the body,
   #   unless the caller passes `body:` explicitly (six Operations take a
   #   JSON array, which keyword params cannot build);
+  # - when the Operation takes a multipart body, everything else is a form
+  #   field, and files stream from disk (Multipart). Files the Executor
+  #   opened are closed once the call is over;
   # - otherwise everything else is the query. Structured query values
   #   (Pennylane's `filter` is a JSON array) are sent as JSON strings.
   #
@@ -30,7 +33,10 @@ module PennylaneClient
 
     def call(operation_id, params = {}, body = nil, retry_policy: :default)
       operation = @registry.fetch(operation_id)
-      handle(@transport.call(build(operation, params, body).with(retry_policy:)))
+      request = build(operation, params, body).with(retry_policy:)
+      handle(@transport.call(request))
+    ensure
+      request.body.close if request&.body.respond_to?(:close)
     end
 
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
@@ -43,9 +49,18 @@ module PennylaneClient
 
       case operation.body
       when :json then json_request(operation, url, body.nil? ? rest : explicit_body(operation, rest, body))
-      when :multipart then raise NotImplementedError, "multipart uploads are not supported yet (#{operation.id})"
+      when :multipart then multipart_request(operation, url, rest, body)
       else query_request(operation, url, rest, body)
       end
+    end
+
+    # Every param left after the path is one form field; files stream.
+    def multipart_request(operation, url, params, body)
+      raise ArgumentError, "#{operation.id.inspect} takes its form fields as keywords" unless body.nil?
+
+      form = Multipart.new(params)
+      form_headers = headers.merge("Content-Type" => form.content_type, "Content-Length" => form.size.to_s)
+      Request.new(verb: operation.verb, url:, headers: form_headers, body: form, operation_id: operation.id)
     end
 
     def query_request(operation, url, params, body)

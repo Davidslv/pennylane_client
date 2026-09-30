@@ -3,6 +3,10 @@
 require "test_helper"
 require "bigdecimal"
 require "date"
+require "minitest/mock"
+require "pathname"
+require "stringio"
+require "tmpdir"
 
 module ExecutorHelpers
   BASE = "https://app.pennylane.com"
@@ -103,10 +107,6 @@ class ExecutorTest < Minitest::Test
     assert_empty @transport.requests
   end
 
-  def test_refuses_multipart_operations_until_uploads_land
-    assert_raises(NotImplementedError) { executor.call(:postFileAttachments, { file: "x" }) }
-  end
-
   def test_returns_a_deep_frozen_hash_with_symbol_keys
     result = executor(ok(200, '{"id":1,"lines":[{"label":"Rent"}]}')).call(:getJournal, { id: 1 })
 
@@ -148,5 +148,53 @@ class ExecutorTest < Minitest::Test
     executor(ok(201)).call(:postJournals, { code: "HA" }, nil, retry_policy: :always)
 
     assert_equal :always, sent.retry_policy
+  end
+end
+
+class ExecutorMultipartTest < Minitest::Test
+  include ExecutorHelpers
+
+  def test_sends_a_multipart_operation_as_a_streamed_form
+    executor.call(:postCustomerInvoiceAppendices, { customer_invoice_id: 42, file: StringIO.new("%PDF") })
+
+    assert_equal "#{BASE}/api/external/v2/customer_invoices/42/appendices", sent.url
+    assert_instance_of PennylaneClient::Multipart, sent.body
+    assert_includes sent.body.read, "%PDF"
+  end
+
+  def test_sends_the_form_content_type_and_length
+    executor.call(:postFileAttachments, { file: StringIO.new("%PDF") })
+    form = sent.body
+
+    assert_equal [form.content_type, form.size.to_s], sent.headers.values_at("Content-Type", "Content-Length")
+  end
+
+  def test_refuses_a_positional_body_for_a_multipart_operation
+    assert_raises(ArgumentError) { executor.call(:postFileAttachments, {}, "x") }
+  end
+
+  def test_closes_the_files_it_opened_once_the_call_is_over
+    Dir.mktmpdir do |dir|
+      path = Pathname(dir).join("receipt.pdf").tap { _1.write("%PDF") }
+      opened = files_opened { reading_executor.call(:postFileAttachments, { file: path }) }
+
+      assert_equal 1, opened.size
+      assert_predicate opened.first, :closed?
+    end
+  end
+
+  private
+
+  # Reads the body, as a real Transport would, which opens the file.
+  def reading_executor
+    PennylaneClient::Executor.new(registry: PennylaneClient::Registry.default,
+                                  transport: ->(request) { request.body.read && ok(201) }, base_url: BASE)
+  end
+
+  def files_opened(&)
+    opened = []
+    original = File.method(:new)
+    File.stub(:new, ->(*args) { original.call(*args).tap { opened << _1 } }, &)
+    opened
   end
 end

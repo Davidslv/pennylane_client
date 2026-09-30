@@ -19,7 +19,10 @@ module PennylaneClient
   #   is needed. Clients share NetHttpTransport.default, so building a
   #   Client per request or per token opens no new sockets; the token
   #   travels in each request, not in the connection.
-  # - Timeouts: open 5 s, read 30 s, write 30 s (proposal 0001).
+  # - Timeouts: open 5 s, read 30 s, write 30 s (proposal 0001). An upload
+  #   gets 300 s to read and write, then the connection goes back to 30 s.
+  # - A body that responds to `read` (Multipart) is rewound and streamed
+  #   as `body_stream`; a String body is sent as is.
   # - Never retries. Net::HTTP retries idempotent verbs once by default,
   #   and PUT and DELETE have side effects at Pennylane (D5).
   class NetHttpTransport
@@ -32,10 +35,11 @@ module PennylaneClient
     # The process-wide transport every Client uses unless given another.
     def self.default = DEFAULT
 
-    def initialize(open_timeout: 5, read_timeout: 30, write_timeout: 30)
+    def initialize(open_timeout: 5, read_timeout: 30, write_timeout: 30, upload_timeout: 300)
       @open_timeout = open_timeout
       @read_timeout = read_timeout
       @write_timeout = write_timeout
+      @upload_timeout = upload_timeout
       @key = :"pennylane_client_connections_#{object_id}"
     end
 
@@ -43,7 +47,7 @@ module PennylaneClient
       uri = URI(request.url)
       http = connection(uri)
       http.start unless http.started?
-      to_response(http.request(build(request, uri)))
+      to_response(send_request(http, request, uri))
     rescue *TIMEOUT_ERRORS => e
       fail_with(TimeoutError, e, uri)
     rescue *CONNECTION_ERRORS => e
@@ -76,9 +80,28 @@ module PennylaneClient
       http
     end
 
+    def send_request(http, request, uri)
+      return http.request(build(request, uri)) unless stream?(request.body)
+
+      request.body.rewind
+      http.read_timeout = http.write_timeout = @upload_timeout
+      begin
+        http.request(build(request, uri))
+      ensure
+        http.read_timeout = @read_timeout
+        http.write_timeout = @write_timeout
+      end
+    end
+
+    def stream?(body) = body.respond_to?(:read)
+
     def build(request, uri)
       http_request = VERBS.fetch(request.verb).new(uri.request_uri, request.headers)
-      http_request.body = request.body if request.body
+      if stream?(request.body)
+        http_request.body_stream = request.body
+      elsif request.body
+        http_request.body = request.body
+      end
       http_request
     end
 
