@@ -35,6 +35,9 @@ require_relative "pennylane_client/resources/quotes"
 require_relative "pennylane_client/resources/commercial_documents"
 require_relative "pennylane_client/resources/customer_invoice_templates"
 require_relative "pennylane_client/resources/numberings"
+require_relative "pennylane_client/resources/journals"
+require_relative "pennylane_client/resources/fiscal_years"
+require_relative "pennylane_client/resources/file_attachments"
 require_relative "pennylane_client/client"
 
 # Unofficial Ruby client for the Pennylane Company API v2.

@@ -110,6 +110,15 @@ module PennylaneClient
     # The named Numberings operation (Resources::Numberings).
     def numberings = @numberings ||= Resources::Numberings.new(self)
 
+    # The named Journals operations (Resources::Journals).
+    def journals = @journals ||= Resources::Journals.new(self)
+
+    # The named Fiscal years operation (Resources::FiscalYears).
+    def fiscal_years = @fiscal_years ||= Resources::FiscalYears.new(self)
+
+    # The named File Attachments operation (Resources::FileAttachments).
+    def file_attachments = @file_attachments ||= Resources::FileAttachments.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

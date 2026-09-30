@@ -264,5 +264,21 @@ module PennylaneClient
     class Numberings < Resource
       def list: (**untyped params) -> Enumerator::Lazy[item, void]
     end
+
+    class Journals < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+    end
+
+    class FiscalYears < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+    end
+
+    class FileAttachments < Resource
+      def upload: (file file, **untyped fields) -> item
+    end
   end
 end
