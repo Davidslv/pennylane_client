@@ -434,7 +434,7 @@ To poll on your own schedule, call the two halves yourself: `create_fec(period_s
 
 ## Check the token and the company
 
-`client.users.me` returns the token's `:user`, `:company` and `:scopes`. `:user` is nil for a token that no user owns. `:scopes` lists what the token may do.
+`client.users.me` returns the token's `:user`, `:company` and `:scopes`. `:user` can be nil; the contract does not say when. `:scopes` lists what the token may do.
 
 Some features depend on the company's plan or on a rollout. `client.company.features` says which are on. Check it before you send a gated field, because Pennylane does not always refuse one it cannot honour:
 
@@ -448,7 +448,7 @@ end
 
 With `installments` off, an invoice sent with installments either gets a 403 or is created with a single installment. Pennylane adds keys here as it gates new features.
 
-`client.pa_registrations.list` returns the company's registrations with a Plateforme Agréée. The company has finished PA onboarding when a registration is `"activated"` with the `exchange_direction` you need. A nil `siret` is the head office (SIREN). The list is one request: Pennylane takes no cursor for it.
+`client.pa_registrations.list` returns the company's registrations with a Plateforme Agréée. The company has finished PA onboarding when a registration is `"activated"` with the `exchange_direction` you need. A nil `siret` is the head office (SIREN). The list is one request: Pennylane takes no cursor for it. If Pennylane answers `has_more: true`, `list` raises `PennylaneClient::Error` rather than return part of the list.
 
 ## Work with billing subscriptions
 
@@ -503,9 +503,9 @@ hook = client.webhook_subscriptions.create(callback_url: "https://example.com/pe
 store_secret(hook[:secret])
 ```
 
-The create response is the only place the secret appears. `find` and `list` leave it out, and `update` cannot change it. To rotate it, create a new subscription and delete the old one. The events are `customer_invoice.e_invoicing_status_updated`, `dms_file.created` and `supplier_invoice.e_invoicing_received`. A company has at most 10 subscriptions.
+The create response is the only place the secret appears. `find` and `list` leave it out, and `update` takes no secret. The contract has no way to rotate it; creating a new subscription and deleting the old one gets you a new secret. The events are `customer_invoice.e_invoicing_status_updated`, `dms_file.created` and `supplier_invoice.e_invoicing_received`. A company-scoped token allows 10 subscriptions per company; an app-bound token allows 10 in all.
 
-Pennylane can disable a subscription whose endpoint keeps failing. `find(id)` shows `enabled`, `disabled_reason` and `consecutive_failures`; `update(id, enabled: true)` turns it back on.
+Pennylane can disable a subscription whose endpoint keeps failing. `find(id)` shows `enabled`, `disabled_reason` and `consecutive_failures`. `update(id, enabled: true)` sends the flag to turn it back on; the contract does not say whether that works after a `permanent_error`.
 
 ## Handle a validation error
 

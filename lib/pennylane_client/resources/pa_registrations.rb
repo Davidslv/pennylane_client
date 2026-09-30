@@ -12,8 +12,15 @@ module PennylaneClient
       # others are establishments.
       #
       # Pennylane answers with `has_more` and `next_cursor` but takes no
-      # cursor here, so this is one request and returns its items.
-      def list = call(:getPaRegistrations).fetch(:items)
+      # cursor here, so this is one request and returns its items. If
+      # Pennylane ever answers `has_more: true`, the rest cannot be read,
+      # so it raises Error rather than return part of the list.
+      def list
+        page = call(:getPaRegistrations)
+        raise Error, "getPaRegistrations answered has_more: true, but takes no cursor" if page[:has_more]
+
+        page.fetch(:items)
+      end
     end
   end
 end

@@ -30,8 +30,7 @@ module PennylaneClient
       def create(**attributes) = call(:postWebhookSubscriptions, **attributes)
 
       # Updates a webhook subscription: `callback_url:`, `events:` or
-      # `enabled:`. The secret stays the same; there is no way to rotate it
-      # except to delete the subscription and create another.
+      # `enabled:`. It takes no secret; a new subscription gets a new one.
       def update(id, **attributes) = call(:putWebhookSubscription, id:, **attributes)
 
       # Deletes a webhook subscription.

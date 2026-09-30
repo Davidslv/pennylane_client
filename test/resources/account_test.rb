@@ -29,7 +29,7 @@ class AccountTest < Minitest::Test
   def test_features
     stub_request(:get, "#{API}/company/features").to_return(status: 200, body: '{"installments":false}')
 
-    refute client.company.features[:installments]
+    assert_equal({ installments: false }, client.company.features)
   end
 
   # names: getPaRegistrations
@@ -38,5 +38,14 @@ class AccountTest < Minitest::Test
     stub_request(:get, "#{API}/pa_registrations").to_return(status: 200, body:)
 
     assert_equal [{ id: 1, siret: nil, status: "activated" }], client.pa_registrations.list
+  end
+
+  # Pennylane takes no cursor here, so a second page cannot be read.
+  def test_pa_registrations_refuses_to_drop_a_second_page
+    body = JSON.generate({ items: [{ id: 1 }], has_more: true, next_cursor: "c2" })
+    stub_request(:get, "#{API}/pa_registrations").to_return(status: 200, body:)
+
+    error = assert_raises(PennylaneClient::Error) { client.pa_registrations.list }
+    assert_match(/has_more/, error.message)
   end
 end
