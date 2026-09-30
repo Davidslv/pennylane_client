@@ -11,7 +11,7 @@ module PennylaneClient
       # `next_cursor` as far as you read and sends `filter` and `sort` again
       # on every page. The filter takes `type`; `sort:` takes `id`.
       #
-      #   journals.list(filter: [{ field: "type", operator: "eq", value: "bank" }])
+      #   journals.list(sort: "id").map { _1[:code] }
       def list(**params) = paginate(:getJournals, **params)
 
       # One journal.

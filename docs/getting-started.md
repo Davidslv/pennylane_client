@@ -32,7 +32,7 @@ Clients are cheap to build. They share one connection pool and, per token, one r
 
 ```ruby
 client.call(:getJournal, id: 42)
-client.call(:getJournals, filter: [{ field: "code", operator: "eq", value: "HA" }])
+client.call(:getLedgerAccounts, filter: [{ field: "number", operator: "start_with", value: "512" }])
 client.call(:postJournals, code: "HA", label: "Achats")
 client.call(:markAsPaidCustomerInvoice, id: 42)   # => true (204, no body)
 ```
@@ -58,7 +58,7 @@ invoices.finalize(invoice[:id])
 invoices.send_by_email(invoice[:id])
 ```
 
-Attributes go to Pennylane as you pass them. Lists return every item lazily, as `client.paginate` does. The full list of methods is in `lib/pennylane_client/resources/` and `sig/pennylane_client/resources.rbs`; the how-to covers the ones you would not guess, for [customer invoices](how-to.md#work-with-customer-invoices), [customers](how-to.md#work-with-customers), [supplier invoices and suppliers](how-to.md#work-with-supplier-invoices-and-suppliers), [mandates](how-to.md#work-with-mandates), [transactions and bank accounts](how-to.md#work-with-transactions-and-bank-accounts), and [quotes and commercial documents](how-to.md#work-with-quotes-and-commercial-documents).
+Attributes go to Pennylane as you pass them. Lists return every item lazily, as `client.paginate` does. The full list of methods is in `lib/pennylane_client/resources/` and `sig/pennylane_client/resources.rbs`; the how-to covers the ones you would not guess, for [customer invoices](how-to.md#work-with-customer-invoices), [customers](how-to.md#work-with-customers), [supplier invoices and suppliers](how-to.md#work-with-supplier-invoices-and-suppliers), [mandates](how-to.md#work-with-mandates), [transactions and bank accounts](how-to.md#work-with-transactions-and-bank-accounts), [quotes and commercial documents](how-to.md#work-with-quotes-and-commercial-documents), and [the ledger](how-to.md#work-with-the-ledger).
 
 ## When it fails
 

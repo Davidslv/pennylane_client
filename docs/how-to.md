@@ -101,7 +101,7 @@ Each page asks for the largest `limit` the operation allows (100, or 1000 for th
 Pass a `File`, an IO or a `Pathname` as the file field. The file streams from disk, so a 100 MB upload does not load 100 MB into memory. The filename comes from the path and the content type from the extension (`.pdf`, `.png`, `.jpg`, `.tiff`, `.bmp`, `.gif`, `.xml`).
 
 ```ruby
-client.call(:postFileAttachments, file: Pathname("receipt.pdf"))
+client.file_attachments.upload(Pathname("receipt.pdf"))   # => { id: 5, ... }
 
 File.open("invoice.pdf", "rb") do |file|
   client.call(:postCustomerInvoiceAppendices, customer_invoice_id: 42, file:)
@@ -151,7 +151,7 @@ Three ways to bring in an invoice issued elsewhere:
 
 ```ruby
 invoices.create_from_quote(quote_id: 9, draft: true)
-invoices.import(file_attachment_id: 5, customer_id: 7, ...)     # PDF uploaded first with postFileAttachments
+invoices.import(file_attachment_id: 5, customer_id: 7, ...)     # PDF uploaded first with file_attachments.upload
 invoices.import_e_invoice(Pathname("facturx.pdf"), invoice_options: { customer_id: 7 })
 ```
 
@@ -198,7 +198,7 @@ customers.categorize(7, [{ id: 426, weight: "0.6575" }, { id: 427, weight: "0.34
 
 ## Work with supplier invoices and suppliers
 
-`client.supplier_invoices` and `client.suppliers` name every Supplier Invoices and Suppliers operation. A supplier invoice has no `create`. It comes in by import, from a PDF uploaded first with `postFileAttachments`, or from an e-invoice file:
+`client.supplier_invoices` and `client.suppliers` name every Supplier Invoices and Suppliers operation. A supplier invoice has no `create`. It comes in by import, from a PDF uploaded first with `client.file_attachments.upload`, or from an e-invoice file:
 
 ```ruby
 invoices = client.supplier_invoices
@@ -332,6 +332,43 @@ client.customer_invoices.create_from_quote(quote_id: quote[:id], draft: true)
 Both resources list what hangs off one document: `invoice_lines` and `invoice_line_sections` (both take `sort:`) and `appendices` (no `sort:`). `upload_appendix(id, file)` attaches a PDF or image, streamed like any [upload](#upload-a-file).
 
 `client.customer_invoice_templates.list` lists the customer invoice templates. The API has no call to create or change one.
+
+## Work with the ledger
+
+`client.journals`, `client.ledger_accounts`, `client.ledger_entries`, `client.ledger_entry_lines`, `client.fiscal_years` and `client.trial_balance` name every ledger operation.
+
+A ledger entry needs a journal and balanced lines. Amounts are Strings or BigDecimals. `create` takes the lines as a plain array; `update` takes them as `{ create: [...], update: [...], delete: [...] }`:
+
+```ruby
+bank = client.ledger_accounts.list(filter: [{ field: "number", operator: "eq", value: "512" }]).first
+entry = client.ledger_entries.create(date: Date.today, label: "Rent", journal_id: 4,
+                                     ledger_entry_lines: [{ debit: "1200", credit: "0", ledger_account_id: 613 },
+                                                          { debit: "0", credit: "1200", ledger_account_id: bank[:id] }])
+client.ledger_entries.update(entry[:id], ledger_entry_lines: { update: [{ id: 91, label: "Rent, March" }] })
+```
+
+Pennylane may return the lines in a different order from the one you sent. Match them by debit, credit or label, not by position.
+
+A ledger account number starting with 401 also creates a supplier, and one starting with 411 a company customer.
+
+Lines are listed, lettered and categorized on `client.ledger_entry_lines`. `letter` and `unletter` both require `unbalanced_lettering_strategy:`: `"none"` makes Pennylane refuse an unbalanced lettering with a `ValidationError`, `"partial"` allows it. Lettering a line that is already lettered brings its whole lettering along. `unletter` is a DELETE with a body and returns true:
+
+```ruby
+lines = client.ledger_entry_lines
+lines.letter([{ id: 91 }, { id: 95 }], unbalanced_lettering_strategy: "none")   # => every line of the lettering
+lines.lettered_lines(91).to_a
+lines.unletter([{ id: 95 }], unbalanced_lettering_strategy: "none")               # => true
+lines.categorize(91, [{ id: 59, weight: "0.5" }, { id: 33, weight: "0.5" }])     # [] removes them all
+```
+
+The trial balance needs a period. It comes back one Hash per account, 1000 to a page:
+
+```ruby
+client.trial_balance.list(period_start: Date.new(2026, 1, 1), period_end: Date.new(2026, 12, 31))
+                    .each { puts [_1[:number], _1[:debits], _1[:credits]].join("\t") }
+```
+
+To attach a receipt to an entry, upload it with `client.file_attachments.upload` and pass the id as `file_attachment_id:`. The contract says that field will soon be deprecated. The deprecated `postLedgerAttachments` has no named method.
 
 ## Handle a validation error
 
