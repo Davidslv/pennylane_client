@@ -13,7 +13,7 @@ Every example below runs in the test suite against the answers Pennylane documen
 
 **Your app:** [use it in Rails](#use-it-in-rails), [forking web servers and job runners](#forking-web-servers-and-job-runners), [receive webhooks in Rails](#receive-webhooks-in-rails), [test your own app](#test-your-own-app).
 
-**Pennylane:** [run an export](#run-an-export), [read the changelogs](#read-the-changelogs), [letter and unletter ledger entry lines](#letter-and-unletter-ledger-entry-lines), [categorize with weights](#categorize-with-weights), [subscribe to webhooks](#subscribe-to-webhooks), and one section per resource group from [customer invoices](#work-with-customer-invoices) to [purchase orders](#import-a-purchase-order).
+**Pennylane:** [run an export](#run-an-export), [read the changelogs](#read-the-changelogs), [letter and unletter ledger entry lines](#letter-and-unletter-ledger-entry-lines), [categorise with weights](#categorise-with-weights), [subscribe to webhooks](#subscribe-to-webhooks), and one section per resource group from [customer invoices](#work-with-customer-invoices) to [purchase orders](#import-a-purchase-order).
 
 ## Walk a list
 
@@ -49,7 +49,7 @@ Each page asks for the largest `limit` the operation allows: 100, or 1000 for th
 client.customer_invoices.list(limit: 20).first(20)   # one request for 20 items
 ```
 
-Read a list with `each`, `first`, `take`, `map` or `to_a`. Avoid `next`, `peek` and `zip`. They drive the enumerator from outside, which runs the walk in a fiber of its own, and that fiber opens its own connection and TLS handshake. Ruby keeps the fiber, and its socket, until garbage collection.
+Read a list with `each`, `first`, `take`, `map` or `to_a`. Avoid `next`, `peek` and `zip`: a list read that way opens a connection of its own, which stays open until garbage collection.
 
 ## Filter and sort a list
 
@@ -125,12 +125,12 @@ Each wait fires a `type: :wait` event with the seconds waited; see [log requests
 
 ### Share the budget across processes
 
-The bucket is per process. Several processes on one token (Puma workers, Sidekiq processes) each think they have 25 requests. The rate-limit headers and the 429 retries absorb the overlap, at the cost of some 429s. To share one budget, give the client a `LimiterRegistry` that builds your own limiter, for example on Redis. A limiter answers two methods:
+The bucket is per process. Several processes on one token (Puma workers, Sidekiq processes) each think they have 25 requests. The rate-limit headers and the 429 retries absorb the overlap, at the cost of some 429s. To share one budget, give the client a `LimiterRegistry` that builds your own limiter, for example on Redis. A limiter responds to two methods:
 
 - `acquire`: wait until a call is allowed, then return the seconds waited (`0.0` when there was no wait);
 - `update(remaining:, reset_at:)`: take Pennylane's count from the headers; `reset_at` is a Unix time, or `nil`.
 
-`idle?` is optional. The block gets a SHA-256 digest of the token, never the token:
+`idle?` is optional; see below the example.
 
 <!-- example -->
 ```ruby
@@ -153,7 +153,7 @@ client = PennylaneClient.new(token: ENV.fetch("PENNYLANE_TOKEN"), limiters:)
 client.users.me
 ```
 
-Build the registry once and share it; every client given it shares its limiters. The registry drops a limiter no one has fetched for 60 s (`idle_after:` changes it) and builds a new one the next time the token is used. If your limiter answers `idle?`, it is dropped only when that returns true.
+The block given to `LimiterRegistry.new` gets a SHA-256 hex digest of the token, never the token. Build the registry once and share it; every client given it shares its limiters. The registry drops a limiter no one has fetched for 60 s (`idle_after:` changes it) and builds a new one the next time the token is used. If your limiter responds to `idle?`, it is dropped only when that returns true.
 
 ## Set timeouts
 
@@ -207,7 +207,7 @@ upload = PennylaneClient::Upload.new(pdf, filename: "receipt-2026-09.pdf", conte
 client.file_attachments.upload(upload)[:id]
 ```
 
-The client reads an IO from where it stands when the call starts, to its end. A `StringIO` you have just written to stands at its end, so without `rewind` the file part is empty, and nothing raises. A retry after a 429 goes back to the same starting point, so every attempt sends the same bytes.
+The client reads an IO from where it stands when the call starts, to its end. A `StringIO` you have written to stands at its end, so without `rewind` the file part is empty, and nothing raises. A retry after a 429 goes back to the same starting point, so every attempt sends the same bytes.
 
 `Upload.new(io, filename:, content_type:)` takes both keywords as optional. With only `filename:`, the content type comes from its extension. An IO with no path sent without an `Upload` goes as `upload`, with `application/octet-stream`, and a `filename:` field next to it does not change that. Each upload operation's reference lists the content types Pennylane accepts: for `file_attachments.upload`, a PDF or a PNG, JPEG, TIFF, BMP or GIF image.
 
@@ -394,7 +394,7 @@ class PennylaneWebhooksController < ApplicationController
     event = PennylaneClient::Webhook.verify!(request.raw_post, request.headers["X-Pennylane-Signature"],
                                              secret: ENV.fetch("PENNYLANE_WEBHOOK_SECRET"))
     PennylaneDelivery.create!(delivery_id: event[:id])   # a unique index on delivery_id
-    PennylaneEventJob.perform_later(event[:event], event[:data].to_h)
+    PennylaneEventJob.perform_later(event[:event], event[:data])
     head :ok
   rescue ActiveRecord::RecordNotUnique
     head :ok             # delivered before: acknowledge it and do nothing
@@ -408,7 +408,7 @@ end
 - **De-duplicate on the delivery id.** Delivery is at least once and in no particular order. `event[:id]` is the delivery id. The controller above stores it under a unique index and acknowledges a repeat without doing the work again. Make the job idempotent as well, and reconcile state from the payload, not from the order of arrival.
 - **Answer fast.** Return a 2xx within a few seconds and do the work in a job. A slow answer counts as a failed delivery and is sent again.
 
-`verify!` computes the HMAC-SHA256 of `"{t}.{raw_body}"` with the subscription secret, compares it in constant time, and rejects a `t` more than 300 seconds from now (`tolerance:` changes it; `nil` skips the check). It returns the event as a deep-frozen Hash with symbol keys:
+`verify!` computes the HMAC-SHA256 of `"{t}.{raw_body}"` with the subscription secret, compares it in constant time, and rejects a `t` more than 300 seconds from now (`tolerance:` changes it; `nil` skips the check). In a test, `now:` (a `Time` or Unix seconds) sets the time it checks against, so a recorded delivery still verifies. It returns the event as a deep-frozen Hash with symbol keys:
 
 <!-- example webhook -->
 ```ruby
@@ -635,7 +635,7 @@ lines.unletter([{ id: 95 }], unbalanced_lettering_strategy: "none")   # => true
 
 Lettering a line that is already lettered brings its whole lettering along. `unletter` is a DELETE with a body and returns true. A missing `unbalanced_lettering_strategy:` raises `ArgumentError` before anything is sent.
 
-## Categorize with weights
+## Categorise with weights
 
 Analytical categories are shared out by weight. `categorize` replaces a record's categories with the ones you pass, as a bare Array of `{ id:, weight: }`. Within one category group the weights must add up to 1. Send weights as Strings:
 
@@ -865,7 +865,7 @@ client.quotes.send_by_email(quote[:id], recipients: ["billing@example.com"])
 client.customer_invoices.create_from_quote(quote_id: quote[:id], draft: true)
 ```
 
-Pennylane numbers each document from the company's numbering for its type. Without one, it refuses to create that commercial document, number a quote or finalize a customer invoice. Numberings are configured in the Pennylane app; `client.numberings.list` shows which exist: `estimate` for quotes, `proforma`, `shipping_order` and `purchasing_order` for commercial documents, `invoice` for customer invoices.
+Pennylane numbers each document from the company's numbering for its type. Without one, it refuses to create that commercial document, number a quote or finalise a customer invoice. Numberings are configured in the Pennylane app; `client.numberings.list` shows which exist: `estimate` for quotes, `proforma`, `shipping_order` and `purchasing_order` for commercial documents, `invoice` for customer invoices.
 
 `update` takes `invoice_lines:` as `{ create: [...], update: [...], delete: [...] }`, not a plain array. A commercial document's `invoice_line_sections:` works the same way. A quote's `update_status` takes `"pending"`, `"accepted"`, `"denied"`, `"invoiced"` or `"expired"`. `send_by_email` works like the invoice one: it returns true, and raises `ConflictError` while Pennylane is still generating the PDF.
 
@@ -888,7 +888,7 @@ client.ledger_entries.update(entry[:id], ledger_entry_lines: { update: [{ id: 91
 
 Pennylane may return the lines in a different order from the one you sent. Match them by debit, credit or label, not by position. A ledger account number starting with 401 also creates a supplier, and one starting with 411 a company customer.
 
-Lines are listed, [lettered](#letter-and-unletter-ledger-entry-lines) and [categorized](#categorize-with-weights) on `client.ledger_entry_lines`. The trial balance needs a period. It comes back one Hash per account, 1000 to a page:
+Lines are listed, [lettered](#letter-and-unletter-ledger-entry-lines) and [categorised](#categorise-with-weights) on `client.ledger_entry_lines`. The trial balance needs a period. It comes back one Hash per account, 1000 to a page:
 
 <!-- example -->
 ```ruby
@@ -911,7 +911,7 @@ client.categories.create(label: "Marketing", category_group_id: group[:id], anal
 client.category_groups.categories(group[:id]).map { _1[:label] }
 ```
 
-`category_groups.update` requires `label:` even when you change only `kind:`. `categories.update` takes `label:`, `analytical_code:` and `direction:`; it does not move a category to another group. To put a category on a record, use [categorize](#categorize-with-weights).
+`category_groups.update` requires `label:` even when you change only `kind:`. `categories.update` takes `label:`, `analytical_code:` and `direction:`; it does not move a category to another group. To put a category on a record, use [`categorize`](#categorise-with-weights).
 
 A product needs `label:`, `price_before_tax:` and `vat_rate:`. Invoice and quote lines can point at it with `product_id:`:
 

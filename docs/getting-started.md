@@ -83,9 +83,9 @@ acme = client.customers.create_company(
 acme[:id]   # => 42
 ```
 
-## Create and finalize a customer invoice
+## Create and finalise a customer invoice
 
-Create the invoice as a draft, check it, then finalize it. Finalizing gives it a number from the company's invoice numbering and makes it final:
+Create the invoice as a draft, check it, then finalise it. Finalising gives it a number from the company's invoice numbering and makes it final:
 
 <!-- example continued -->
 ```ruby
@@ -167,9 +167,9 @@ end
 | `RateLimitError` | 429 | Already retried after `retry-after`; `retry_after` says how long to wait. |
 | `ServerError` | 5xx | Already retried for a GET. A write is not sent twice. |
 | `ConnectionError`, `TimeoutError` | no response arrived | As for `ServerError`. |
-| `ExportError` | an export failed or was not ready in time | `export` has the export's id. |
+| `ExportError` | an export failed or was not ready in time | `e.export[:id]` is the export's id. |
 
-A 2xx body that is not JSON, or not valid UTF-8, raises the base `Error`. An unknown operationId raises `PennylaneClient::UnknownOperationError`, an `ArgumentError`, as does a missing required keyword.
+A 2xx body that is not JSON, or not valid UTF-8, raises the base `Error`. An unknown operationId raises `PennylaneClient::UnknownOperationError`, a subclass of `ArgumentError`. A missing required keyword raises Ruby's own `ArgumentError`.
 
 Before raising, the client retries what is safe to repeat: a 429 for any request, after Pennylane's `retry-after`, and a 5xx or no response for a GET only. A POST, PUT or DELETE that fails with a 5xx or a timeout is not sent again, because Pennylane may already have applied it. [Retry a request](how-to.md#retry-a-request) says how to opt in.
 

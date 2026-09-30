@@ -6,7 +6,7 @@ The design is in [proposal 0001](../proposals/0001-pennylane-client-gem.md), dec
 
 ## Components
 
-One class, one job. Every component in `lib/` is built.
+One class, one job. Every component below is in `lib/`.
 
 | Component | File | Its one responsibility |
 |---|---|---|
@@ -226,7 +226,7 @@ Known limits, stated plainly:
 - **One Operation shape is assumed.** The Executor puts leftover params in the body when there is one and in the query when there is not. No Operation in the snapshot takes both. If a future snapshot adds one, its query params would go in the body; neither the generator nor the Executor checks for it.
 - **Named lists return items only.** `list` walks `items` and drops any other top-level key on the page, such as the `included` section `getCustomerInvoices` returns with `include:` (experimental at Pennylane). `client.pages` returns the whole page.
 - **A path-less IO uploads as `application/octet-stream`.** A `StringIO` or a Tempfile without an extension has no name to take a content type from. Pennylane lists the content types it allows; wrap the IO in `Upload.new(io, filename:, content_type:)`.
-- **An IO is read from its current position.** `Multipart` records the position of each IO when the call starts and rewinds to it before every attempt, so a retry sends what the first attempt sent. An IO left at its end (a `StringIO` just written to) sends an empty file part without an error. Rewinding to byte 0 instead would ignore a position the caller chose, and Ruby reads an IO from where it stands elsewhere too (`IO.copy_stream`, `Net::HTTP` `body_stream`).
+- **An IO is read from its current position.** `Multipart` records the position of each IO when the call starts and rewinds to it before every attempt, so a retry sends what the first attempt sent. An IO left at its end (a `StringIO` after writing to it) sends an empty file part without an error. Rewinding to byte 0 instead would ignore a position the caller chose, and Ruby reads an IO from where it stands elsewhere too (`IO.copy_stream`, `Net::HTTP` `body_stream`).
 - **D5 rests on an assumption.** A 429 is retried for writes because it should mean the request was not run. That is unconfirmed until a sandbox run (`PENNYLANE_SMOKE_PROBE_429`, proposal 0001 open questions).
 - **No live verification yet.** The maintainer has no Pennylane account, so behaviour is checked against the documentation and `FakePennylane`, not a sandbox. The README states the live-verified count.
 - **Responses are untyped.** Callers convert money and dates themselves (D6).
