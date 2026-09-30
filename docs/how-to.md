@@ -19,7 +19,8 @@ On Ruby 3.4 and newer `bigdecimal` is a bundled gem, so add `gem "bigdecimal"` t
 Send amounts as strings too. Pennylane rejects numeric amounts with a 400. The client converts a `BigDecimal`, `Date` or `Time` you pass for you:
 
 ```ruby
-client.call(:postJournals, amount: BigDecimal("12.50"), date: Date.today)   # sends "12.5" and "2026-09-30"
+client.call(:createTransaction, bank_account_id: 1, label: "Rent",
+                                amount: BigDecimal("12.50"), date: Date.today)   # sends "12.5" and "2026-09-30"
 ```
 
 ## Log requests and collect metrics

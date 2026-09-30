@@ -33,6 +33,12 @@ client.call(:postJournals, code: "HA", label: "Achats")
 client.call(:markAsPaidCustomerInvoice, id: 42)   # => true (204, no body)
 ```
 
+A few operations take a JSON array as their body. Pass it as the second argument:
+
+```ruby
+client.call(:putCustomerCategories, [{ id: 3, weight: "1" }], customer_id: 9)
+```
+
 ## When it fails
 
 Every error is a `PennylaneClient::Error` with `#status`, `#code`, `#details` and `#body`:

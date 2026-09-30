@@ -34,12 +34,13 @@ What happens on `client.call(:getJournal, id: 42)`:
 3. **Executor** builds a `Request`:
    - Names in the path template (`{id}`) are taken from the params and escaped. A missing one raises `ArgumentError`.
    - If the Operation takes a JSON body, every other param goes into the body, run through the **Encoder** and `JSON.generate`. This covers `DELETE` with a body (`deleteLedgerEntryLinesUnletter`).
+   - Six Operations (`putCustomerCategories` and its siblings) take a JSON array, which keywords cannot build. The caller passes the body as the second argument, `client.call(:putCustomerCategories, [...], customer_id: 9)`; keywords then fill only the path, and any left over raise `ArgumentError`.
    - Otherwise every other param goes into the query. `nil` values are left out. Hash and Array values are sent as JSON strings, because Pennylane's `filter` is a JSON array in a query string.
    - No Operation in the 2026-09-30 snapshot takes both a body and a query.
    - Multipart Operations raise `NotImplementedError` until uploads land (#8).
    - Headers: `Authorization: Bearer <token>`, `Accept: application/json`, a `User-Agent` naming the gem, and `Content-Type: application/json` when there is a body.
-4. **Transport** sends it. `NetHttpTransport` keeps one keep-alive connection per host per thread, so threads never share a socket. Timeouts are open 5 s, read 30 s, write 30 s. It sets `max_retries = 0`, because `Net::HTTP` otherwise resends an idempotent verb once on a dropped connection, and PUT and DELETE have side effects at Pennylane (D5). No response raises `TimeoutError` or `ConnectionError` and drops the connection.
-5. **Instrumentation** records the attempt: one log line (`info`, or `warn` when no response came) and one frozen `on_request` event: `operation_id`, `method`, `path` (no query), `status`, `error`, `duration` in ms.
+4. **Transport** sends it. Every Client shares `NetHttpTransport.default`, so building a Client per request or per token opens no new sockets; the token travels in each request, not in the connection. It keeps one keep-alive connection per host per fiber (`Thread#[]` is fiber-local), so threads and fibers never share a socket. Bodies come back as UTF-8. Timeouts are open 5 s, read 30 s, write 30 s. It sets `max_retries = 0`, because `Net::HTTP` otherwise resends an idempotent verb once on a dropped connection, and PUT and DELETE have side effects at Pennylane (D5). No response raises `TimeoutError` or `ConnectionError` and drops the connection.
+5. **Instrumentation** records the attempt: one log line (`info`, or `warn` when no response came) and one frozen `on_request` event: `operation_id`, `method`, `path` (no query), `status`, `error`, `duration` in ms. It never raises: a failing logger or callback is reported and ignored, so a write that reached Pennylane never looks failed to the caller.
 6. **Executor** reads the `Response`:
    - 2xx with an empty body returns `true`.
    - 2xx with a body returns `JSON.parse(..., symbolize_names: true, freeze: true)`: a deep-frozen Hash with symbol keys. A body that is not JSON raises the base `Error`.
@@ -47,7 +48,7 @@ What happens on `client.call(:getJournal, id: 42)`:
 
 ### Where the token lives
 
-Only the Executor holds the token, and only `Request#headers` carries it. `Client`, `Executor` and `Request` override `inspect`, errors are built from the response alone, and events are built from the Operation and the URL path. `test/token_secrecy_test.rb` checks all of these.
+Only the Executor holds the token, and only `Request#headers` carries it. `Client`, `Executor` and `Request` override `inspect`, errors are built from the response alone, and events are built from the Operation and the URL path. `Request#to_h` and `#headers` do return the raw header, because a Transport needs it; a custom Transport must not log them. A token with whitespace or a line break is refused when the Client is built, because `Net::HTTP` would otherwise raise an error quoting the header. `test/token_secrecy_test.rb` checks all of these.
 
 ### Transport interface
 
