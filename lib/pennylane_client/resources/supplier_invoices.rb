@@ -68,6 +68,20 @@ module PennylaneClient
         call(:postSupplierInvoiceLinkedPurchaseRequests, supplier_invoice_id:, purchase_request_id:)
       end
 
+      # Matches one bank transaction to the invoice. Call it once per
+      # transaction; a transaction can match several invoices. Returns true.
+      #
+      #   invoices.match_transaction(42, transaction_id: 9)
+      def match_transaction(supplier_invoice_id, transaction_id:)
+        call(:postSupplierInvoiceMatchedTransactions, supplier_invoice_id:, transaction_id:)
+      end
+
+      # Unmatches the transaction `transaction_id` from the invoice. Returns
+      # true.
+      def unmatch_transaction(supplier_invoice_id, transaction_id)
+        call(:deleteSupplierInvoiceMatchedTransactions, supplier_invoice_id:, id: transaction_id)
+      end
+
       # The lists below hang off one invoice. Each returns every item as an
       # Enumerator::Lazy of Hashes, like `list`.
 

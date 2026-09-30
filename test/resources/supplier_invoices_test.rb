@@ -123,7 +123,7 @@ class SupplierInvoiceImportsTest < Minitest::Test
 end
 
 # What changes on an invoice after it exists: payment status, e-invoice
-# status, categories, linked purchase requests.
+# status, categories, linked purchase requests, matched transactions.
 class SupplierInvoiceActionsTest < Minitest::Test
   include SupplierInvoicesTestHelper
 
@@ -164,6 +164,22 @@ class SupplierInvoiceActionsTest < Minitest::Test
       .to_return(status: 204)
 
     assert invoices.link_purchase_request(42, purchase_request_id: 8)
+  end
+
+  # names: postSupplierInvoiceMatchedTransactions
+  def test_match_transaction_returns_true_on_no_content
+    stub_request(:post, "#{API}/supplier_invoices/42/matched_transactions")
+      .with(body: '{"transaction_id":9}')
+      .to_return(status: 204)
+
+    assert invoices.match_transaction(42, transaction_id: 9)
+  end
+
+  # names: deleteSupplierInvoiceMatchedTransactions
+  def test_unmatch_transaction_returns_true_on_no_content
+    stub_request(:delete, "#{API}/supplier_invoices/42/matched_transactions/9").with(body: nil).to_return(status: 204)
+
+    assert invoices.unmatch_transaction(42, 9)
   end
 
   # names: putSupplierInvoiceCategories

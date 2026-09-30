@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 85 of 177 live |
+| Named | 89 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -320,14 +320,14 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `getSupplierCategories` | GET | `/suppliers/{supplier_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/suppliers_test.rb#test_categories_walks_every_page` |
 | `putSupplierCategories` | PUT | `/suppliers/{supplier_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/suppliers_test.rb#test_categorize_sends_the_categories_as_a_bare_array` |
 
-## Transactions (7 of 11 named)
+## Transactions (11 of 11 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `postCustomerInvoiceMatchedTransactions` | POST | `/customer_invoices/{customer_invoice_id}/matched_transactions` | yes | no | unverified: no sandbox access |  |
-| `deleteCustomerInvoiceMatchedTransactions` | DELETE | `/customer_invoices/{customer_invoice_id}/matched_transactions/{id}` | yes | no | unverified: no sandbox access |  |
-| `postSupplierInvoiceMatchedTransactions` | POST | `/supplier_invoices/{supplier_invoice_id}/matched_transactions` | yes | no | unverified: no sandbox access |  |
-| `deleteSupplierInvoiceMatchedTransactions` | DELETE | `/supplier_invoices/{supplier_invoice_id}/matched_transactions/{id}` | yes | no | unverified: no sandbox access |  |
+| `postCustomerInvoiceMatchedTransactions` | POST | `/customer_invoices/{customer_invoice_id}/matched_transactions` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_match_transaction_returns_true_on_no_content` |
+| `deleteCustomerInvoiceMatchedTransactions` | DELETE | `/customer_invoices/{customer_invoice_id}/matched_transactions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_unmatch_transaction_returns_true_on_no_content` |
+| `postSupplierInvoiceMatchedTransactions` | POST | `/supplier_invoices/{supplier_invoice_id}/matched_transactions` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_match_transaction_returns_true_on_no_content` |
+| `deleteSupplierInvoiceMatchedTransactions` | DELETE | `/supplier_invoices/{supplier_invoice_id}/matched_transactions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_unmatch_transaction_returns_true_on_no_content` |
 | `getTransactions` | GET | `/transactions` | yes | yes | unverified: no sandbox access | `test/resources/transactions_test.rb#test_list_walks_every_page_resending_the_filter` |
 | `createTransaction` | POST | `/transactions` | yes | yes | unverified: no sandbox access | `test/resources/transactions_test.rb#test_create_encodes_the_amount_and_date` |
 | `getTransaction` | GET | `/transactions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/transactions_test.rb#test_find` |
