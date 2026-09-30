@@ -105,7 +105,9 @@ client.customer_invoices.categorize(42, [{ id: 426, weight: "1" }], retry: :alwa
 client.call(:putCategoryGroup, id: 42, label: "Sales", retry: :always)
 ```
 
-A named read takes no `retry:`, because a GET is retried already. Do not pass `retry: :always` to a create: a retried create can make two records.
+Reads need nothing: every GET is retried as the table shows. So a named read takes no `retry:`. A list refuses it with an `ArgumentError` that says a GET is retried already. A `find` has no keywords at all, so `find(42, retry: :always)` raises Ruby's own `ArgumentError`, "wrong number of arguments".
+
+Do not pass `retry: :always` to a create: a retried create can make two records.
 
 ## Stay inside the rate limit
 
