@@ -67,13 +67,12 @@ module PennylaneClient
 
     def plain_text
       text = body.to_s.strip
-      return nil if text.empty?
-
-      text.length > MESSAGE_LIMIT ? "#{text[0, MESSAGE_LIMIT]}..." : text
+      text.empty? ? nil : text
     end
 
     # "422 unprocessable_entity: Entry lines are not balanced"
     def summary(text)
+      text = "#{text[0, MESSAGE_LIMIT]}..." if text && text.length > MESSAGE_LIMIT
       [[status, code].compact.join(" "), text].reject { _1.nil? || _1.empty? }.join(": ")
     end
   end

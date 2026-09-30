@@ -11,29 +11,24 @@ class ErrorsTest < Minitest::Test
     PennylaneClient::Error.from_response(response(...))
   end
 
-  # Written by hand from the errors guide, not read from STATUS_ERRORS.
-  DOCUMENTED = {
-    400 => PennylaneClient::ValidationError,
-    401 => PennylaneClient::AuthenticationError,
-    403 => PennylaneClient::PermissionError,
-    404 => PennylaneClient::NotFoundError,
-    409 => PennylaneClient::ConflictError,
-    422 => PennylaneClient::ValidationError,
-    429 => PennylaneClient::RateLimitError,
-    500 => PennylaneClient::ServerError,
-    502 => PennylaneClient::ServerError,
-    503 => PennylaneClient::ServerError,
-    504 => PennylaneClient::ServerError
-  }.freeze
+  # One test per class, statuses written by hand from the errors guide.
+  def assert_maps(status, klass)
+    error = error_for(status)
 
-  def test_maps_each_documented_status_to_its_class
-    DOCUMENTED.each do |status, klass|
-      error = error_for(status)
-
-      assert_instance_of klass, error, "status #{status}"
-      assert_equal status, error.status
-    end
+    assert_instance_of klass, error, "status #{status}"
+    assert_equal status, error.status
   end
+
+  def test_400_is_a_validation_error = assert_maps(400, PennylaneClient::ValidationError)
+  def test_401_is_an_authentication_error = assert_maps(401, PennylaneClient::AuthenticationError)
+  def test_403_is_a_permission_error = assert_maps(403, PennylaneClient::PermissionError)
+  def test_404_is_a_not_found_error = assert_maps(404, PennylaneClient::NotFoundError)
+  def test_409_is_a_conflict_error = assert_maps(409, PennylaneClient::ConflictError)
+  def test_422_is_a_validation_error = assert_maps(422, PennylaneClient::ValidationError)
+  def test_429_is_a_rate_limit_error = assert_maps(429, PennylaneClient::RateLimitError)
+  def test_500_is_a_server_error = assert_maps(500, PennylaneClient::ServerError)
+  def test_503_is_a_server_error = assert_maps(503, PennylaneClient::ServerError)
+  def test_any_other_5xx_is_a_server_error = assert_maps(502, PennylaneClient::ServerError)
 
   def test_an_undocumented_status_falls_back_to_the_base_class
     assert_instance_of PennylaneClient::Error, error_for(418)
@@ -85,6 +80,10 @@ class ErrorsTest < Minitest::Test
 
     assert_operator error.message.length, :<, 300
     assert_equal 1_000, error.body.length
+  end
+
+  def test_truncates_a_long_json_message_too
+    assert_operator error_for(422, { message: "y" * 1_000 }.to_json).message.length, :<, 300
   end
 
   def test_rate_limit_error_exposes_retry_after_in_seconds
