@@ -132,6 +132,15 @@ module PennylaneClient
     # The named Trial balance operation (Resources::TrialBalance).
     def trial_balance = @trial_balance ||= Resources::TrialBalance.new(self)
 
+    # The named Categories operations (Resources::Categories).
+    def categories = @categories ||= Resources::Categories.new(self)
+
+    # The named Category Groups operations (Resources::CategoryGroups).
+    def category_groups = @category_groups ||= Resources::CategoryGroups.new(self)
+
+    # The named Products operations (Resources::Products).
+    def products = @products ||= Resources::Products.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

@@ -326,5 +326,37 @@ module PennylaneClient
     class TrialBalance < Resource
       def list: (period_start: untyped, period_end: untyped, **untyped params) -> Enumerator::Lazy[item, void]
     end
+
+    class Categories < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+    end
+
+    class CategoryGroups < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+
+      def categories: (Integer category_group_id, **untyped params) -> Enumerator::Lazy[item, void]
+    end
+
+    class Products < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+    end
   end
 end
