@@ -40,6 +40,19 @@ Operations with a Ruby name are marked `named` in the [checklist](docs/api/CHECK
 
 Responses are frozen Hashes with symbol keys, exactly as Pennylane sends them. Money stays a decimal string (`"230.32"`).
 
+### Inbound webhooks
+
+```ruby
+event = PennylaneClient::Webhook.verify!(raw_body, headers["X-Pennylane-Signature"],
+                                         secret: ENV.fetch("PENNYLANE_WEBHOOK_SECRET"))
+event[:id]     # the delivery id
+event[:event]  # "customer_invoice.e_invoicing_status_updated"
+```
+
+`verify!` checks the HMAC-SHA256 signature in constant time, rejects a timestamp more than 300 seconds old (`tolerance:`), and returns the deep-frozen event. Any failure raises `PennylaneClient::SignatureError`. Pass the raw body bytes, not re-serialised JSON.
+
+Pennylane delivers at least once and in no particular order. De-duplicate on the delivery `id` and make your handler idempotent; storing seen ids is up to you. See [how-to](docs/how-to.md#verify-an-inbound-webhook).
+
 ## Requirements
 
 Ruby 3.3 or newer. No runtime dependencies.
