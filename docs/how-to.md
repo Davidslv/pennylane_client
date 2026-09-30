@@ -423,19 +423,105 @@ A missing or malformed header, a signature that does not match, a stale timestam
 
 ## Test your own app
 
-The gem sends plain HTTPS requests, so [WebMock](https://github.com/bblimke/webmock) can stand in for Pennylane in your tests. Stub the method and path from the operation's reference page (the [checklist](api/CHECKLIST.md) lists them), answer with the JSON Pennylane documents, and use a fresh `LimiterRegistry` so tests never wait on the rate limit. In a Minitest test with `require "webmock/minitest"`:
+The gem sends plain HTTPS requests, so [WebMock](https://github.com/bblimke/webmock) can stand in for Pennylane in your tests. Stub the method and path from the operation's reference page (the [checklist](api/CHECKLIST.md) lists them) and answer with the JSON Pennylane documents. The examples below are Minitest with `require "webmock/minitest"`.
+
+First, a client that never waits on the rate limit. Every client shares one budget per token for the whole process, 25 requests per 5 s, and a test suite spends it fast. A fresh `LimiterRegistry` gives a test its own budget, but it still waits once that test makes more than 25 calls in 5 s. A registry that builds a limiter doing nothing never waits:
 
 <!-- example -->
 ```ruby
-stub_request(:get, "https://app.pennylane.com/api/external/v2/customer_invoices/42")
-  .to_return(status: 200, headers: { "Content-Type" => "application/json" },
+module NoopLimiter
+  def self.acquire = 0.0                        # the seconds waited: none
+  def self.update(remaining:, reset_at:); end   # ignores Pennylane's rate-limit headers
+end
+
+client = PennylaneClient.new(token: "test-token", limiters: PennylaneClient::LimiterRegistry.new { NoopLimiter })
+```
+
+### Stub one record
+
+<!-- example continued -->
+```ruby
+api = "https://app.pennylane.com/api/external/v2"
+json = { "Content-Type" => "application/json" }
+
+stub_request(:get, "#{api}/customer_invoices/42")
+  .to_return(status: 200, headers: json,
              body: { id: 42, invoice_number: "F20230001", amount: "230.32", status: "upcoming" }.to_json)
 
-client = PennylaneClient.new(token: "test-token", limiters: PennylaneClient::LimiterRegistry.new)
 client.customer_invoices.find(42)[:invoice_number]   # => "F20230001"
 ```
 
-Stub a failure the same way. A 422 raises `ValidationError`. A GET that gets a 503 is sent 3 times, with up to 1.5 s of backoff in all, before `ServerError` is raised, so stub the 503 for every attempt. `FakePennylane`, the stand-in the gem's own tests use, is not part of the gem.
+### Stub a list
+
+A list asks for the largest page the operation allows (`limit=100` here) and sends your `filter` as a JSON string. Each page answers with `items`, `has_more` and `next_cursor`. The client asks for the next page with `cursor` set to the last `next_cursor`, and stops when `has_more` is false:
+
+<!-- example continued -->
+```ruby
+drafts = [{ field: "draft", operator: "eq", value: "true" }]
+
+stub_request(:get, "#{api}/customer_invoices")
+  .with(query: { limit: "100", filter: drafts.to_json })
+  .to_return(status: 200, headers: json, body: {
+    items: [{ id: 42, invoice_number: "F20230001", amount: "230.32", currency: "EUR" }],
+    has_more: true, next_cursor: "cursor-2"
+  }.to_json)
+stub_request(:get, "#{api}/customer_invoices")
+  .with(query: { limit: "100", filter: drafts.to_json, cursor: "cursor-2" })
+  .to_return(status: 200, headers: json, body: {
+    items: [{ id: 43, invoice_number: "F20230002", amount: "120.00", currency: "EUR" }],
+    has_more: false, next_cursor: nil
+  }.to_json)
+
+client.customer_invoices.list(filter: drafts).map { _1[:id] }.to_a   # => [42, 43]
+```
+
+### Stub an error
+
+Answer with the status and the body Pennylane sends. This 422 body is the example from Pennylane's error guide:
+
+<!-- example continued -->
+```ruby
+stub_request(:post, "#{api}/customer_invoices")
+  .to_return(status: 422, headers: json, body: {
+    error: "unprocessable_entity", message: "Missing required field: customer_id",
+    details: { field: "customer_id", issue: "is required" }
+  }.to_json)
+
+begin
+  client.customer_invoices.create(date: "2026-09-30", deadline: "2026-10-30", invoice_lines: [])
+rescue PennylaneClient::ValidationError => e
+  e.details   # => { field: "customer_id", issue: "is required" }
+end
+```
+
+A GET that gets a 500, 502, 503 or 504 is sent 3 times, with up to 1.5 s of random backoff in all, before `ServerError` is raised. Build the test client with `max_retry_wait: 0` and it raises on the first one: no backoff fits in 0 s. A 429 stubbed with `"Retry-After" => "0"` is still retried, at once:
+
+<!-- example continued -->
+```ruby
+stub_request(:get, "#{api}/customer_invoices/44").to_return(status: 503)
+no_waits = PennylaneClient.new(token: "test-token", max_retry_wait: 0,
+                               limiters: PennylaneClient::LimiterRegistry.new { NoopLimiter })
+
+begin
+  no_waits.customer_invoices.find(44)
+rescue PennylaneClient::ServerError => e
+  e.status   # => 503
+end
+```
+
+### Point the client at a local server
+
+`base_url:` sends every request to another host, such as a fake Pennylane you run in your test suite. The client adds `/api/external/v2`. It is for tests; leave the default, `https://app.pennylane.com`, everywhere else:
+
+<!-- example continued -->
+```ruby
+local = PennylaneClient.new(token: "test-token", base_url: "http://127.0.0.1:9292",
+                            limiters: PennylaneClient::LimiterRegistry.new { NoopLimiter })
+stub_request(:get, "http://127.0.0.1:9292/api/external/v2/me").to_return(status: 200, headers: json, body: "{}")
+local.users.me   # => {}
+```
+
+### Without WebMock
 
 Without WebMock, give the client a transport of your own. A transport is anything with `call(request)` that returns a `PennylaneClient::Response`:
 
