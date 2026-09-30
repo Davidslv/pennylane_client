@@ -15,7 +15,7 @@ module PennylaneClient
     def self.default: () -> NetHttpTransport
 
     def initialize: (?open_timeout: Numeric, ?read_timeout: Numeric, ?write_timeout: Numeric,
-                     ?upload_timeout: Numeric) -> void
+                     ?upload_timeout: Numeric, ?keep_alive_timeout: Numeric) -> void
 
     def close: () -> void
 

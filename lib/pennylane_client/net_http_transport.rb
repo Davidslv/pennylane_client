@@ -21,6 +21,10 @@ module PennylaneClient
   #   travels in each request, not in the connection.
   # - Timeouts: open 5 s, read 30 s, write 30 s (proposal 0001). An upload
   #   gets 300 s to read and write, then the connection goes back to 30 s.
+  # - An idle connection is kept for 30 s (`keep_alive_timeout`). Net::HTTP
+  #   drops it after 2 s by default, and a rate-limit wait lasts up to 5 s,
+  #   so a busy token would reconnect after every wait (docs/performance.md).
+  #   Net::HTTP still reconnects when the server has closed the connection.
   # - A body that responds to `read` (Multipart) is rewound and streamed
   #   as `body_stream`; a String body is sent as is.
   # - Never retries. Net::HTTP retries idempotent verbs once by default,
@@ -35,11 +39,12 @@ module PennylaneClient
     # The process-wide transport every Client uses unless given another.
     def self.default = DEFAULT
 
-    def initialize(open_timeout: 5, read_timeout: 30, write_timeout: 30, upload_timeout: 300)
+    def initialize(open_timeout: 5, read_timeout: 30, write_timeout: 30, upload_timeout: 300, keep_alive_timeout: 30)
       @open_timeout = open_timeout
       @read_timeout = read_timeout
       @write_timeout = write_timeout
       @upload_timeout = upload_timeout
+      @keep_alive_timeout = keep_alive_timeout
       @key = :"pennylane_client_connections_#{object_id}"
     end
 
@@ -76,6 +81,7 @@ module PennylaneClient
       http.open_timeout = @open_timeout
       http.read_timeout = @read_timeout
       http.write_timeout = @write_timeout
+      http.keep_alive_timeout = @keep_alive_timeout
       http.max_retries = 0
       http
     end
