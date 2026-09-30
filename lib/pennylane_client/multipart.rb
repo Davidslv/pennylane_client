@@ -186,7 +186,10 @@ module PennylaneClient
 
     # A file named by a Pathname: opened on the first read, closed by close.
     # It is checked when the form is built, so a local file error is not
-    # reported as a network one halfway through the request.
+    # reported as a network one halfway through the request: a missing file
+    # raises Errno::ENOENT (from File.size), and a path that exists but is
+    # not a readable file (a directory, no read permission) raises
+    # ArgumentError.
     class PathSource < FileSource
       def initialize(path)
         size = File.size(path)

@@ -117,7 +117,7 @@ xml = PennylaneClient::Upload.new(io, filename: "invoice.xml", content_type: "ap
 client.call(:createCustomerInvoiceEInvoiceImport, file: xml, invoice_options: { customer_id: 12 })
 ```
 
-An upload gets 300 s to read and write. Change it with `PennylaneClient::NetHttpTransport.new(upload_timeout: 600)`, passed as `transport:`. A file you open stays open; the client closes only what it opened from a `Pathname`. An IO must respond to `size`, so a pipe cannot be uploaded.
+An upload gets 300 s to read and write. Change it with `PennylaneClient::NetHttpTransport.new(upload_timeout: 600)`, passed as `transport:`. A file you open stays open; the client closes only what it opened from a `Pathname`. A `Pathname` is checked before anything is sent: a missing file raises `Errno::ENOENT`, and a directory or a file you cannot read raises `ArgumentError`. An IO must respond to `size`, so a pipe cannot be uploaded.
 
 ## Work with customer invoices
 
