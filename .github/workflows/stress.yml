@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       soak_minutes:
-        description: "Soak length in minutes (0 for none, at least 1.5 otherwise)"
+        description: "Soak length in minutes (0 for none, at least 2 otherwise)"
         type: number
         default: 0
 

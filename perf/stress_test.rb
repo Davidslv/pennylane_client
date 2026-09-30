@@ -18,7 +18,7 @@ require "tmpdir"
 #   as many threads and file descriptors as before.
 #
 # `rake stress[30]` (SOAK_MINUTES=30) adds a soak: every fault in turn for
-# that long, with memory sampled every 30 s. It needs at least 1.5 minutes
+# that long, with memory sampled every 30 s. It needs at least 2 minutes
 # to compare memory after the first minute with the end.
 class StressTest < Minitest::Test
   THREADS = 8
@@ -29,6 +29,11 @@ class StressTest < Minitest::Test
     ->(client) { client.call(:ValidateAccountingSupplierInvoice, id: 1) },
     ->(client) { client.call(:deleteCustomerInvoices, id: 1) }
   ].freeze
+  SOAK_ERRORS = [PennylaneClient::RateLimitError, PennylaneClient::ServerError, PennylaneClient::TimeoutError,
+                 PennylaneClient::ConnectionError, PennylaneClient::Error].freeze
+  SOAK_FAULTS = [[:server_error, { times: 20 }], [:slow, { delay: 0.2 }], [:reset, { times: 5 }],
+                 [:malformed, { times: 5 }], [:rate_limited, { times: 10 }], [:hang, { times: 3, delay: 1.0 }],
+                 [nil, {}]].freeze
 
   def setup
     @fake = FakePennylane.new
@@ -70,9 +75,9 @@ class StressTest < Minitest::Test
 
     report("5xx burst of #{2 * THREADS}, GET", outcomes, seconds)
     assert_equal [:ok], outcomes.keys - [PennylaneClient::ServerError]
-    assert_equal 2 * THREADS, @fake.count("GET 503")
-    assert_operator @fake.count("GET 200") + @fake.count("GET 503"), :<=, THREADS * 3 * ATTEMPTS
-    assert_operator @events.size, :>, 0, "at least one retry"
+    failed = outcomes.fetch(PennylaneClient::ServerError, 0)
+    assert_equal [2 * THREADS, outcomes[:ok]], [@fake.count("GET 503"), @fake.count("GET 200")]
+    assert_equal (2 * THREADS) - failed, @events.size, "every 503 retried, except the last of each failed call"
     assert_no_leaks
   end
 
@@ -164,28 +169,34 @@ class StressTest < Minitest::Test
     processes = 4
     calls = 12
     started = Perf.now
-    outcomes = Array.new(processes) { spawn_caller(calls) }.map { collect(_1) }.reduce({}) do |sum, tally|
-      sum.merge(tally) { |_, a, b| a + b }
-    end
+    outcomes = sum(Array.new(processes) { spawn_caller(calls) }.map { collect(_1) })
 
     report("#{processes} processes x #{calls} calls, one token", outcomes, Perf.now - started,
            too_many_requests: @fake.count("GET 429"))
     assert_equal [:ok], outcomes.keys - ["PennylaneClient::RateLimitError"]
     assert_equal processes * calls, outcomes.values.sum
-    assert_operator @fake.count("GET 200") + @fake.count("GET 429"), :<=, processes * calls * ATTEMPTS
+    assert_equal @fake.count("GET 429"), @events.size + outcomes.fetch("PennylaneClient::RateLimitError", 0),
+                 "every 429 retried, except the last of each failed call"
     assert_no_leaks
   end
 
+  # Eight threads, one client each for the whole soak, while the faults take
+  # turns. Memory is compared from the end of the first minute, once the
+  # process has warmed up.
   def test_soak
     minutes = Float(ENV.fetch("SOAK_MINUTES", "0"))
     skip "set SOAK_MINUTES to soak" unless minutes.positive?
-    raise ArgumentError, "a soak needs at least 1.5 minutes, got #{minutes}" if minutes < 1.5
+    raise ArgumentError, "a soak needs at least 2 minutes, got #{minutes}" if minutes < 2
 
-    samples = soak(minutes * 60)
-    growth = (samples.last - samples[1]).round(1)
+    outcomes, samples = soak(minutes * 60)
+    growth = (samples.last - samples[2]).round(1)
+    calls = outcomes.values.sum
 
-    Perf.report("stress: soak #{minutes} min", requests: @fake.requests, rss_mb: samples.map(&:round).join(","),
-                                               growth_after_first_minute_mb: growth)
+    report("soak #{minutes} min", outcomes, minutes * 60, rss_mb: samples.map(&:round).join(","),
+                                                          growth_after_first_minute_mb: growth)
+    assert_empty outcomes.keys - [:ok, *SOAK_ERRORS], "unexpected outcomes"
+    assert_operator @fake.requests, :<=, calls * ATTEMPTS
+    assert_operator outcomes[:ok], :>, calls / 2, "most calls succeed between faults"
     assert_operator growth, :<, 30, "memory grew #{growth} MB after the first minute"
     assert_no_leaks
   end
@@ -219,45 +230,69 @@ class StressTest < Minitest::Test
 
   def write_count(outcome) = %w[POST PUT DELETE].sum { @fake.count("#{_1} #{outcome}") }
 
+  def sum(tallies) = tallies.reduce({}) { |total, tally| total.merge(tally) { |_, a, b| a + b } }
+
   # A child process that makes `calls` calls on the shared token and writes
-  # its tally to a pipe. exit! skips Minitest's at_exit in the child.
+  # its tally and retry count to a pipe. exit! skips Minitest's at_exit in
+  # the child.
   def spawn_caller(calls)
     reader, writer = IO.pipe
     pid = fork do
       reader.close
-      transport = PennylaneClient::NetHttpTransport.new
-      client = Perf.client(token: "shared", base_url: @server.url, transport:)
+      retries = 0
+      client = Perf.client(token: "shared", base_url: @server.url, transport: PennylaneClient::NetHttpTransport.new,
+                           on_request: ->(event) { retries += 1 if event[:type] == :retry })
       tally = Array.new(calls) { outcome { client.call(:getMe) } }.map(&:to_s).tally
-      writer.write(JSON.generate(tally))
+      writer.write(JSON.generate(tally:, retries:))
       exit!(0)
     end
     writer.close
     [pid, reader]
   end
 
+  # The child's tally; its retries join @events so the report counts them.
   def collect((pid, reader))
-    tally = JSON.parse(reader.read)
+    result = JSON.parse(reader.read)
     Process.wait(pid)
-    tally.transform_keys { _1 == "ok" ? :ok : _1 }
+    result.fetch("retries").times { @events << :child_retry }
+    result.fetch("tally").transform_keys { _1 == "ok" ? :ok : _1 }
   ensure
     reader.close
   end
 
-  # Every fault in turn, 10 s each, until the time is up. Returns RSS
-  # samples, one every 30 s.
+  # Every thread calls GET, POST, PUT and DELETE in turn on one client until
+  # the time is up, while the faults take 10 s turns. Returns the outcomes
+  # and RSS samples, one every 30 s.
   def soak(seconds)
-    faults = [[:server_error, { times: 20 }], [:slow, { delay: 0.2 }], [:reset, { times: 5 }],
-              [:malformed, { times: 5 }], [:rate_limited, { times: 10 }], [:hang, { times: 3, delay: 1.0 }], [nil, {}]]
     deadline = Perf.now + seconds
     sampler = Thread.new { sample_until(deadline) }
-    faults.cycle do |kind, options|
+    driver = Thread.new { cycle_faults(deadline) }
+    tallies = Perf.in_threads(THREADS, timeout: seconds + 120) do |index|
+      soak_calls(client("soak-#{index}"), deadline)
+    ensure
+      @transport.close
+    end
+    driver.join
+    [sum(tallies), sampler.value]
+  end
+
+  def soak_calls(api, deadline)
+    tally = Hash.new(0)
+    [GET, *WRITES].cycle do |call|
+      break if Perf.now > deadline
+
+      tally[outcome { call.call(api) }] += 1
+    end
+    tally
+  end
+
+  def cycle_faults(deadline)
+    SOAK_FAULTS.cycle do |kind, options|
       break if Perf.now > deadline
 
       kind ? @fake.inject(kind, **options) : @fake.heal
-      turn_ends = [deadline, Perf.now + 10].min
-      run_calls([GET, *WRITES, GET]) while Perf.now < turn_ends
+      sleep [10, deadline - Perf.now].min.clamp(0, nil)
     end
-    sampler.value
   end
 
   def sample_until(deadline)

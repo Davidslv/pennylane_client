@@ -114,6 +114,10 @@ class FakePennylane
       line = socket.gets("\r\n", 8192) or return
       verb, target = line.split(" ", 3)
       headers = read_headers(socket)
+      # The client always sends a Content-Length; a chunked body would be
+      # read as the next request.
+      raise ArgumentError, "FakePennylane::Server does not read chunked bodies" if headers.key?("transfer-encoding")
+
       length = headers.fetch("content-length", "0").to_i
       PennylaneClient::Request.new(verb: verb.downcase.to_sym, url: url + target, headers:,
                                    body: length.positive? ? Body.new(socket, length) : nil)

@@ -28,7 +28,9 @@ module Perf
   # given as the transport.
   def client(token:, base_url: nil, transport: nil, **)
     raise ArgumentError, "perf runs use FakePennylane only, not #{base_url}" if base_url && !local?(base_url)
-    raise ArgumentError, "a perf client needs a local base_url or a FakePennylane" unless base_url || transport
+    unless base_url || transport.is_a?(FakePennylane)
+      raise ArgumentError, "a perf client needs a 127.0.0.1 base_url or a FakePennylane transport"
+    end
 
     options = { token:, transport:, logger: nil, on_request: nil, limiters: PennylaneClient::LimiterRegistry.new }
     options[:base_url] = base_url if base_url
