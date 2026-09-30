@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require_relative "../../tools/contract_drift"
+require_relative "snapshot_contract_test" # for SnapshotContractFixtures
 require "tmpdir"
 
 module ContractDriftFixtures
@@ -243,5 +244,91 @@ class ContractDriftReportTest < Minitest::Test
     assert_operator report.to_markdown.length, :<=, ContractDrift::Report::LIMIT
     assert report.to_markdown.end_with?("Run `bundle exec rake contract:drift` locally for the full report.\n")
     assert_includes report.to_markdown(limit: nil), "getJournal3000"
+  end
+end
+
+# Opening or updating the one drift issue. `gh` is recorded, never run.
+class ContractDriftIssueTest < Minitest::Test
+  include ContractDriftFixtures
+
+  # Answers `gh issue list` with the open drift issue's number, if any.
+  def gh(open_issue: nil)
+    calls = []
+    runner = lambda do |*args|
+      calls << args
+      args.first(2) == %w[issue list] ? "#{open_issue}\n" : ""
+    end
+    [runner, calls]
+  end
+
+  def report(old, new)
+    ContractDrift::Report.new(diff: diff(old, new), guides: [], committed: "c", retrieved_on: "2026-10-07")
+  end
+
+  def test_no_drift_touches_no_issue
+    runner, calls = gh
+
+    assert_equal "No drift.", ContractDrift::Issue.sync(report([JOURNAL], [JOURNAL]), cli: runner)
+    assert_empty calls
+  end
+
+  def test_drift_opens_a_labelled_issue_when_none_is_open
+    runner, calls = gh
+    drift = report([JOURNAL], [JOURNAL, ATTACHMENTS])
+
+    assert_equal "Opened a drift issue.", ContractDrift::Issue.sync(drift, cli: runner)
+    assert_equal %w[issue list --label drift --state open --json number --jq .[0].number], calls[0]
+    assert_equal %w[label create drift], calls[1].first(3)
+    assert_includes calls[1], "--force"
+    assert_equal ["issue", "create", "--title", ContractDrift::Issue::TITLE, "--label", "drift",
+                  "--body", drift.to_markdown], calls[2]
+  end
+
+  def test_drift_updates_the_open_issue_instead_of_opening_another
+    runner, calls = gh(open_issue: 31)
+    drift = report([JOURNAL], [JOURNAL, ATTACHMENTS])
+
+    assert_equal "Updated drift issue #31.", ContractDrift::Issue.sync(drift, cli: runner)
+    assert_equal [%w[issue edit 31 --body] + [drift.to_markdown]], calls.drop(1)
+  end
+end
+
+# The whole run: snapshot the (fixture) docs into a temporary folder and
+# compare with the latest committed snapshot.
+class ContractDriftRunTest < Minitest::Test
+  include SnapshotContractFixtures
+
+  def served(pages = site)
+    pages.merge(SnapshotContract::GUIDES.to_h { |_name, url| [url, "# Guide\n\nBody of #{url}\n"] })
+  end
+
+  def with_committed_snapshot
+    Dir.mktmpdir do |root|
+      contract = File.join(root, "docs/api/contract")
+      SnapshotContract.run(fetch: served.method(:[]), root: contract, date: Date.new(2026, 9, 30), warn: ->(_) {})
+      yield root
+    end
+  end
+
+  def drift(root, pages)
+    ContractDrift.run(fetch: pages.method(:[]), root: root, date: Date.new(2026, 10, 7), warn: ->(_) {})
+  end
+
+  def test_unchanged_docs_are_no_drift
+    with_committed_snapshot { |root| assert_empty drift(root, served) }
+  end
+
+  def test_a_changed_page_is_drift_against_the_committed_snapshot
+    url = "https://pennylane.readme.io/reference/getjournal.md"
+    changed = page("getjournal").sub(/("label": \{\s+"type": )"string"/, '\1"integer"')
+
+    with_committed_snapshot do |root|
+      markdown = drift(root, served(site.merge(url => changed))).to_markdown
+
+      assert_includes markdown, "- Committed snapshot: `docs/api/contract/2026-09-30`\n"
+      assert_includes markdown, "- changed `responses.200.content.application/json.schema.properties.label.type`: " \
+                                "`\"string\"` → `\"integer\"`\n"
+      assert_equal ["2026-09-30"], Dir.children(File.join(root, "docs/api/contract")), "drift never writes a snapshot"
+    end
   end
 end

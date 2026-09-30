@@ -20,6 +20,11 @@ namespace :contract do
     ruby "tools/snapshot_contract.rb"
   end
 
+  desc "Compare Pennylane's docs with the latest contract snapshot and print the drift (reaches pennylane.readme.io)"
+  task :drift do
+    ruby "tools/contract_drift.rb"
+  end
+
   desc "Regenerate lib/pennylane_client/operations.rb from the latest contract snapshot"
   task :sync do
     ruby "tools/operation_table.rb"

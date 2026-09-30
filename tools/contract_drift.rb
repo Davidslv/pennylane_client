@@ -15,9 +15,26 @@
 # Standard library only. Run it with `bundle exec rake contract:drift`.
 
 require "json"
+require "open3"
+require "tmpdir"
+require_relative "snapshot_contract"
+require_relative "operation_table"
 
 # Finds and reports the difference between two contract snapshots.
 module ContractDrift
+  class Error < StandardError; end
+
+  # Snapshots the docs into a temporary folder and compares it with the
+  # latest snapshot committed under <root>/docs/api/contract. Writes nothing
+  # under root. `fetch` is SnapshotContract's, injected so tests stay offline.
+  def self.run(fetch:, root:, date:, warn: Kernel.method(:warn))
+    committed = File.dirname(OperationTable.latest_snapshot(File.join(root, "docs/api/contract")))
+    Dir.mktmpdir("contract-drift") do |scratch|
+      fresh = SnapshotContract.run(fetch: fetch, root: scratch, date: date, warn: warn)[:dir]
+      compare(committed: committed, fresh: fresh, committed_label: committed.delete_prefix("#{root}/"))
+    end
+  end
+
   # Compares two snapshot folders (each holding operations.json and guides/).
   def self.compare(committed:, fresh:, committed_label:)
     before = JSON.parse(File.read(File.join(committed, "operations.json")))
@@ -41,6 +58,43 @@ module ContractDrift
     end
   end
   private_class_method :changed_guides, :guides
+
+  # Keeps one open GitHub issue labelled `drift` in step with the report.
+  # `cli` takes the gh CLI's arguments and returns its output; it is injected
+  # so tests never reach GitHub.
+  module Issue
+    LABEL = "drift"
+    TITLE = "Pennylane API contract drift"
+
+    # Returns what it did, for the workflow log. With no drift it leaves any
+    # open issue alone: closing it is for the pull request that applies it.
+    def self.sync(report, cli:)
+      body = report.to_markdown or return "No drift."
+
+      number = cli.call("issue", "list", "--label", LABEL, "--state", "open", "--json", "number",
+                        "--jq", ".[0].number").strip
+      return create(body, cli) if number.empty?
+
+      cli.call("issue", "edit", number, "--body", body)
+      "Updated drift issue ##{number}."
+    end
+
+    def self.create(body, cli)
+      cli.call("label", "create", LABEL, "--color", "d93f0b", "--force",
+               "--description", "Pennylane's docs differ from the committed contract snapshot")
+      cli.call("issue", "create", "--title", TITLE, "--label", LABEL, "--body", body)
+      "Opened a drift issue."
+    end
+    private_class_method :create
+  end
+
+  # Runs the gh CLI and returns its output; raises when it fails.
+  GH = lambda do |*args|
+    output, status = Open3.capture2("gh", *args)
+    raise Error, "gh #{args.first(2).join(" ")} failed (#{status.exitstatus})" unless status.success?
+
+    output
+  end
 
   # The drift as the body of a GitHub issue.
   class Report
@@ -215,5 +269,21 @@ module ContractDrift
       item.key?("in") && item.key?("name") ? "#{item["in"]}:#{item["name"]}" : index.to_s
     end
     private_class_method :changed, :roots, :nodes, :leaves, :walk, :walk_hash, :walk_array, :item_key
+  end
+end
+
+# Locally: print the full report. In the workflow, `--open-issue` also opens
+# or updates the drift issue.
+if $PROGRAM_NAME == __FILE__
+  http = SnapshotContract::HTTP.new
+  begin
+    report = ContractDrift.run(fetch: http.method(:get), root: File.expand_path("..", __dir__),
+                               date: Time.now.utc.to_date)
+    puts report.to_markdown(limit: nil) || "No drift."
+    puts ContractDrift::Issue.sync(report, cli: ContractDrift::GH) if ARGV.include?("--open-issue")
+  rescue SnapshotContract::Error, OperationTable::Error, ContractDrift::Error => e
+    abort e.message
+  ensure
+    http.finish
   end
 end
