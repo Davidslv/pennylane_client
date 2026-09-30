@@ -11,7 +11,7 @@ Every example below runs in the test suite against the answers Pennylane documen
 
 **The client:** [walk a list](#walk-a-list), [filter and sort a list](#filter-and-sort-a-list), [retry a request](#retry-a-request), [stay inside the rate limit](#stay-inside-the-rate-limit), [set timeouts](#set-timeouts), [upload a file](#upload-a-file), [rotate tokens](#rotate-tokens), [convert money and dates](#convert-money-and-dates), [log requests and collect metrics](#log-requests-and-collect-metrics), [use an Experimental method](#use-an-experimental-method).
 
-**Your app:** [use it in Rails](#use-it-in-rails), [receive webhooks in Rails](#receive-webhooks-in-rails), [test your own app](#test-your-own-app).
+**Your app:** [use it in Rails](#use-it-in-rails), [forking web servers and job runners](#forking-web-servers-and-job-runners), [receive webhooks in Rails](#receive-webhooks-in-rails), [test your own app](#test-your-own-app).
 
 **Pennylane:** [run an export](#run-an-export), [read the changelogs](#read-the-changelogs), [letter and unletter ledger entry lines](#letter-and-unletter-ledger-entry-lines), [categorize with weights](#categorize-with-weights), [subscribe to webhooks](#subscribe-to-webhooks), and one section per resource group from [customer invoices](#work-with-customer-invoices) to [purchase orders](#import-a-purchase-order).
 
@@ -328,7 +328,7 @@ PennylaneClient.configure do |config|
 end
 ```
 
-Build a client where you need one. Clients are cheap: every client shares one connection pool, and every client on one token shares one rate-limit budget. With one Pennylane company per tenant, build one client per token:
+Build a client where you need one. Clients are cheap: every client shares the same connections, one per thread or fiber, and every client on one token shares one rate-limit budget per process. Puma in cluster mode and other forking servers need no setup; see [forking web servers and job runners](#forking-web-servers-and-job-runners). With one Pennylane company per tenant, build one client per token:
 
 <!-- example rails -->
 ```ruby
@@ -365,6 +365,18 @@ end
 A job retry sends a write again. The client refuses to resend a write after a 5xx or a timeout because Pennylane may have applied it, and a job retry has the same risk. Make the job check before it writes (read the invoice, and skip it if it is already final) when a second run could do harm.
 
 Rate-limit waits happen inside the job's thread. With many workers on one token, see [share the budget across processes](#share-the-budget-across-processes).
+
+## Forking web servers and job runners
+
+Puma in cluster mode, Unicorn, Passenger's smart spawning, Resque and Spring load your app once and then fork worker processes. The gem handles the fork itself. You add nothing to `on_worker_boot`, `after_fork` or `before_fork` for it.
+
+What happens in a forked child:
+
+- **Connections.** Each connection is tagged with the process that opened it. A child never sends a request on a connection it inherited, even one the parent opened at boot (a `users.me` check in an initializer, for example). It opens its own on its first call. It does not close the inherited ones either: they are the parent's sockets, and closing one would end the parent's TLS session. `NetHttpTransport#close` in a child closes only the child's own connections.
+- **Clients.** A client built before the fork works in the child. So does the configuration set with `PennylaneClient.configure`.
+- **Rate limit.** The budget is per process. Each child starts with a copy of the parent's bucket as it was at the fork, and spends it on its own. Four Puma workers on one token each allow themselves 25 requests per 5 s. Pennylane's rate-limit headers and the 429 retries absorb the overlap. To share one budget between processes, see [share the budget across processes](#share-the-budget-across-processes).
+
+Resque forks a new child for each job, so each job opens its own connection and makes its own TLS handshake.
 
 ## Receive webhooks in Rails
 

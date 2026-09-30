@@ -147,7 +147,7 @@ A Transport is anything with `call(request) -> Response` that raises `Connection
 
 `NetHttpTransport` is the default. Every Client shares `NetHttpTransport.default`, so building a Client per request or per token opens no new sockets. The token travels in each request, not in the connection.
 
-- **One connection per host per fiber.** Connections live in `Thread.current[...]`, which is fiber-local, so threads and fibers never share a socket and a call on an open connection takes no lock.
+- **One connection per host per fiber.** Connections live in `Thread.current[...]`, which is fiber-local, so threads and fibers never share a socket and a call on an open connection takes no lock. Each fiber's connections are tagged with the pid that opened them, so a forked child never uses its parent's; see the lifecycle below.
 - **Timeouts.** Open 5 s, read 30 s, write 30 s. An upload gets 300 s to read and write (`upload_timeout:`), and the connection goes back to 30 s afterwards.
 - **Keep-alive.** An idle connection is kept for 10 s (`keep_alive_timeout:`), not `Net::HTTP`'s 2 s, because a rate-limit wait lasts up to 5 s and would otherwise cost a new connection and TLS handshake after every wait ([performance](performance.md)). `Net::HTTP` still replaces a connection the server has closed.
 - **No retries.** `max_retries = 0`. `Net::HTTP` otherwise resends an idempotent verb once on a dropped connection, and PUT and DELETE have side effects at Pennylane (D5).
@@ -157,7 +157,8 @@ A Transport is anything with `call(request) -> Response` that raises `Connection
 
 - **A call that does not complete drops its connection.** `NetHttpTransport#call` closes the connection in an `ensure` unless a response was read. That covers `ConnectionError` and `TimeoutError`, and also any exception the transport does not rescue: `Timeout.timeout`, rack-timeout, `Interrupt`. Without it, a request sent and its answer unread would leave that answer on the socket, to be read as the next call's response, and the next call could be for another token.
 - **Finished fibers' connections are reaped.** `ConnectionOwners` maps each fiber, held weakly in an `ObjectSpace::WeakMap`, to its connections. Whenever any thread or fiber opens a new connection, the connections of every fiber that is no longer alive are closed. A finished fiber never runs again, so no call is using them. A thread per job therefore does not leave one socket per finished job. The owners' lock is taken only when a fiber first connects and when a connection is opened.
-- **`close`** closes the current thread's (fiber's) connections.
+- **A forked child leaves its parent's connections alone.** After a fork, the child's copy of `Thread.current[...]` still holds the connections the forking thread had open, and the parent's other threads look finished. The transport sees the pid tag differ and starts the child with no connections, and `ConnectionOwners` starts empty in the child, so the reaper does not close the parent's either. Closing them would call `Net::HTTP#finish` on the parent's sockets and, over TLS, end the parent's sessions. The child forgets them without closing them and opens its own. The Limiters are copied at the fork too, so each process has its own budget.
+- **`close`** closes the current thread's (fiber's) connections. In a forked child that is only the connections the child opened.
 
 ## Pagination
 

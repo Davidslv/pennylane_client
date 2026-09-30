@@ -20,14 +20,14 @@ First release. All 178 operations of the Company API v2 (contract snapshot of 20
 - Request encoding: `BigDecimal` to a plain decimal String, `Date` to ISO 8601, `Time` and `DateTime` to ISO 8601 with microseconds when they have a fraction of a second.
 - Path parameters are escaped. A missing, nil or empty one, or `.` or `..`, raises `ArgumentError` before anything is sent.
 - Errors under `PennylaneClient::Error` (`status`, `code`, `details`, `body`, `headers`): `ValidationError` (400, 422), `AuthenticationError` (401), `PermissionError` (403), `NotFoundError` (404), `ConflictError` (409), `RateLimitError` (429, `#retry_after`), `ServerError` (5xx), `ConnectionError` and `TimeoutError`. An unknown operationId raises `UnknownOperationError`, an `ArgumentError`.
-- Cursor pagination: `client.paginate(:operationId, **params)` returns every item as an `Enumerator::Lazy` at the operation's largest page size, resending `filter` and `sort` on every page and sending `start_date` with the first page only. `client.pages` gives the pages.
+- Cursor pagination: `client.paginate(:operationId, **params)` returns every item as an `Enumerator::Lazy` at the operation's largest page size, resending `filter` and `sort` on every page and sending `start_date` with the first page only. String keys follow the same rules as Symbol keys. `client.pages` gives the pages.
 - Multipart uploads for the 7 upload operations: pass a `File`, IO, `Pathname` or `PennylaneClient::Upload` (to set the filename or content type). Files stream from disk. An IO is read from its position when the call starts, and a retry after a 429 sends the same bytes again.
 
 #### Rate limit, retries and transport
 
-- Client-side rate limiting: a token bucket of 25 requests per 5 s per token, shared across clients and threads through `LimiterRegistry.default`, corrected by Pennylane's `ratelimit-remaining` and `ratelimit-reset` headers. A reset that disagrees with the host clock is ignored; the remaining count still applies. Limiters for tokens not used for 60 s are dropped (`LimiterRegistry.new(idle_after:)`). Pass `limiters:` to bring your own limiter.
+- Client-side rate limiting: a token bucket of 25 requests per 5 s per token, shared across clients and threads in one process through `LimiterRegistry.default`, corrected by Pennylane's `ratelimit-remaining` and `ratelimit-reset` headers. A reset that disagrees with the host clock is ignored; the remaining count still applies. Limiters for tokens not used for 60 s are dropped (`LimiterRegistry.new(idle_after:)`). Pass `limiters:` to bring your own limiter.
 - Retries: a 429 for any verb, after `retry-after`; 500, 502, 503, 504 and no response for GET only. At most 3 attempts, full jitter, and at most 30 s of waiting per call (`max_retry_wait:`). `retry: :always` opts a write in, on `client.call` and on every named write.
-- `NetHttpTransport`, on `Net::HTTP`: one keep-alive connection per host per thread or fiber, shared by every Client; timeouts of 5 s open, 30 s read and write, 300 s for uploads; idle connections kept 10 s (`keep_alive_timeout:`); `Net::HTTP`'s own retry turned off. A call that does not complete drops its connection, and the connections of finished threads and fibers are closed.
+- `NetHttpTransport`, on `Net::HTTP`: one keep-alive connection per host per thread or fiber, shared by every Client; timeouts of 5 s open, 30 s read and write, 300 s for uploads; idle connections kept 10 s (`keep_alive_timeout:`); `Net::HTTP`'s own retry turned off. A call that does not complete drops its connection, and the connections of finished threads and fibers are closed. A forked child (Puma cluster mode, Unicorn, Resque) opens its own connections and leaves its parent's alone; the caller needs no after-fork hook.
 - Instrumentation: `PennylaneClient.configure` with `logger` and `on_request`. Every attempt, retry and rate-limit wait emits one log line and one frozen event (`type:` `:request`, `:retry` or `:wait`). A failing logger or callback never fails the call. The token never appears in logs, `inspect`, errors or events.
 
 #### Named methods
@@ -44,8 +44,8 @@ Every live operation has a hand-written Ruby name. Lists return an `Enumerator::
 - `client.categories`, `client.category_groups` and `client.products`: all 13 operations.
 - `client.changelogs`: one feed per record type, all 10. Each takes `since:`, a Time, a DateTime or an RFC 3339 String; anything else, a Date included, raises `ArgumentError`, and so does `start_date:`.
 - `client.exports`: the FEC, General Ledger and Analytical General Ledger. `generate_*` creates the export and polls it until ready, raising `ExportError` when it fails or times out.
-- `client.billing_subscriptions`, `client.purchase_requests`, `client.webhook_subscriptions`, `client.users.me`, `client.company.features` and `client.pa_registrations.list`. `pa_registrations.list` returns an `Enumerator::Lazy` like every other list, and raises `Error` if Pennylane ever answers `has_more: true` there, since that operation takes no cursor.
-- A keyword that names a positional path parameter raises `ArgumentError`, so `update(1, id: 2)` cannot write record 2.
+- `client.billing_subscriptions`, `client.purchase_requests`, `client.webhook_subscriptions`, `client.users.me`, `client.company.features` and `client.pa_registrations.list`. `pa_registrations.list` returns an `Enumerator::Lazy` like every other list, and raises `Error` before handing out any item if Pennylane ever answers `has_more: true` there, since that operation takes no cursor.
+- A keyword that names a positional path parameter raises `ArgumentError`, so `update(1, id: 2)` cannot write record 2. A `file:` keyword next to an upload's positional file raises too.
 
 #### Webhooks
 
@@ -77,6 +77,10 @@ An independent review before the first release found problems in the unreleased 
 - A `ratelimit-reset` that disagreed with the host clock also discarded `ratelimit-remaining`. The count now applies either way.
 - Connections of finished threads stayed open until GC. They are now closed when another connection opens.
 - `since:` given a Time dropped its microseconds, so a resumed changelog started early. They are now sent.
+- After a fork, the child sent requests on the connection of the thread that forked, shared with the parent, and closed the connections of the parent's other threads, ending their TLS sessions. A child now opens its own connections and leaves the parent's alone.
+- A `pa_registrations` page answering `has_more: true` handed out its items before raising, so `list.first(2)` returned part of the list. It now raises first.
+- `file_attachments.upload(a, file: b)` and both `import_e_invoice` methods sent `b` and dropped `a`. A `file:` keyword next to the positional file now raises `ArgumentError`.
+- A String `"start_date"` key passed the changelog and pagination guards and was sent next to a cursor, which Pennylane answers with 400. String keys now follow the Symbol rules, and a String `"since"` key raises `ArgumentError`.
 - Public API settled before release: `retry:` on every named write, `pa_registrations.list` lazy like every other list, `unmatch_transaction(id, transaction_id:)` matching `match_transaction`, changelogs refusing `start_date:`, the Experimental tier and the declared public API.
 - The gate now catches drift between `sig/` and the code, `# names:` markers whose test sends nothing, and a success range wider than 2xx.
 

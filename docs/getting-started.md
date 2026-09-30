@@ -35,7 +35,7 @@ me[:scopes]           # => ["customer_invoices", "suppliers"]
 
 `users.me` says which company the token belongs to and what it may do. A token without the scope an operation needs gets a `PermissionError`.
 
-Clients are cheap to build. They share one connection pool and, per token, one rate-limit budget. A client is safe to share between threads.
+Clients are cheap to build. They share the same connections, one per thread or fiber, and, per token, one rate-limit budget per process. A client is safe to share between threads, and a forking server such as Puma in cluster mode needs no setup ([forking web servers](how-to.md#forking-web-servers-and-job-runners)).
 
 ## Two ways to call an operation
 
