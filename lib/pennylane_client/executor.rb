@@ -18,22 +18,20 @@ module PennylaneClient
   #
   # No Operation in the contract snapshot takes both a body and a query.
   #
-  # Every request, answered or not, is recorded as an event (Instrumentation).
+  # The transport is usually the middleware pipeline Client composes.
   class Executor
     PATH_PARAMETER = /\{(\w+)\}/
 
-    def initialize(registry:, transport:, token:, base_url:, instrumentation: Instrumentation.new)
+    def initialize(registry:, transport:, token:, base_url:)
       @registry = registry
       @transport = transport
       @token = token
       @base_url = base_url
-      @instrumentation = instrumentation
     end
 
     def call(operation_id, params = {}, body = nil)
       operation = @registry.fetch(operation_id)
-      response = perform(operation, build(operation, params, body))
-      handle(response)
+      handle(@transport.call(build(operation, params, body)))
     end
 
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
@@ -54,7 +52,7 @@ module PennylaneClient
     def query_request(operation, url, params, body)
       raise ArgumentError, "#{operation.id.inspect} takes no request body" unless body.nil?
 
-      Request.new(verb: operation.verb, url: url + query(params), headers:, body: nil)
+      Request.new(verb: operation.verb, url: url + query(params), headers:, body: nil, operation_id: operation.id)
     end
 
     # A body passed as is, for the Operations whose body is a JSON array.
@@ -67,7 +65,8 @@ module PennylaneClient
     end
 
     def json_request(operation, url, params)
-      Request.new(verb: operation.verb, url:, headers: headers(json: true), body: JSON.generate(Encoder.encode(params)))
+      Request.new(verb: operation.verb, url:, headers: headers(json: true), body: JSON.generate(Encoder.encode(params)),
+                  operation_id: operation.id)
     end
 
     def fill_path(operation, params)
@@ -96,22 +95,6 @@ module PennylaneClient
                   "User-Agent" => "pennylane_client/#{VERSION} (ruby #{RUBY_VERSION})" }
       headers["Content-Type"] = "application/json" if json
       headers
-    end
-
-    def perform(operation, request)
-      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      response = @transport.call(request)
-      report(operation, request, started, status: response.status)
-      response
-    rescue Error => e
-      report(operation, request, started, error: e.class.name)
-      raise
-    end
-
-    def report(operation, request, started, status: nil, error: nil)
-      duration = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1000).round(1)
-      @instrumentation.record({ operation_id: operation.id, method: request.verb.to_s.upcase,
-                                path: URI(request.url).path, status:, error:, duration: }.freeze)
     end
 
     def handle(response)

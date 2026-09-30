@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
 module PennylaneClient
-  # Where request events go: one log line and one `on_request` call each.
+  # Where events go: one log line and one `on_request` call each.
   #
-  # An event is a frozen Hash with plain values only:
+  # An event is a frozen Hash with plain values only. Every attempt sent to
+  # the Transport is one `type: :request` event:
   #
-  #   { operation_id: :getMe, method: "GET", path: "/api/external/v2/me",
-  #     status: 200, error: nil, duration: 12.3 }
+  #   { type: :request, operation_id: :getMe, method: "GET",
+  #     path: "/api/external/v2/me", status: 200, error: nil, duration: 12.3 }
   #
   # `status` is nil and `error` names the Error class when no response
   # arrived. `duration` is in milliseconds. The path never has a query, and

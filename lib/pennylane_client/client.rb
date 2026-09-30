@@ -19,8 +19,9 @@ module PennylaneClient
       end
 
       @base_url = base_url
-      @executor = Executor.new(registry: Registry.default, transport:, token:, base_url:,
-                               instrumentation: Instrumentation.new(logger:, on_request:))
+      instrumentation = Instrumentation.new(logger:, on_request:)
+      pipeline = Middleware::Instrument.new(transport, instrumentation)
+      @executor = Executor.new(registry: Registry.default, transport: pipeline, token:, base_url:)
     end
 
     # Runs any Registered operation by its Pennylane operationId.

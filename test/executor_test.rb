@@ -3,26 +3,6 @@
 require "test_helper"
 require "bigdecimal"
 require "date"
-require "logger"
-require "stringio"
-
-# Records each Request and answers with a canned Response.
-class FakeTransport
-  attr_reader :requests
-
-  def initialize(*responses)
-    @responses = responses
-    @requests = []
-  end
-
-  def call(request)
-    @requests << request
-    response = @responses.shift
-    raise response if response.is_a?(Exception)
-
-    response
-  end
-end
 
 module ExecutorHelpers
   BASE = "https://app.pennylane.com"
@@ -31,11 +11,10 @@ module ExecutorHelpers
     PennylaneClient::Response.new(status:, headers:, body:)
   end
 
-  def executor(*responses, logger: nil, on_request: nil)
+  def executor(*responses)
     @transport = FakeTransport.new(*responses.then { _1.empty? ? [ok] : _1 })
     PennylaneClient::Executor.new(registry: PennylaneClient::Registry.default, transport: @transport,
-                                  token: "tok", base_url: BASE,
-                                  instrumentation: PennylaneClient::Instrumentation.new(logger:, on_request:))
+                                  token: "tok", base_url: BASE)
   end
 
   def sent = @transport.requests.last
@@ -156,39 +135,10 @@ class ExecutorTest < Minitest::Test
 
     assert_equal 200, error.status
   end
-end
 
-class ExecutorEventsTest < Minitest::Test
-  include ExecutorHelpers
+  def test_names_the_operation_on_the_request
+    executor.call(:getMe)
 
-  def test_emits_an_event_for_every_request
-    events = []
-    executor(ok(201, "{}"), on_request: events.method(:<<)).call(:postJournals, code: "HA")
-
-    event = events.fetch(0)
-
-    assert_equal({ operation_id: :postJournals, method: "POST", path: "/api/external/v2/journals", status: 201,
-                   error: nil }, event.except(:duration))
-    assert_kind_of Float, event[:duration]
-    assert_predicate event, :frozen?
-  end
-
-  def test_emits_an_event_and_logs_when_no_response_arrives
-    events = []
-    log = StringIO.new
-    failing = executor(PennylaneClient::TimeoutError.new("Net::ReadTimeout"), on_request: events.method(:<<),
-                                                                              logger: Logger.new(log))
-
-    assert_raises(PennylaneClient::TimeoutError) { failing.call(:getMe) }
-    assert_equal "PennylaneClient::TimeoutError", events.fetch(0)[:error]
-    assert_nil events.fetch(0)[:status]
-    assert_includes log.string, "getMe GET /api/external/v2/me failed: PennylaneClient::TimeoutError"
-  end
-
-  def test_logs_each_request
-    log = StringIO.new
-    executor(ok, logger: Logger.new(log)).call(:getMe)
-
-    assert_match %r{pennylane_client getMe GET /api/external/v2/me -> 200 \(\d+\.\d ms\)}, log.string
+    assert_equal :getMe, sent.operation_id
   end
 end

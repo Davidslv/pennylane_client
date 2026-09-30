@@ -1,0 +1,13 @@
+module PennylaneClient
+  module Middleware
+    class Instrument
+      include _Transport
+
+      def initialize: (_Transport app, Instrumentation instrumentation) -> void
+
+      private
+
+      def report: (Request request, Float started, ?status: Integer?, ?error: String?) -> void
+    end
+  end
+end
