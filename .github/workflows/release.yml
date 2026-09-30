@@ -51,6 +51,24 @@ jobs:
           TAG: ${{ github.ref_name }}
       - name: Run the gate (tests, RuboCop, RBS, stale generated files)
         run: bundle exec rake
+      # Load the gem as a user would: installed, outside the repo, no -Ilib.
+      # Catches a file missing from spec.files and a broken quick start.
+      - name: Install the built gem and load the README quick start
+        run: |
+          gem build pennylane_client.gemspec --output "$RUNNER_TEMP/pennylane_client.gem"
+          gem install --local --no-document --install-dir "$RUNNER_TEMP/gems" "$RUNNER_TEMP/pennylane_client.gem"
+          cd "$RUNNER_TEMP"
+          GEM_HOME="$RUNNER_TEMP/gems" GEM_PATH="$RUNNER_TEMP/gems" ruby -e '
+            require "pennylane_client"
+            loaded = $LOADED_FEATURES.grep(/pennylane_client\.rb\z/).first
+            abort "loaded #{loaded}, not the installed gem" unless loaded.start_with?(ENV["GEM_HOME"])
+            client = PennylaneClient.new(token: "not-a-token")
+            client.customer_invoices.method(:finalize)
+            client.customers.method(:find)
+            client.method(:call)
+            PennylaneClient::Webhook.method(:verify!)
+            puts "Loaded pennylane_client #{PennylaneClient::VERSION} from #{loaded}"
+          '
       - name: Publish to RubyGems with an attestation
         uses: rubygems/release-gem@v1
         with:
