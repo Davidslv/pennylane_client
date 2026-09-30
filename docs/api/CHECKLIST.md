@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 40 of 177 live |
+| Named | 60 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (0 of 3 named)
@@ -290,35 +290,35 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `getQuoteInvoiceLineSections` | GET | `/quotes/{quote_id}/invoice_line_sections` | yes | no | unverified: no sandbox access |  |
 | `getQuoteInvoiceLines` | GET | `/quotes/{quote_id}/invoice_lines` | yes | no | unverified: no sandbox access |  |
 
-## Supplier Invoices (0 of 14 named)
+## Supplier Invoices (14 of 14 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getSupplierInvoices` | GET | `/supplier_invoices` | yes | no | unverified: no sandbox access |  |
-| `createSupplierInvoiceEInvoiceImport` | POST | `/supplier_invoices/e_invoices/imports` | yes | no | unverified: no sandbox access |  |
-| `importSupplierInvoice` | POST | `/supplier_invoices/import` | yes | no | unverified: no sandbox access |  |
-| `getSupplierInvoice` | GET | `/supplier_invoices/{id}` | yes | no | unverified: no sandbox access |  |
-| `putSupplierInvoice` | PUT | `/supplier_invoices/{id}` | yes | no | unverified: no sandbox access |  |
-| `ValidateAccountingSupplierInvoice` | PUT | `/supplier_invoices/{id}/validate_accounting` | yes | no | unverified: no sandbox access |  |
-| `getSupplierInvoiceCategories` | GET | `/supplier_invoices/{supplier_invoice_id}/categories` | yes | no | unverified: no sandbox access |  |
-| `putSupplierInvoiceCategories` | PUT | `/supplier_invoices/{supplier_invoice_id}/categories` | yes | no | unverified: no sandbox access |  |
-| `putSupplierInvoiceEInvoiceStatus` | PUT | `/supplier_invoices/{supplier_invoice_id}/e_invoice_status` | yes | no | unverified: no sandbox access |  |
-| `getSupplierInvoiceLines` | GET | `/supplier_invoices/{supplier_invoice_id}/invoice_lines` | yes | no | unverified: no sandbox access |  |
-| `postSupplierInvoiceLinkedPurchaseRequests` | POST | `/supplier_invoices/{supplier_invoice_id}/linked_purchase_requests` | yes | no | unverified: no sandbox access |  |
-| `getSupplierInvoiceMatchedTransactions` | GET | `/supplier_invoices/{supplier_invoice_id}/matched_transactions` | yes | no | unverified: no sandbox access |  |
-| `updateSupplierInvoicePaymentStatus` | PUT | `/supplier_invoices/{supplier_invoice_id}/payment_status` | yes | no | unverified: no sandbox access |  |
-| `getSupplierInvoicePayments` | GET | `/supplier_invoices/{supplier_invoice_id}/payments` | yes | no | unverified: no sandbox access |  |
+| `getSupplierInvoices` | GET | `/supplier_invoices` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `createSupplierInvoiceEInvoiceImport` | POST | `/supplier_invoices/e_invoices/imports` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_import_e_invoice_uploads_the_file_with_json_options` |
+| `importSupplierInvoice` | POST | `/supplier_invoices/import` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_import_encodes_dates_and_amounts` |
+| `getSupplierInvoice` | GET | `/supplier_invoices/{id}` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_find` |
+| `putSupplierInvoice` | PUT | `/supplier_invoices/{id}` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_update` |
+| `ValidateAccountingSupplierInvoice` | PUT | `/supplier_invoices/{id}/validate_accounting` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_validate_accounting_sends_no_body` |
+| `getSupplierInvoiceCategories` | GET | `/supplier_invoices/{supplier_invoice_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_categories` |
+| `putSupplierInvoiceCategories` | PUT | `/supplier_invoices/{supplier_invoice_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_categorize_sends_the_categories_as_a_bare_array` |
+| `putSupplierInvoiceEInvoiceStatus` | PUT | `/supplier_invoices/{supplier_invoice_id}/e_invoice_status` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_update_e_invoice_status_disputes_with_a_reason` |
+| `getSupplierInvoiceLines` | GET | `/supplier_invoices/{supplier_invoice_id}/invoice_lines` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_invoice_lines_walks_every_page` |
+| `postSupplierInvoiceLinkedPurchaseRequests` | POST | `/supplier_invoices/{supplier_invoice_id}/linked_purchase_requests` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_link_purchase_request_returns_true_on_no_content` |
+| `getSupplierInvoiceMatchedTransactions` | GET | `/supplier_invoices/{supplier_invoice_id}/matched_transactions` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_matched_transactions` |
+| `updateSupplierInvoicePaymentStatus` | PUT | `/supplier_invoices/{supplier_invoice_id}/payment_status` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_update_payment_status_returns_true_on_no_content` |
+| `getSupplierInvoicePayments` | GET | `/supplier_invoices/{supplier_invoice_id}/payments` | yes | yes | unverified: no sandbox access | `test/resources/supplier_invoices_test.rb#test_payments` |
 
-## Suppliers (0 of 6 named)
+## Suppliers (6 of 6 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getSuppliers` | GET | `/suppliers` | yes | no | unverified: no sandbox access |  |
-| `postSupplier` | POST | `/suppliers` | yes | no | unverified: no sandbox access |  |
-| `getSupplier` | GET | `/suppliers/{id}` | yes | no | unverified: no sandbox access |  |
-| `putSupplier` | PUT | `/suppliers/{id}` | yes | no | unverified: no sandbox access |  |
-| `getSupplierCategories` | GET | `/suppliers/{supplier_id}/categories` | yes | no | unverified: no sandbox access |  |
-| `putSupplierCategories` | PUT | `/suppliers/{supplier_id}/categories` | yes | no | unverified: no sandbox access |  |
+| `getSuppliers` | GET | `/suppliers` | yes | yes | unverified: no sandbox access | `test/resources/suppliers_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `postSupplier` | POST | `/suppliers` | yes | yes | unverified: no sandbox access | `test/resources/suppliers_test.rb#test_create` |
+| `getSupplier` | GET | `/suppliers/{id}` | yes | yes | unverified: no sandbox access | `test/resources/suppliers_test.rb#test_find` |
+| `putSupplier` | PUT | `/suppliers/{id}` | yes | yes | unverified: no sandbox access | `test/resources/suppliers_test.rb#test_update` |
+| `getSupplierCategories` | GET | `/suppliers/{supplier_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/suppliers_test.rb#test_categories_walks_every_page` |
+| `putSupplierCategories` | PUT | `/suppliers/{supplier_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/suppliers_test.rb#test_categorize_sends_the_categories_as_a_bare_array` |
 
 ## Transactions (0 of 11 named)
 

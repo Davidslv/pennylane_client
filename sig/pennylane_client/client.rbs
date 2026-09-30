@@ -21,6 +21,10 @@ module PennylaneClient
 
     def customers: () -> Resources::Customers
 
+    def supplier_invoices: () -> Resources::SupplierInvoices
+
+    def suppliers: () -> Resources::Suppliers
+
     def inspect: () -> String
 
     private
@@ -28,6 +32,10 @@ module PennylaneClient
     @customer_invoices: Resources::CustomerInvoices?
 
     @customers: Resources::Customers?
+
+    @supplier_invoices: Resources::SupplierInvoices?
+
+    @suppliers: Resources::Suppliers?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end

@@ -196,6 +196,45 @@ customers.delete_contact(7, contact[:id])
 customers.categorize(7, [{ id: 426, weight: "0.6575" }, { id: 427, weight: "0.3425" }])
 ```
 
+## Work with supplier invoices and suppliers
+
+`client.supplier_invoices` and `client.suppliers` name every Supplier Invoices and Suppliers operation. A supplier invoice has no `create`. It comes in by import, from a PDF uploaded first with `postFileAttachments`, or from an e-invoice file:
+
+```ruby
+invoices = client.supplier_invoices
+
+invoices.import(file_attachment_id: 5, supplier_id: 12, date: Date.today, deadline: Date.today + 30,
+                currency_amount_before_tax: "100", currency_amount: "120", currency_tax: "20",
+                invoice_lines: [{ currency_amount: "120", currency_tax: "20", vat_rate: "FR_200" }])
+invoices.import_e_invoice(Pathname("facturx.pdf"), invoice_options: { supplier_id: 12 })
+```
+
+Pennylane de-duplicates supplier invoice files: importing the same file twice raises `ConflictError`. `import` also raises `ConflictError` while the uploaded file is not ready yet; Pennylane says to try again after a few seconds. The client never retries a 409. A `ConflictError` that persists most likely means the file was imported before.
+
+`import_e_invoice` takes a Factur-X PDF, or a UBL or CII XML invoice (alpha at Pennylane), and streams it like any [upload](#upload-a-file).
+
+`ValidateAccountingSupplierInvoice` is `validate_accounting(42)`. Payment status and e-invoice status take their value as a keyword. `update_payment_status` returns true:
+
+```ruby
+invoices.update_payment_status(42, payment_status: "paid")        # or "to_be_paid"
+invoices.update_e_invoice_status(42, status: "disputed", reason: "incorrect_vat_rate")
+invoices.update_e_invoice_status(42, status: "refused", reason: "duplicate_invoice")   # archives it for good
+invoices.update_e_invoice_status(42, status: "approved")          # lifts a dispute
+```
+
+`update_e_invoice_status` is for invoices received through the PA. A transition the invoice cannot make, such as disputing one with payments, raises `ValidationError`.
+
+`update` takes `invoice_lines:` as `{ create: [...], update: [...], delete: [...] }`, not a plain array. `link_purchase_request(42, purchase_request_id: 8)` links one purchase request; call it once for each.
+
+The lists under one invoice walk every page lazily: `invoice_lines`, `payments`, `matched_transactions` (all take `sort:`) and `categories` (no `sort:`). `categorize` replaces an invoice's or a supplier's categories with a bare array:
+
+```ruby
+invoices.categorize(42, [{ id: 426, weight: "0.6575" }, { id: 427, weight: "0.3425" }])
+client.suppliers.categorize(12, [{ id: 426, weight: "1" }])
+```
+
+Suppliers have `list`, `find`, `create`, `update`, `categories` and `categorize`. `create` needs `name:` and raises `ConflictError` when the supplier already exists.
+
 ## Handle a validation error
 
 ```ruby
