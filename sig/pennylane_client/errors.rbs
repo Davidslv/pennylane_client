@@ -1,0 +1,52 @@
+module PennylaneClient
+  class Error < StandardError
+    MESSAGE_LIMIT: Integer
+
+    attr_reader status: Integer?
+    attr_reader code: String?
+    attr_reader details: untyped
+    attr_reader body: String?
+    attr_reader headers: Hash[String, String]
+
+    def self.from_response: (Response response) -> Error
+
+    def initialize: (?String? message, ?status: Integer?, ?body: String?, ?headers: Hash[String, String]) -> void
+
+    private
+
+    def parse: (String? body) -> untyped
+    def describe: (untyped parsed) -> [String?, String?]
+    def plain_text: () -> String?
+    def summary: (String? text) -> String
+  end
+
+  class AuthenticationError < Error
+  end
+
+  class PermissionError < Error
+  end
+
+  class NotFoundError < Error
+  end
+
+  class ConflictError < Error
+  end
+
+  class ValidationError < Error
+  end
+
+  class ServerError < Error
+  end
+
+  class ConnectionError < Error
+  end
+
+  class TimeoutError < Error
+  end
+
+  class RateLimitError < Error
+    def retry_after: () -> Float?
+  end
+
+  STATUS_ERRORS: Hash[Integer, singleton(Error)]
+end

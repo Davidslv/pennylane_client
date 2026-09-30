@@ -1,0 +1,11 @@
+module PennylaneClient
+  class Response < Data
+    attr_reader status: Integer
+    attr_reader headers: Hash[String, String]
+    attr_reader body: String
+
+    def initialize: (status: Integer, headers: Hash[String, String], body: String) -> void
+
+    def success?: () -> bool
+  end
+end

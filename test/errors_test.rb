@@ -1,0 +1,102 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+class ErrorsTest < Minitest::Test
+  def response(status, body = "", headers = {})
+    PennylaneClient::Response.new(status:, headers:, body:)
+  end
+
+  def error_for(...)
+    PennylaneClient::Error.from_response(response(...))
+  end
+
+  # Written by hand from the errors guide, not read from STATUS_ERRORS.
+  DOCUMENTED = {
+    400 => PennylaneClient::ValidationError,
+    401 => PennylaneClient::AuthenticationError,
+    403 => PennylaneClient::PermissionError,
+    404 => PennylaneClient::NotFoundError,
+    409 => PennylaneClient::ConflictError,
+    422 => PennylaneClient::ValidationError,
+    429 => PennylaneClient::RateLimitError,
+    500 => PennylaneClient::ServerError,
+    502 => PennylaneClient::ServerError,
+    503 => PennylaneClient::ServerError,
+    504 => PennylaneClient::ServerError
+  }.freeze
+
+  def test_maps_each_documented_status_to_its_class
+    DOCUMENTED.each do |status, klass|
+      error = error_for(status)
+
+      assert_instance_of klass, error, "status #{status}"
+      assert_equal status, error.status
+    end
+  end
+
+  def test_an_undocumented_status_falls_back_to_the_base_class
+    assert_instance_of PennylaneClient::Error, error_for(418)
+  end
+
+  def test_every_class_is_a_pennylane_client_error
+    [
+      PennylaneClient::AuthenticationError, PennylaneClient::PermissionError, PennylaneClient::NotFoundError,
+      PennylaneClient::ConflictError, PennylaneClient::ValidationError, PennylaneClient::RateLimitError,
+      PennylaneClient::ServerError, PennylaneClient::ConnectionError, PennylaneClient::TimeoutError
+    ].each { assert_operator _1, :<, PennylaneClient::Error }
+  end
+
+  def test_parses_the_error_message_details_shape
+    body = '{"error":"unprocessable_entity","message":"Entry lines are not balanced",' \
+           '"details":{"debit_total":"100.00","credit_total":"80.00"}}'
+    error = error_for(422, body)
+
+    assert_equal "422 unprocessable_entity: Entry lines are not balanced", error.message
+    assert_equal "unprocessable_entity", error.code
+    assert_equal({ debit_total: "100.00", credit_total: "80.00" }, error.details)
+    assert_equal body, error.body
+  end
+
+  def test_parses_the_status_error_shape
+    error = error_for(409, '{"status":409,"error":"A document with ID 2058167880 already exists."}')
+
+    assert_equal "409: A document with ID 2058167880 already exists.", error.message
+    assert_nil error.code
+    assert_nil error.details
+  end
+
+  def test_parses_a_message_only_shape
+    assert_equal "400: Bad filter", error_for(400, '{"message":"Bad filter"}').message
+  end
+
+  def test_keeps_a_plain_text_body_as_the_message
+    assert_equal "503: Service Unavailable", error_for(503, "Service Unavailable\n").message
+  end
+
+  def test_survives_an_empty_or_malformed_body
+    assert_equal "500", error_for(500, "").message
+    assert_equal "500: {not json", error_for(500, "{not json").message
+    assert_equal "500: [1, 2]", error_for(500, "[1, 2]").message
+  end
+
+  def test_truncates_a_long_plain_text_body_in_the_message
+    error = error_for(502, "x" * 1_000)
+
+    assert_operator error.message.length, :<, 300
+    assert_equal 1_000, error.body.length
+  end
+
+  def test_rate_limit_error_exposes_retry_after_in_seconds
+    assert_in_delta 3.0, error_for(429, "", { "retry-after" => "3" }).retry_after
+    assert_nil error_for(429).retry_after
+    assert_nil error_for(429, "", { "retry-after" => "soon" }).retry_after
+  end
+
+  def test_a_connection_error_carries_no_status
+    error = PennylaneClient::ConnectionError.new("connection refused")
+
+    assert_nil error.status
+    assert_equal "connection refused", error.message
+  end
+end
