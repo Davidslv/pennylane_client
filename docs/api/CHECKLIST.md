@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 160 of 177 live |
+| Named | 177 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -34,16 +34,16 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `getBankEstablishments` | GET | `/bank_establishments` | yes | yes | unverified: no sandbox access | `test/resources/bank_accounts_test.rb#test_bank_establishments_list_walks_every_page_resending_the_filter` |
 
-## Billing Subscriptions (0 of 6 named)
+## Billing Subscriptions (6 of 6 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getBillingSubscriptions` | GET | `/billing_subscriptions` | yes | no | unverified: no sandbox access |  |
-| `postBillingSubscriptions` | POST | `/billing_subscriptions` | yes | no | unverified: no sandbox access |  |
-| `getBillingSubscriptionInvoiceLineSections` | GET | `/billing_subscriptions/{billing_subscription_id}/invoice_line_sections` | yes | no | unverified: no sandbox access |  |
-| `getBillingSubscriptionInvoiceLines` | GET | `/billing_subscriptions/{billing_subscription_id}/invoice_lines` | yes | no | unverified: no sandbox access |  |
-| `getBillingSubscription` | GET | `/billing_subscriptions/{id}` | yes | no | unverified: no sandbox access |  |
-| `putBillingSubscriptions` | PUT | `/billing_subscriptions/{id}` | yes | no | unverified: no sandbox access |  |
+| `getBillingSubscriptions` | GET | `/billing_subscriptions` | yes | yes | unverified: no sandbox access | `test/resources/billing_subscriptions_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `postBillingSubscriptions` | POST | `/billing_subscriptions` | yes | yes | unverified: no sandbox access | `test/resources/billing_subscriptions_test.rb#test_create_encodes_the_start_date_and_line_prices` |
+| `getBillingSubscriptionInvoiceLineSections` | GET | `/billing_subscriptions/{billing_subscription_id}/invoice_line_sections` | yes | yes | unverified: no sandbox access | `test/resources/billing_subscriptions_test.rb#test_invoice_line_sections` |
+| `getBillingSubscriptionInvoiceLines` | GET | `/billing_subscriptions/{billing_subscription_id}/invoice_lines` | yes | yes | unverified: no sandbox access | `test/resources/billing_subscriptions_test.rb#test_invoice_lines` |
+| `getBillingSubscription` | GET | `/billing_subscriptions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/billing_subscriptions_test.rb#test_find` |
+| `putBillingSubscriptions` | PUT | `/billing_subscriptions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/billing_subscriptions_test.rb#test_update_stops_a_subscription` |
 
 ## Categories (5 of 5 named)
 
@@ -91,11 +91,11 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `getCommercialDocument` | GET | `/commercial_documents/{id}` | yes | yes | unverified: no sandbox access | `test/resources/commercial_documents_test.rb#test_find` |
 | `updateCommercialDocument` | PUT | `/commercial_documents/{id}` | yes | yes | unverified: no sandbox access | `test/resources/commercial_documents_test.rb#test_update_sends_only_the_given_attributes` |
 
-## Company (0 of 1 named)
+## Company (1 of 1 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getCompanyFeatures` | GET | `/company/features` | yes | no | unverified: no sandbox access |  |
+| `getCompanyFeatures` | GET | `/company/features` | yes | yes | unverified: no sandbox access | `test/resources/account_test.rb#test_features` |
 
 ## Customer Invoice Templates (1 of 1 named)
 
@@ -251,11 +251,11 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `getNumberings` | GET | `/numberings` | yes | yes | unverified: no sandbox access | `test/resources/numberings_and_templates_test.rb#test_numberings_walks_every_page` |
 
-## PA Registrations (0 of 1 named)
+## PA Registrations (1 of 1 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getPaRegistrations` | GET | `/pa_registrations` | yes | no | unverified: no sandbox access |  |
+| `getPaRegistrations` | GET | `/pa_registrations` | yes | yes | unverified: no sandbox access | `test/resources/account_test.rb#test_pa_registrations_returns_the_items` |
 
 ## Products (4 of 4 named)
 
@@ -266,13 +266,13 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `getProduct` | GET | `/products/{id}` | yes | yes | unverified: no sandbox access | `test/resources/products_test.rb#test_find` |
 | `putProduct` | PUT | `/products/{id}` | yes | yes | unverified: no sandbox access | `test/resources/products_test.rb#test_update` |
 
-## Purchase Requests (0 of 3 named)
+## Purchase Requests (3 of 3 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getPurchaseRequests` | GET | `/purchase_requests` | yes | no | unverified: no sandbox access |  |
-| `createPurchaseRequestImport` | POST | `/purchase_requests/imports` | yes | no | unverified: no sandbox access |  |
-| `getPurchaseRequest` | GET | `/purchase_requests/{id}` | yes | no | unverified: no sandbox access |  |
+| `getPurchaseRequests` | GET | `/purchase_requests` | yes | yes | unverified: no sandbox access | `test/resources/purchase_requests_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `createPurchaseRequestImport` | POST | `/purchase_requests/imports` | yes | yes | unverified: no sandbox access | `test/resources/purchase_requests_test.rb#test_import_sends_json_with_the_file_attachment_id_and_encoded_amounts` |
+| `getPurchaseRequest` | GET | `/purchase_requests/{id}` | yes | yes | unverified: no sandbox access | `test/resources/purchase_requests_test.rb#test_find` |
 
 ## Quotes (11 of 11 named)
 
@@ -342,18 +342,18 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `getTrialBalance` | GET | `/trial_balance` | yes | yes | unverified: no sandbox access | `test/resources/trial_balance_test.rb#test_list_encodes_the_period_and_walks_every_page` |
 
-## Users (0 of 1 named)
+## Users (1 of 1 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getMe` | GET | `/me` | yes | no | unverified: no sandbox access |  |
+| `getMe` | GET | `/me` | yes | yes | unverified: no sandbox access | `test/resources/account_test.rb#test_me` |
 
-## Webhooks (0 of 5 named)
+## Webhooks (5 of 5 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getWebhookSubscriptions` | GET | `/webhook_subscriptions` | yes | no | unverified: no sandbox access |  |
-| `postWebhookSubscriptions` | POST | `/webhook_subscriptions` | yes | no | unverified: no sandbox access |  |
-| `deleteWebhookSubscription` | DELETE | `/webhook_subscriptions/{id}` | yes | no | unverified: no sandbox access |  |
-| `getWebhookSubscription` | GET | `/webhook_subscriptions/{id}` | yes | no | unverified: no sandbox access |  |
-| `putWebhookSubscription` | PUT | `/webhook_subscriptions/{id}` | yes | no | unverified: no sandbox access |  |
+| `getWebhookSubscriptions` | GET | `/webhook_subscriptions` | yes | yes | unverified: no sandbox access | `test/resources/webhook_subscriptions_test.rb#test_list_walks_every_page` |
+| `postWebhookSubscriptions` | POST | `/webhook_subscriptions` | yes | yes | unverified: no sandbox access | `test/resources/webhook_subscriptions_test.rb#test_create_returns_the_secret` |
+| `deleteWebhookSubscription` | DELETE | `/webhook_subscriptions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/webhook_subscriptions_test.rb#test_delete` |
+| `getWebhookSubscription` | GET | `/webhook_subscriptions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/webhook_subscriptions_test.rb#test_find` |
+| `putWebhookSubscription` | PUT | `/webhook_subscriptions/{id}` | yes | yes | unverified: no sandbox access | `test/resources/webhook_subscriptions_test.rb#test_update` |

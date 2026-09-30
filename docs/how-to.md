@@ -432,6 +432,81 @@ It reads the export every 5 s for up to 300 s. Change both with `interval:` and 
 
 To poll on your own schedule, call the two halves yourself: `create_fec(period_start:, period_end:)` returns the pending export and `find_fec(id)` reads it. The same pairs exist for `general_ledger` and `analytical_general_ledger`.
 
+## Check the token and the company
+
+`client.users.me` returns the token's `:user`, `:company` and `:scopes`. `:user` can be nil; the contract does not say when. `:scopes` lists what the token may do.
+
+Some features depend on the company's plan or on a rollout. `client.company.features` says which are on. Check it before you send a gated field, because Pennylane does not always refuse one it cannot honour:
+
+```ruby
+if client.company.features[:installments]
+  client.customer_invoices.create(**invoice, installments:)
+else
+  client.customer_invoices.create(**invoice)
+end
+```
+
+With `installments` off, an invoice sent with installments either gets a 403 or is created with a single installment. Pennylane adds keys here as it gates new features.
+
+`client.pa_registrations.list` returns the company's registrations with a Plateforme Agréée. The company has finished PA onboarding when a registration is `"activated"` with the `exchange_direction` you need. A nil `siret` is the head office (SIREN). The list is one request: Pennylane takes no cursor for it. If Pennylane answers `has_more: true`, `list` raises `PennylaneClient::Error` rather than return part of the list.
+
+## Work with billing subscriptions
+
+`client.billing_subscriptions` names every Billing Subscriptions operation. Pennylane issues a customer invoice on each occurrence of the recurring rule.
+
+The request shape differs from what you read back. Send `mode:` as a Hash and `recurring_rule:` with `type:`; read back `mode` as a String and `recurring_rule[:rule_type]`. Send `customer_id:`; read back `customer: { id:, url: }`.
+
+```ruby
+line = { label: "Hosting", quantity: 1, unit: "month", raw_currency_unit_price: BigDecimal("49.90"), vat_rate: "FR_200" }
+subscription = client.billing_subscriptions.create(
+  start: Date.new(2026, 10, 1), customer_id: 3, payment_conditions: "30_days", payment_method: "offline",
+  mode: { type: "email", email_settings: { recipients: ["billing@example.com"] } },
+  recurring_rule: { type: "monthly", interval: 1, day_of_month: 1 },
+  customer_invoice_data: { invoice_lines: [line] }
+)
+```
+
+`mode:` is `{ type: "awaiting_validation" }`, `{ type: "finalized" }` or the email form above. The email form needs an email template set up in Pennylane.
+
+To stop a subscription in progress, `update(id, stop: true)`; `stop: false` resumes it. `update` changes invoice lines and sections through lists, not by replacing them:
+
+```ruby
+client.billing_subscriptions.update(subscription[:id], customer_invoice_data: {
+  invoice_lines: { create: [line], update: [{ id: 11, quantity: 2 }], delete: [{ id: 12 }] }
+})
+```
+
+`invoice_lines(id)` and `invoice_line_sections(id)` walk the current lines and sections.
+
+## Import a purchase order
+
+`client.purchase_requests` lists and reads purchase requests, and `import` creates one from a purchase order. The body is JSON: upload the order first and pass the attachment id. Pennylane approves an imported request straight away.
+
+```ruby
+attachment = client.file_attachments.upload(Pathname("po-1042.pdf"))
+client.purchase_requests.import(
+  file_attachment_id: attachment[:id], supplier_id: 4, reason: "Laptops", purchase_order_number: "PO-1042",
+  currency_amount_before_tax: BigDecimal("1000"), currency_tax: BigDecimal("200"), currency_amount: BigDecimal("1200"),
+  delivery_address: { address: "1 rue de Rivoli", postal_code: "75001", city: "Paris", country_alpha2: "FR" },
+  purchase_request_lines: [{ label: "Laptop", quantity: 2, unit: "piece", unit_price: BigDecimal("500"),
+                             vat_rate: "FR_200", currency_amount: BigDecimal("1200"), currency_tax: BigDecimal("200") }]
+)
+```
+
+## Subscribe to webhooks
+
+`client.webhook_subscriptions` names the Webhooks operations. Webhooks are in beta at Pennylane, which suggests the changelogs as a fallback.
+
+```ruby
+hook = client.webhook_subscriptions.create(callback_url: "https://example.com/pennylane",
+                                           events: ["customer_invoice.e_invoicing_status_updated"])
+store_secret(hook[:secret])
+```
+
+The create response is the only place the secret appears. `find` and `list` leave it out, and `update` takes no secret. The contract has no way to rotate it; creating a new subscription and deleting the old one gets you a new secret. The events are `customer_invoice.e_invoicing_status_updated`, `dms_file.created` and `supplier_invoice.e_invoicing_received`. A company-scoped token allows 10 subscriptions per company; an app-bound token allows 10 in all.
+
+Pennylane can disable a subscription whose endpoint keeps failing. `find(id)` shows `enabled`, `disabled_reason` and `consecutive_failures`. `update(id, enabled: true)` sends the flag to turn it back on; the contract does not say whether that works after a `permanent_error`.
+
 ## Handle a validation error
 
 ```ruby

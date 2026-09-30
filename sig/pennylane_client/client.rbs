@@ -69,6 +69,18 @@ module PennylaneClient
 
     def exports: () -> Resources::Exports
 
+    def billing_subscriptions: () -> Resources::BillingSubscriptions
+
+    def users: () -> Resources::Users
+
+    def company: () -> Resources::Company
+
+    def pa_registrations: () -> Resources::PaRegistrations
+
+    def purchase_requests: () -> Resources::PurchaseRequests
+
+    def webhook_subscriptions: () -> Resources::WebhookSubscriptions
+
     def inspect: () -> String
 
     private
@@ -124,6 +136,18 @@ module PennylaneClient
     @changelogs: Resources::Changelogs?
 
     @exports: Resources::Exports?
+
+    @billing_subscriptions: Resources::BillingSubscriptions?
+
+    @users: Resources::Users?
+
+    @company: Resources::Company?
+
+    @pa_registrations: Resources::PaRegistrations?
+
+    @purchase_requests: Resources::PurchaseRequests?
+
+    @webhook_subscriptions: Resources::WebhookSubscriptions?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end

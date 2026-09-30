@@ -149,6 +149,25 @@ module PennylaneClient
     # General Ledger (Resources::Exports).
     def exports = @exports ||= Resources::Exports.new(self)
 
+    # The named Billing Subscriptions operations
+    # (Resources::BillingSubscriptions).
+    def billing_subscriptions = @billing_subscriptions ||= Resources::BillingSubscriptions.new(self)
+
+    # The named Users operation: the token's user (Resources::Users).
+    def users = @users ||= Resources::Users.new(self)
+
+    # The named Company operation: gated features (Resources::Company).
+    def company = @company ||= Resources::Company.new(self)
+
+    # The named PA Registrations operation (Resources::PaRegistrations).
+    def pa_registrations = @pa_registrations ||= Resources::PaRegistrations.new(self)
+
+    # The named Purchase Requests operations (Resources::PurchaseRequests).
+    def purchase_requests = @purchase_requests ||= Resources::PurchaseRequests.new(self)
+
+    # The named Webhooks operations (Resources::WebhookSubscriptions).
+    def webhook_subscriptions = @webhook_subscriptions ||= Resources::WebhookSubscriptions.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

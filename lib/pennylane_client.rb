@@ -47,6 +47,12 @@ require_relative "pennylane_client/resources/category_groups"
 require_relative "pennylane_client/resources/products"
 require_relative "pennylane_client/resources/changelogs"
 require_relative "pennylane_client/resources/exports"
+require_relative "pennylane_client/resources/billing_subscriptions"
+require_relative "pennylane_client/resources/users"
+require_relative "pennylane_client/resources/company"
+require_relative "pennylane_client/resources/pa_registrations"
+require_relative "pennylane_client/resources/purchase_requests"
+require_relative "pennylane_client/resources/webhook_subscriptions"
 require_relative "pennylane_client/client"
 
 # Unofficial Ruby client for the Pennylane Company API v2.
