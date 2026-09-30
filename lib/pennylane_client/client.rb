@@ -93,6 +93,9 @@ module PennylaneClient
     # The named Bank Establishments operations (Resources::BankEstablishments).
     def bank_establishments = @bank_establishments ||= Resources::BankEstablishments.new(self)
 
+    # The named Transactions operations (Resources::Transactions).
+    def transactions = @transactions ||= Resources::Transactions.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

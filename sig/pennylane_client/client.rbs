@@ -35,6 +35,8 @@ module PennylaneClient
 
     def bank_establishments: () -> Resources::BankEstablishments
 
+    def transactions: () -> Resources::Transactions
+
     def inspect: () -> String
 
     private
@@ -56,6 +58,8 @@ module PennylaneClient
     @bank_accounts: Resources::BankAccounts?
 
     @bank_establishments: Resources::BankEstablishments?
+
+    @transactions: Resources::Transactions?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end
