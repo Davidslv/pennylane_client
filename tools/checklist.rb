@@ -30,7 +30,10 @@ module Checklist
   # Only test/resources/ is read, so the contract test can never count.
   module NamedTests
     GLOB = "test/resources/**/*_test.rb"
-    MARKER = /\A\s*#\s*names:\s*(\S+)\s*\z/
+    MARKER = /\A\s*#\s*names:\s*([\w-]+)\s*\z/
+    # Anything that looks like a marker but is not one fails, so a typo
+    # never leaves an operation silently unnamed.
+    MARKER_LIKE = /\A\s*#\s*names\s*:/i
     COMMENT = /\A\s*#/
     TEST = /\A\s*def\s+(test_\w+)/
 
@@ -41,7 +44,7 @@ module Checklist
         each_marker(File.read(File.join(root, file)), file) do |id, test|
           raise Error, "#{file}: #{id} is not an operationId in the snapshot" unless known.include?(id)
 
-          named[id] << "#{file}##{test}"
+          named[id] |= ["#{file}##{test}"]
         end
       end
       named.to_h
@@ -49,14 +52,15 @@ module Checklist
 
     # Yields [operationId, test name] for each marker. Markers wait in
     # `pending` until the next test method; any other code first is an error.
-    def self.each_marker(source, file, &)
+    def self.each_marker(source, file, &block)
       pending = []
-      source.each_line.with_index(1) { |line, number| read_line(line, number, pending, file, &) }
+      source.each_line.with_index(1) { |line, number| read_line(line, number, pending, file, &block) }
       refuse_stray(pending, file)
     end
 
     def self.read_line(line, number, pending, file)
       if (marker = MARKER.match(line)) then pending << [marker[1], number]
+      elsif MARKER_LIKE.match?(line) then raise Error, "#{file}:#{number}: use \"# names: <operationId>\""
       elsif (test = TEST.match(line)) then pending.shift(pending.size).each { |marked| yield marked.first, test[1] }
       elsif !COMMENT.match?(line) then refuse_stray(pending, file)
       end

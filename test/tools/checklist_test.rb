@@ -91,6 +91,18 @@ class ChecklistNamedTestsTest < Minitest::Test
     assert_raises(Checklist::Error) { scan("def test_find\nend\n# names: getJournal\n") }
   end
 
+  def test_refuses_a_malformed_marker_instead_of_ignoring_it
+    ["# names: getJournal getJournals", "# names: getJournal, getJournals", "# Names: getJournal"].each do |marker|
+      assert_raises(Checklist::Error, marker) { scan("#{marker}\ndef test_find\nend\n") }
+    end
+  end
+
+  def test_the_same_marker_twice_lists_the_test_once
+    named = scan("# names: getJournal\n# names: getJournal\ndef test_find\nend\n")
+
+    assert_equal ["test/resources/journals_test.rb#test_find"], named["getJournal"]
+  end
+
   def test_refuses_an_operation_id_the_snapshot_does_not_have
     error = assert_raises(Checklist::Error) { scan("# names: getJurnal\ndef test_find\nend\n") }
 

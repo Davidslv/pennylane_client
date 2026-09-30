@@ -33,13 +33,14 @@ jobs:
       # No bundler-cache: it keys on Gemfile.lock, which this gem does not keep.
       - name: Install dependencies
         run: bundle install
-      - name: Run the gate (tests, RuboCop, RBS, stale generated files)
-        run: bundle exec rake
-      # `rake stale` already compares in memory; this shows the diff in the log.
+      # Runs before the gate so a stale file fails here with the diff in the
+      # log. `rake stale` in the gate makes the same check locally.
       - name: Regenerate the operation table and checklist, fail on any difference
         run: |
           bundle exec rake contract:sync checklist
           git diff --exit-code
+      - name: Run the gate (tests, RuboCop, RBS, stale generated files)
+        run: bundle exec rake
 
   audit:
     runs-on: ubuntu-latest
