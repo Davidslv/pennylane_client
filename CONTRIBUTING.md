@@ -22,7 +22,7 @@ You need Ruby 3.3 or newer and a recent Bundler (4.x recommended). The Gemfile u
 
 The repository does not commit a `Gemfile.lock`, as recommended for gems.
 
-`bundle exec rake contract:snapshot` takes a new [contract snapshot](docs/api/README.md) from Pennylane's docs site. It is not part of the gate and is the only task that reaches the network.
+`bundle exec rake contract:snapshot` takes a new [contract snapshot](docs/api/README.md) from Pennylane's docs site. `bundle exec rake contract:drift` prints how the docs differ from the latest snapshot; a weekly workflow runs the same check and opens a `drift` issue. Neither is part of the gate, and they are the only tasks that reach the network.
 
 `bundle exec rake contract:sync checklist` regenerates the operation table and the checklist. Run it after a new snapshot and after adding a behaviour test that names an operation. Commit what it writes; never edit either file by hand.
 
