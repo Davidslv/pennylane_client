@@ -118,13 +118,17 @@ class NetHttpTransportTest < Minitest::Test
   end
 
   def test_drops_the_connection_after_a_failure
-    stub_request(:get, "#{BASE}/me").to_raise(Errno::ECONNRESET).then.to_return(status: 200)
-    opened = count_connections do
-      assert_raises(PennylaneClient::ConnectionError) { transport.call(request) }
-      transport.call(request)
-    end
+    { Errno::ECONNRESET => PennylaneClient::ConnectionError, Net::ReadTimeout => PennylaneClient::TimeoutError }
+      .each do |cause, error|
+        @transport = nil
+        stub_request(:get, "#{BASE}/me").to_raise(cause).then.to_return(status: 200)
+        opened = count_connections do
+          assert_raises(error) { transport.call(request) }
+          transport.call(request)
+        end
 
-    assert_equal 2, opened
+        assert_equal 2, opened, cause.name
+      end
   end
 
   private

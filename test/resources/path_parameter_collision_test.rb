@@ -83,3 +83,34 @@ class ClientPathParameterCollisionTest < Minitest::Test
     assert_requested :put, "#{API}/customers/9/categories", body: '[{"id":1,"weight":"1"}]'
   end
 end
+
+# An upload takes its file positionally. A `file` keyword would replace it
+# and send another file, so it raises like a path parameter.
+class FileCollisionTest < Minitest::Test
+  API = "https://app.pennylane.com/api/external/v2"
+
+  def client = @client ||= PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new)
+
+  def setup
+    @any = stub_request(:any, /#{Regexp.escape(API)}/o).to_return(status: 200, body: "{}")
+  end
+
+  def uploads
+    [->(**kw) { client.file_attachments.upload(StringIO.new("a"), **kw) },
+     ->(**kw) { client.customer_invoices.import_e_invoice(StringIO.new("a"), **kw) },
+     ->(**kw) { client.supplier_invoices.import_e_invoice(StringIO.new("a"), **kw) }]
+  end
+
+  def test_every_upload_refuses_a_file_keyword
+    uploads.each do |upload|
+      error = assert_raises(ArgumentError) { upload.call(file: StringIO.new("b")) }
+      assert_match(/takes file positionally; it cannot also be a keyword/, error.message)
+    end
+    assert_not_requested @any
+  end
+
+  def test_every_upload_refuses_a_string_file_key
+    uploads.each { |upload| assert_raises(ArgumentError) { upload.call(**{ "file" => StringIO.new("b") }) } }
+    assert_not_requested @any
+  end
+end

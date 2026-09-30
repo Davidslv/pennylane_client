@@ -183,7 +183,7 @@ File.open("timesheet.pdf", "rb") do |file|
 end
 ```
 
-Wrap the file in `PennylaneClient::Upload` to set the filename or the content type yourself. Hash and Array fields go as JSON parts:
+Wrap the file in `PennylaneClient::Upload` to set the filename or the content type yourself. An IO with no path, such as a `StringIO`, has neither: unwrapped, it goes as `upload` with `application/octet-stream`, and a `filename:` field does not change that. Upload takes the content type from the filename when you give only the filename. Hash and Array fields go as JSON parts:
 
 <!-- example -->
 ```ruby
@@ -191,6 +191,8 @@ xml = PennylaneClient::Upload.new(StringIO.new(File.read("invoice.xml")),
                                   filename: "invoice.xml", content_type: "application/xml")
 client.customer_invoices.import_e_invoice(xml, invoice_options: { customer_id: 42 })
 ```
+
+The file is always positional. A `file:` keyword next to it raises `ArgumentError`, as a keyword naming a positional id does.
 
 A file you open stays open; the client closes only what it opened from a `Pathname`. A `Pathname` is checked before anything is sent: a missing file raises `Errno::ENOENT`, and a directory or a file you cannot read raises `ArgumentError`. An IO must respond to `size`, so a pipe cannot be uploaded.
 
@@ -479,7 +481,7 @@ client.changelogs.customer_invoices(since: Time.now - 3600).each do |change|
 end
 ```
 
-Pennylane keeps four weeks of changes. A `since:` older than that raises `ValidationError` (422). Without `since:` the feed starts at the oldest change kept. `since:` takes a `Time` or an RFC 3339 String. It is sent with the first page only, because Pennylane answers 400 to `start_date` next to a `cursor`. Pennylane's own name, `start_date:`, raises `ArgumentError`.
+Pennylane keeps four weeks of changes. A `since:` older than that raises `ValidationError` (422). Without `since:` the feed starts at the oldest change kept. `since:` takes a `Time` or an RFC 3339 String. It is sent with the first page only, because Pennylane answers 400 to `start_date` next to a `cursor`. Pennylane's own name, `start_date`, raises `ArgumentError`, as a Symbol or a String key.
 
 To resume where the last run stopped, keep the `processed_at` of the last change you handled and pass it as `since:` next time. The last page's `next_cursor` is null, so it cannot carry you forward. Pass `processed_at` back as the String, or as a `Time` parsed from it; either keeps its microseconds. The contract does not say whether `since:` includes a change at that exact time, so handle a repeat of the last change:
 
@@ -558,6 +560,15 @@ invoices = client.customer_invoices
 invoices.invoice_lines(42).each { |line| puts "#{line[:label]}: #{line[:amount]}" }
 invoices.payments(42, sort: "-id").first(5)
 # also: invoice_line_sections, matched_transactions, custom_header_fields, appendices, categories
+```
+
+`list` yields the invoices only. With `include: "invoice_lines"`, Pennylane adds an `included` section to each page, and `list` drops it. Read the pages to keep it. Pennylane marks `include` experimental, so it may change or go away:
+
+<!-- example -->
+```ruby
+page = client.pages(:getCustomerInvoices, include: "invoice_lines").first
+page[:items]      # the invoices
+page[:included]   # the invoice lines, when Pennylane sends them
 ```
 
 `send_by_email` and `send_to_pa` raise `ConflictError` while Pennylane is still generating the PDF or processing an e-invoice import. The client never retries a 409, so try again later. Both return true:

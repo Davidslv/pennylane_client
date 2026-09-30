@@ -14,7 +14,7 @@ module PennylaneClient
       # Pennylane answers with `has_more` and `next_cursor` but takes no
       # cursor here, so reading it is one request. If Pennylane ever answers
       # `has_more: true`, the rest cannot be read, so reading raises Error
-      # rather than return part of the list.
+      # before any item is handed out.
       def list(**params) = paginate(:getPaRegistrations, **params)
     end
   end

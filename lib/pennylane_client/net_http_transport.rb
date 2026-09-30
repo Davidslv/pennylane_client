@@ -23,6 +23,8 @@ module PennylaneClient
   #   next time any thread or fiber opens a new connection, so a thread per
   #   job does not leave a socket per finished job. Only opening a
   #   connection takes a lock; a call on an open connection takes none.
+  # - A forked child forgets the connections it inherited without closing
+  #   them, since they are the parent's sockets, and opens its own.
   # - Timeouts: open 5 s, read 30 s, write 30 s (proposal 0001). An upload
   #   gets 300 s to read and write, then the connection goes back to 30 s.
   # - An idle connection is kept for 10 s (`keep_alive_timeout`). Net::HTTP
@@ -65,9 +67,9 @@ module PennylaneClient
     rescue *CONNECTION_ERRORS => e
       fail_with(ConnectionError, e, uri)
     ensure
-      # Anything else that cuts the call short (Timeout.timeout,
-      # rack-timeout, Interrupt) may leave a request sent and its answer
-      # unread. Reusing that connection would hand the answer to the next
+      # A failure above, or anything else that cuts the call short
+      # (Timeout.timeout, rack-timeout, Interrupt), may leave a request sent
+      # and its answer unread. Reusing that connection would hand the answer to the next
       # call, whichever token it is for, so it is dropped.
       drop(uri) if uri && response.nil?
     end
@@ -86,8 +88,12 @@ module PennylaneClient
       to_response(send_request(http, request, uri))
     end
 
+    # Tagged with the pid, so a forked child never uses the parent's.
     def connections
-      Thread.current[@key] ||= @owners.register({})
+      pid, owned = Thread.current[@key]
+      return owned if pid == Process.pid
+
+      (Thread.current[@key] = [Process.pid, @owners.register({})]).last
     end
 
     # Opening a connection is also when those of finished threads and
@@ -141,8 +147,8 @@ module PennylaneClient
       Response.new(status: response.code.to_i, headers: response.each_header.to_h, body:)
     end
 
+    # The ensure in #call drops the connection.
     def fail_with(klass, error, uri)
-      drop(uri)
       raise klass, "#{error.class}: #{error.message} (#{uri.host})"
     end
 

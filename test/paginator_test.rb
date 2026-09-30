@@ -2,9 +2,8 @@
 
 require "test_helper"
 
-class PaginatorTest < Minitest::Test
-  DRAFTS = [{ field: "status", operator: "eq", value: "draft" }].freeze
-
+# Builds a Paginator over a FakeTransport and reads back what it sent.
+module PaginatorTestHelpers
   def ok(status, body) = PennylaneClient::Response.new(status:, headers: {}, body:)
 
   def executor(*responses)
@@ -24,6 +23,12 @@ class PaginatorTest < Minitest::Test
   end
 
   def queries = @transport.requests.map { URI.decode_www_form(URI(_1.url).query.to_s).to_h }
+end
+
+class PaginatorTest < Minitest::Test
+  include PaginatorTestHelpers
+
+  DRAFTS = [{ field: "status", operator: "eq", value: "draft" }].freeze
 
   def test_follows_next_cursor_and_resends_filter_and_sort_on_every_page
     three = [page([1, 2], next_cursor: "c2"), page([3], next_cursor: "c3"), page([4])]
@@ -108,6 +113,15 @@ class PaginatorTest < Minitest::Test
       paginator(:getCustomerChanges, { start_date: "2026-09-29T10:00:00Z", cursor: "c2" })
     end
     assert_match(/start_date/, error.message)
+  end
+
+  # Keys given as Strings follow the same rules as Symbols.
+  def test_string_keys_follow_the_start_date_rules
+    assert_raises(ArgumentError) { paginator(:getCustomerChanges, { "start_date" => "x", "cursor" => "c2" }) }
+    paginator(:getCustomerChanges, { "start_date" => "x" }, responses: [page([1], next_cursor: "c2"), page([2])])
+      .items.to_a
+
+    assert_equal([["x", nil], [nil, "c2"]], queries.map { _1.values_at("start_date", "cursor") })
   end
 
   # getPaRegistrations answers with items, has_more and next_cursor but takes

@@ -55,4 +55,16 @@ class AccountTest < Minitest::Test
       assert_match(/has_more/, error.message)
     end
   end
+
+  # It raises before handing out any item, so a caller acting per item
+  # never acts on part of the list.
+  def test_pa_registrations_hands_out_no_item_of_a_page_it_refuses
+    body = JSON.generate({ items: [{ id: 1 }, { id: 2 }], has_more: true, next_cursor: "c2" })
+    stub_request(:get, "#{API}/pa_registrations").to_return(status: 200, body:)
+    seen = []
+
+    assert_raises(PennylaneClient::Error) { client.pa_registrations.list.each { seen << _1[:id] } }
+    assert_empty seen
+    assert_raises(PennylaneClient::Error) { client.pa_registrations.list.first(2) }
+  end
 end

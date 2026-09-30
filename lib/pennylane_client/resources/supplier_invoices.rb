@@ -35,13 +35,17 @@ module PennylaneClient
       # Imports a supplier invoice from an e-invoice file: a Factur-X PDF, or
       # a UBL or CII XML invoice. `file` is a File, IO, Pathname or
       # PennylaneClient::Upload and streams from disk. Hash and Array fields
-      # (`invoice_options:`, `override_invoice_lines:`) go as JSON parts.
+      # (`invoice_options:`, `override_invoice_lines:`) go as JSON parts. An
+      # IO with no path, such as a StringIO, goes as "upload" with
+      # application/octet-stream; wrap it in Upload to name it:
+      #
+      #   supplier_invoices.import_e_invoice(PennylaneClient::Upload.new(io, filename: "invoice.xml"))
       #
       # @note Experimental: the UBL and CII XML input only, which Pennylane
       #   calls alpha. It may change in a minor release (README, Stability).
       #   A Factur-X PDF is stable.
       def import_e_invoice(file, retry: nil, **fields)
-        call(:createSupplierInvoiceEInvoiceImport, file:, retry:, **fields)
+        call_on(:createSupplierInvoiceEInvoiceImport, { file: }, retry:, **fields)
       end
 
       # Updates a supplier invoice. Only the attributes you pass change.
