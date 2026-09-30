@@ -11,10 +11,10 @@ class AccountTest < Minitest::Test
   def client = @client ||= PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new)
 
   def test_is_one_resource_per_client
-    assert_same client.users, client.users
-    assert_same client.company, client.company
-    assert_same client.pa_registrations, client.pa_registrations
-    refute_includes client.users.inspect, "tok"
+    %i[users company pa_registrations].each do |name|
+      assert_same client.public_send(name), client.public_send(name)
+      refute_includes client.public_send(name).inspect, "tok"
+    end
   end
 
   # names: getMe

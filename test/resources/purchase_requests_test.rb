@@ -40,7 +40,8 @@ class PurchaseRequestsTest < Minitest::Test
   # names: createPurchaseRequestImport
   def test_import_sends_json_with_the_file_attachment_id_and_encoded_amounts
     body = '{"file_attachment_id":12,"supplier_id":4,"currency_amount":"120.0","estimated_delivery_date":"2026-11-02"}'
-    stub_request(:post, "#{API}/purchase_requests/imports").with(body:, headers: { "Content-Type" => "application/json" })
+    json = { "Content-Type" => "application/json" }
+    stub_request(:post, "#{API}/purchase_requests/imports").with(body:, headers: json)
                                                            .to_return(status: 201, body: '{"id":9}')
 
     imported = requests.import(file_attachment_id: 12, supplier_id: 4, currency_amount: BigDecimal("120"),

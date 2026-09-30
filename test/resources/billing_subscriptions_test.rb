@@ -39,20 +39,12 @@ class BillingSubscriptionsTest < Minitest::Test
 
   # names: postBillingSubscriptions
   def test_create_encodes_the_start_date_and_line_prices
-    body = {
-      start: "2026-10-01", customer_id: 3, payment_conditions: "30_days", payment_method: "offline",
-      mode: { type: "finalized" }, recurring_rule: { type: "monthly", interval: 1, day_of_month: 1 },
-      customer_invoice_data: { invoice_lines: [{ label: "Hosting", quantity: 1, unit: "month",
-                                                 raw_currency_unit_price: "49.9", vat_rate: "FR_200" }] }
-    }
-    stub_request(:post, "#{API}/billing_subscriptions").with(body: JSON.generate(body))
-                                                       .to_return(status: 201, body: '{"id":7}')
+    body = '{"start":"2026-10-01","customer_id":3,"mode":{"type":"finalized"},' \
+           '"customer_invoice_data":{"invoice_lines":[{"label":"Hosting","raw_currency_unit_price":"49.9"}]}}'
+    stub_request(:post, "#{API}/billing_subscriptions").with(body:).to_return(status: 201, body: '{"id":7}')
 
-    line = { label: "Hosting", quantity: 1, unit: "month", raw_currency_unit_price: BigDecimal("49.9"),
-             vat_rate: "FR_200" }
-    created = subscriptions.create(start: Date.new(2026, 10, 1), customer_id: 3, payment_conditions: "30_days",
-                                   payment_method: "offline", mode: { type: "finalized" },
-                                   recurring_rule: { type: "monthly", interval: 1, day_of_month: 1 },
+    line = { label: "Hosting", raw_currency_unit_price: BigDecimal("49.9") }
+    created = subscriptions.create(start: Date.new(2026, 10, 1), customer_id: 3, mode: { type: "finalized" },
                                    customer_invoice_data: { invoice_lines: [line] })
 
     assert_equal({ id: 7 }, created)
