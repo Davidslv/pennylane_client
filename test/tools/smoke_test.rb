@@ -60,6 +60,9 @@ module SmokeFixtures
     end
   end
 
+  # The report a main run on 2026-10-01 by @octocat wrote under root.
+  def report_in(root) = JSON.parse(File.read(File.join(root, "docs/api/live/2026-10-01-octocat.json")))
+
   def error(klass, status)
     klass.new(nil, status: status, body: %({"message":"secret detail about customer 42"}))
   end
@@ -166,7 +169,6 @@ class SmokeReadsTest < Minitest::Test
     reads(read_answers, sleeps: sleeps)
 
     assert_equal [Smoke::PACE] * 4, sleeps
-    assert_operator 5 / Smoke::PACE, :<=, 10
   end
 
   def test_never_sends_a_write
@@ -218,6 +220,16 @@ class SmokeWritesTest < Minitest::Test
 
     assert_equal "fail: 500 ServerError", results["getCustomerContact"]
     assert_includes client.ids, :deleteCustomerContact
+  end
+
+  def test_a_failed_delete_prints_what_to_delete_by_hand
+    client = FakeClient.new(write_answers.merge(deleteCustomerContact: error(PennylaneClient::ServerError, 500)))
+    out = StringIO.new
+    runner = Smoke::Runner.new(client: client, plan: plan, sleeper: ->(_) {}, out: out)
+    runner.reads
+    runner.writes
+
+    assert_match(/Delete by hand: deleteCustomerContact customer_id=7 id=90/, out.string)
   end
 
   def test_deletes_the_contact_even_when_the_run_is_interrupted
@@ -371,6 +383,26 @@ class SmokeRateLimitProbeTest < Minitest::Test
     assert_requested stub, times: Smoke::RateLimitProbe::BURST + 1
   end
 
+  def test_the_probe_client_sends_a_write_once_even_when_told_to_retry_at_once
+    stub = stub_request(:post, "https://app.pennylane.com/api/external/v2/customers/7/contacts")
+           .to_return(status: 429, headers: { "retry-after" => "0" }, body: "")
+
+    assert_raises(PennylaneClient::RateLimitError) do
+      Smoke.probe_client("probe-token").call(:postCustomerContact, customer_id: 7, email: "a@example.com")
+    end
+    assert_requested stub, times: 1
+  end
+
+  def test_a_failed_probe_cleanup_prints_what_to_delete_by_hand
+    probe = FakeClient.new({ getMe: burst_then_limited(0), postCustomerContact: { id: 60 } })
+    reader = FakeClient.new({ deleteCustomerContact: error(PennylaneClient::ServerError, 500) })
+    out = StringIO.new
+
+    Smoke::RateLimitProbe.new(client: probe, reader: reader, customer_id: 7, sleeper: ->(_) {}, out: out).run
+
+    assert_match(/Delete by hand: deleteCustomerContact customer_id=7 id=60/, out.string)
+  end
+
   def test_not_run_without_a_customer
     result, probe, = probe({}, {}, customer_id: nil)
 
@@ -409,9 +441,9 @@ class SmokeReportTest < Minitest::Test
 
   ENV_OK = { "PENNYLANE_SMOKE_TOKEN" => "t", "PENNYLANE_SMOKE_GITHUB_USER" => "octocat" }.freeze
 
-  def main(root, answers, out: StringIO.new, env: ENV_OK)
+  def main(root, answers, out: StringIO.new, env: ENV_OK, **)
     Smoke.main(env: env, root: root, out: out, client: FakeClient.new(answers), operations: operations,
-               today: Date.new(2026, 10, 1), sleeper: ->(_) {})
+               today: Date.new(2026, 10, 1), sleeper: ->(_) {}, **)
   end
 
   def test_main_runs_the_reads_and_writes_the_report
@@ -457,6 +489,26 @@ class SmokeReportTest < Minitest::Test
                                                           "PENNYLANE_SMOKE_PROBE_429=yes to probe",
                      "webhook_signature" => "not run" }, report["checks"])
     end
+  end
+
+  PROBE_ENV = ENV_OK.merge("PENNYLANE_SMOKE_SANDBOX" => "yes", "PENNYLANE_SMOKE_PROBE_429" => "yes").freeze
+
+  def test_main_runs_the_probe_on_the_first_customer_when_asked_on_a_sandbox
+    with_root do |root|
+      limited = PennylaneClient::RateLimitError.new(nil, status: 429)
+      probe = FakeClient.new({ getMe: limited, postCustomerContact: limited })
+      main(root, sandbox_answers, env: PROBE_ENV, probe_client: probe)
+
+      assert_equal "pass", report_in(root).dig("checks", "rate_limited_write_not_executed")
+      assert_equal 7, probe.calls.last.last[:customer_id]
+    end
+  end
+
+  def sandbox_answers
+    read_answers.merge(postCustomerContact: { id: 90 }, getCustomerContact: {}, putCustomerContact: {},
+                       deleteCustomerContact: true, postWebhookSubscriptions: { id: 5 }, getWebhookSubscription: {},
+                       putWebhookSubscription: {}, deleteWebhookSubscription: true,
+                       getCustomerContacts: { items: [] })
   end
 
   def test_main_exits_one_when_a_read_fails

@@ -54,17 +54,18 @@ module Smoke
     results = exercise(runner, env, out)
     checks = checks(env) do
       RateLimitProbe.new(client: probe_client || probe_client(token), reader: client,
-                         customer_id: runner.customer_id, sleeper: sleeper)
+                         customer_id: runner.customer_id, sleeper: sleeper, out: out)
     end
     Report.write(root: root, date: today, user: env[USER], contract: plan.contract,
                  operations: results, checks: checks)
   end
 
-  # A client with no client-side limit and no retry wait, so a 429 comes
-  # straight back (RateLimitProbe). Never used for anything else.
+  # A client with no client-side limit that never retries, so a 429 comes
+  # straight back and each write goes out once (RateLimitProbe). A negative
+  # wait budget refuses even a `retry-after: 0`. Never used for anything else.
   def self.probe_client(token)
     PennylaneClient.new(token: token, limiters: PennylaneClient::LimiterRegistry.new { Unlimited.new },
-                        max_retry_wait: 0)
+                        max_retry_wait: -1.0)
   end
 
   # The yielded RateLimitProbe runs only when the contributor asked for it
@@ -104,6 +105,12 @@ module Smoke
     report.fetch("checks").each { |check, result| out.puts "#{check}: #{result}" }
     out.puts "Wrote #{path}. Run `bundle exec rake checklist` and open a pull request with both."
     [*results, *report.fetch("checks").values].any? { _1.start_with?("fail") } ? 1 : 0
+  end
+
+  # What a contributor deletes by hand when cleanup failed. Printed to the
+  # terminal only; the report never holds ids.
+  def self.leftover(operation_id, **params)
+    "Delete by hand: #{operation_id} #{params.map { |key, value| "#{key}=#{value}" }.join(" ")}"
   end
 
   def self.tally(results)
@@ -219,7 +226,10 @@ module Smoke
       attempt(results, find) { @client.call(find, **scope, id: id) }
       attempt(results, update) { @client.call(update, **scope, id: id, **changes) }
     ensure
-      attempt(results, delete) { @client.call(delete, **scope, id: id) } if id
+      if id
+        attempt(results, delete) { @client.call(delete, **scope, id: id) }
+        @out&.puts Smoke.leftover(delete, **scope, id: id) unless results[delete.to_s] == PASS
+      end
     end
 
     def attempt(results, operation_id)
@@ -279,11 +289,12 @@ module Smoke
 
     # `client` must have no client-side limit and no retry wait
     # (Smoke.probe_client); `reader` is the paced client.
-    def initialize(client:, reader:, customer_id:, sleeper:)
+    def initialize(client:, reader:, customer_id:, sleeper:, out: nil)
       @client = client
       @reader = reader
       @customer_id = customer_id
       @sleeper = sleeper
+      @out = out
     end
 
     def run
@@ -326,7 +337,12 @@ module Smoke
       "fail: the rate-limited write was executed"
     end
 
-    def delete(id) = @reader.call(:deleteCustomerContact, customer_id: @customer_id, id: id)
+    def delete(id)
+      @reader.call(:deleteCustomerContact, customer_id: @customer_id, id: id)
+    rescue PennylaneClient::Error
+      @out&.puts Smoke.leftover(:deleteCustomerContact, customer_id: @customer_id, id: id)
+      raise
+    end
   end
 
   # A limiter that never waits, for the probe client only.

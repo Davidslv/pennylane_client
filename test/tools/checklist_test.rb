@@ -156,6 +156,30 @@ class ChecklistLiveReportsTest < Minitest::Test
     assert_equal({ "getJournals" => %w[2026-10-01 octocat], "postJournals" => %w[2026-10-05 hubot] }, live.verified)
   end
 
+  def test_a_later_report_that_did_not_run_an_operation_leaves_an_earlier_pass
+    live = scan(report("2026-10-01", "octocat", { "getJournal" => "pass" }),
+                report("2026-10-05", "hubot", { "getJournal" => "not run: 403 PermissionError" }))
+
+    assert_equal({ "getJournal" => %w[2026-10-01 octocat] }, live.verified)
+  end
+
+  def test_a_report_on_an_older_contract_may_name_operations_the_snapshot_has_since_dropped
+    old = report("2026-10-01", "octocat", { "getJournal" => "pass", "getRetired" => "pass" })
+    old["contract"] = "2026-01-01"
+    live = Dir.mktmpdir do |root|
+      FileUtils.mkdir_p(File.join(root, "docs/api/live"))
+      File.write(File.join(root, "docs/api/live/old.json"), JSON.generate(old))
+      Checklist::LiveReports.scan(root: root, known: KNOWN, contract: "2026-09-30")
+    end
+
+    assert_equal ["getJournal"], live.verified.keys
+  end
+
+  def test_refuses_a_result_that_is_not_a_string
+    assert_raises(Checklist::Error) { scan(report("2026-10-01", "octocat", {}, checks: { "probe" => 1 })) }
+    assert_raises(Checklist::Error) { scan(report("2026-10-01", "octocat", { "getJournal" => true })) }
+  end
+
   def test_checks_keep_the_latest_result_that_actually_ran
     live = scan(report("2026-10-01", "octocat", {}, checks: { "webhook_signature" => "pass", "probe" => "pass" }),
                 report("2026-10-05", "hubot", {}, checks: { "webhook_signature" => "not run",

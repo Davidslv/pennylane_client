@@ -180,15 +180,15 @@ module Checklist
     document, source, known = snapshot(root)
     render(document, source: source,
                      registered: registered, named: NamedTests.scan(root: root, known: known),
-                     live: LiveReports.scan(root: root, known: known))
+                     live: LiveReports.for_snapshot(root, document))
   end
 
   # Returns README.md under root with its live-verified count regenerated.
   def self.readme(root:)
-    document, _source, known = snapshot(root)
+    document, = snapshot(root)
     operations = document.fetch("operations")
     Readme.update(File.read(File.join(root, Readme::PATH)),
-                  verified: verified_count(operations, LiveReports.scan(root: root, known: known)),
+                  verified: verified_count(operations, LiveReports.for_snapshot(root, document)),
                   live: operations.count { !_1["deprecated"] })
   end
 

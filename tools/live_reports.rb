@@ -16,13 +16,13 @@ module Checklist
   # Reads the sandbox reports under docs/api/live/. A report is JSON:
   #
   #   {"format": 1, "verified_on": "2026-10-01", "by": "octocat",
-  #    "operations": {"getMe": "pass", "getJournals": "fail: 403 ..."},
+  #    "operations": {"getMe": "pass", "getJournals": "fail: 500 ServerError"},
   #    "checks": {"webhook_signature": "pass"}}
   #
   # Reports are read oldest first, so for each operation the latest report
-  # that ran it decides: "pass" verifies it, anything else leaves it
-  # unverified. A check keeps its latest result that ran: anything but
-  # "not run" or "not run: <why>".
+  # that ran it decides: "pass" verifies it, "fail: ..." leaves it
+  # unverified, and "not run: ..." (a missing scope) changes nothing. A
+  # check likewise keeps its latest result other than "not run[: <why>]".
   module LiveReports
     DIR = "docs/api/live"
     GLOB = "#{DIR}/*.json".freeze
@@ -38,39 +38,60 @@ module Checklist
     Live = Data.define(:verified, :checks)
     NONE = Live.new(verified: {}.freeze, checks: {}.freeze)
 
-    def self.scan(root:, known:)
-      reports = Dir.glob(GLOB, base: root).map { |file| read(File.join(root, file), file, known) }
+    # `contract` is the snapshot date. A report taken on an older contract
+    # may name operations Pennylane has since removed; those are skipped,
+    # since a report is evidence and is never edited. On the current
+    # contract an unknown operationId is an error.
+    def self.scan(root:, known:, contract: nil)
+      reports = Dir.glob(GLOB, base: root).map { |file| read(File.join(root, file), file, known, contract) }
       reports.sort_by { [_1.fetch("verified_on"), _1.fetch("file")] }
              .each_with_object(Live.new(verified: {}, checks: {})) { |report, live| apply(report, live) }
     end
 
-    def self.read(path, file, known)
+    # The reports under root, checked against a parsed contract snapshot.
+    def self.for_snapshot(root, document)
+      scan(root: root, known: document.fetch("operations").map { _1["operation_id"] },
+           contract: document.fetch("retrieved_on"))
+    end
+
+    def self.read(path, file, known, contract)
       report = JSON.parse(File.read(path))
       validate(report, file)
-      unknown = report.fetch("operations").keys - known
-      raise Error, "#{file}: #{unknown.join(", ")} not an operationId in the snapshot" if unknown.any?
-
-      report.merge("file" => file)
+      report.merge("file" => file, "operations" => current(report, file, known, contract))
     rescue JSON::ParserError, KeyError, NoMethodError => e
       raise Error, "#{file}: not a sandbox report (#{e.message})"
+    end
+
+    def self.current(report, file, known, contract)
+      operations = report.fetch("operations")
+      unknown = operations.keys - known
+      return operations if unknown.empty?
+      return operations.except(*unknown) if contract && report["contract"].to_s < contract
+
+      raise Error, "#{file}: #{unknown.join(", ")} not an operationId in the snapshot"
     end
 
     def self.validate(report, file)
       raise Error, "#{file}: format must be #{FORMAT}" unless report["format"] == FORMAT
       raise Error, "#{file}: verified_on must be YYYY-MM-DD" unless DATE.match?(report["verified_on"].to_s)
       raise Error, "#{file}: by must be a GitHub username" unless USER.match?(report["by"].to_s)
+
+      results = [*report.fetch("operations").values, *report.fetch("checks", {}).values]
+      raise Error, "#{file}: every result must be a String" unless results.all?(String)
     end
 
     def self.apply(report, live)
       stamp = report.values_at("verified_on", "by")
       report.fetch("operations").each do |id, result|
+        next if result.start_with?(NOT_RUN)
+
         result == PASS ? live.verified[id] = stamp : live.verified.delete(id)
       end
       report.fetch("checks", {}).each do |check, result|
         live.checks[check] = [result, *stamp] unless result.start_with?(NOT_RUN)
       end
     end
-    private_class_method :read, :validate, :apply
+    private_class_method :read, :current, :validate, :apply
   end
 
   # Keeps the README's live-verified count generated, not typed. Only the

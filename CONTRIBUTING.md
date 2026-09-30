@@ -79,7 +79,7 @@ This sends reads only: every live list operation that needs no parameters, one i
 Optional, each off unless you set it:
 
 - `PENNYLANE_SMOKE_SANDBOX=yes` confirms the token is for a sandbox and turns on writes. The run creates, reads, updates and deletes a contact on your first customer, and, if the company has no webhook subscription, a disabled one pointing at `https://example.com`. Everything it creates is deleted, even when a step fails. An existing webhook subscription is never touched.
-- `PENNYLANE_SMOKE_PROBE_429=yes` (with `PENNYLANE_SMOKE_SANDBOX=yes`) checks the assumption behind [D5](proposals/0001-pennylane-client-gem.md) that Pennylane does not run a request it answers with 429. It sends up to 30 quick `getMe` calls until one is rate-limited, sends one contact create into the exhausted window, waits out `retry-after`, and looks for the contact. This is the only time the run reaches the rate limit: one burst, on purpose.
+- `PENNYLANE_SMOKE_PROBE_429=yes` (with `PENNYLANE_SMOKE_SANDBOX=yes`) checks the assumption behind [D5](proposals/0001-pennylane-client-gem.md) that Pennylane does not run a request it answers with 429. It sends up to 30 quick `getMe` calls until one is rate-limited, sends one contact create into the exhausted window, waits out `retry-after`, and looks for the contact. The probe client never retries, so each request goes out once. This is the only time the run reaches the rate limit: one burst, on purpose. If Pennylane is slow to list a new contact, the check can pass falsely; run it twice if it matters.
 - `PENNYLANE_SMOKE_WEBHOOK_BODY` (a file holding the raw body), `PENNYLANE_SMOKE_WEBHOOK_SIGNATURE` (the `X-Pennylane-Signature` header) and `PENNYLANE_SMOKE_WEBHOOK_SECRET` check a delivery you captured from your sandbox against `Webhook.verify!`.
 
 The run writes `docs/api/live/<date>-<your-github-name>.json`. It holds operationIds, results and HTTP statuses only: no ids, no response bodies, no token. Error messages are printed to your terminal, not written to the report. Read the file, then:
@@ -88,7 +88,7 @@ The run writes `docs/api/live/<date>-<your-github-name>.json`. It holds operatio
 bundle exec rake checklist
 ```
 
-and open a pull request with the report, `docs/api/CHECKLIST.md` and `README.md`. For each operation the latest report that ran it decides its `live` cell, so a later failure clears an earlier pass.
+and open a pull request with the report, `docs/api/CHECKLIST.md` and `README.md`. For each operation the latest report that ran it decides its `live` cell, so a later failure clears an earlier pass. A `not run` (a missing scope) leaves an earlier pass alone. If a cleanup delete fails, the run prints what to delete by hand.
 
 `rake smoke` is never part of `bundle exec rake` and never runs in CI. Never run load or stress tests against Pennylane's servers, sandbox included.
 
