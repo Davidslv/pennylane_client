@@ -1,5 +1,7 @@
 module PennylaneClient
   class Paginator
+    FIRST_PAGE_ONLY: Array[Symbol]
+
     @executor: Executor
     @operation: Operation
     @params: Hash[Symbol, untyped]
@@ -15,6 +17,6 @@ module PennylaneClient
     private
 
     def with_limit: (Hash[Symbol, untyped] params) -> Hash[Symbol, untyped]
-    def fetch: (String? cursor) -> Hash[Symbol, untyped]
+    def fetch: (Hash[Symbol, untyped] params) -> Hash[Symbol, untyped]
   end
 end

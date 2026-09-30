@@ -48,5 +48,11 @@ module PennylaneClient
     def retry_after: () -> Float?
   end
 
+  class ExportError < Error
+    attr_reader export: Hash[Symbol, untyped]
+
+    def initialize: (String message, export: Hash[Symbol, untyped]) -> void
+  end
+
   STATUS_ERRORS: Hash[Integer, singleton(Error)]
 end
