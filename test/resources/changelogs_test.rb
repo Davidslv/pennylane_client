@@ -62,6 +62,22 @@ class ChangelogsTest < Minitest::Test
     assert_equal [3], ids(changelogs.customers(limit: 50))
   end
 
+  FEEDS = %i[customer_invoices customers ledger_entries_categories ledger_entry_lines
+             ledger_entry_lines_categories products quotes supplier_invoices suppliers transactions].freeze
+
+  # `since:` is the one spelling. Pennylane's own `start_date:` next to it
+  # used to win silently; alone it was a second way to say the same thing.
+  def test_every_feed_refuses_start_date_and_points_to_since
+    assert_equal FEEDS.sort, PennylaneClient::Resources::Changelogs.public_instance_methods(false).sort
+
+    FEEDS.each do |feed|
+      [{ start_date: "2026-09-20T00:00:00Z" }, { since: SINCE, start_date: "2026-09-20T00:00:00Z" }].each do |args|
+        error = assert_raises(ArgumentError, "#{feed}(#{args})") { changelogs.public_send(feed, **args) }
+        assert_includes error.message, "since:"
+      end
+    end
+  end
+
   # names: getCustomerChanges
   def test_customers
     stub_since("customers")

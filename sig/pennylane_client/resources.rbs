@@ -384,6 +384,10 @@ module PennylaneClient
       def suppliers: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
 
       def transactions: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+
+      private
+
+      def feed: (Symbol operation_id, Time | String | nil since, Hash[Symbol, untyped] params) -> Enumerator::Lazy[item, void]
     end
 
     class Exports < Resource
