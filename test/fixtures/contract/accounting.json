@@ -1,0 +1,21 @@
+{
+  "openapi": "3.0.1",
+  "paths": {
+    "/api/external/v2/journals": {
+      "post": {
+        "operationId": "postJournals"
+      }
+    },
+    "/api/external/v2/journals/{id}": {
+      "get": {
+        "operationId": "getJournal"
+      }
+    },
+    "/api/external/v2/ledger_attachments": {
+      "post": {
+        "operationId": "postLedgerAttachments",
+        "deprecated": true
+      }
+    }
+  }
+}

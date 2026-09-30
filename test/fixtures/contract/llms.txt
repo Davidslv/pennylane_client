@@ -1,0 +1,17 @@
+# Company API Documentation
+
+> Documentation for Company API
+
+## Guides: ADVANCED GUIDES
+- [Rate Limiting in API v2](https://pennylane.readme.io/docs/rate-limiting-1.md)
+
+## API Reference: Accounting
+- [Retrieve a journal](https://pennylane.readme.io/reference/getjournal.md): Retrieve a journal  > ℹ️ > This endpoint requires one of the following scopes: `journals:readonly`, `journals:all`
+- [Create a journal](https://pennylane.readme.io/reference/postjournals.md): Create a journal  > ℹ️ > This endpoint requires the following scope: `journals:all`
+- [Upload a file](https://pennylane.readme.io/reference/postledgerattachments.md): Upload a file to attach to a ledger entry.  > ‼️ > This endpoint is **DEPRECATED**
+
+## API Reference: Company V2
+- [Retrieve a journal](https://pennylane.readme.io/reference/getjournal.md): The same page linked from a second section
+
+## Changelog
+- [New fields on Customer Invoice](https://pennylane.readme.io/changelog/new-fields-on-customer-invoice.md)
