@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 131 of 177 live |
+| Named | 144 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -45,24 +45,24 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `getBillingSubscription` | GET | `/billing_subscriptions/{id}` | yes | no | unverified: no sandbox access |  |
 | `putBillingSubscriptions` | PUT | `/billing_subscriptions/{id}` | yes | no | unverified: no sandbox access |  |
 
-## Categories (0 of 5 named)
+## Categories (5 of 5 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getCategories` | GET | `/categories` | yes | no | unverified: no sandbox access |  |
-| `postCategories` | POST | `/categories` | yes | no | unverified: no sandbox access |  |
-| `getCategory` | GET | `/categories/{id}` | yes | no | unverified: no sandbox access |  |
-| `updateCategory` | PUT | `/categories/{id}` | yes | no | unverified: no sandbox access |  |
-| `getCategoryGroups` | GET | `/category_groups` | yes | no | unverified: no sandbox access |  |
+| `getCategories` | GET | `/categories` | yes | yes | unverified: no sandbox access | `test/resources/categories_test.rb#test_categories_list_walks_every_page_resending_the_filter` |
+| `postCategories` | POST | `/categories` | yes | yes | unverified: no sandbox access | `test/resources/categories_test.rb#test_categories_create` |
+| `getCategory` | GET | `/categories/{id}` | yes | yes | unverified: no sandbox access | `test/resources/categories_test.rb#test_categories_find` |
+| `updateCategory` | PUT | `/categories/{id}` | yes | yes | unverified: no sandbox access | `test/resources/categories_test.rb#test_categories_update` |
+| `getCategoryGroups` | GET | `/category_groups` | yes | yes | unverified: no sandbox access | `test/resources/categories_test.rb#test_groups_list_walks_every_page` |
 
-## Category Groups (0 of 4 named)
+## Category Groups (4 of 4 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `postCategoryGroups` | POST | `/category_groups` | yes | no | unverified: no sandbox access |  |
-| `getCategoryGroupCategories` | GET | `/category_groups/{category_group_id}/categories` | yes | no | unverified: no sandbox access |  |
-| `getCategoryGroup` | GET | `/category_groups/{id}` | yes | no | unverified: no sandbox access |  |
-| `putCategoryGroup` | PUT | `/category_groups/{id}` | yes | no | unverified: no sandbox access |  |
+| `postCategoryGroups` | POST | `/category_groups` | yes | yes | unverified: no sandbox access | `test/resources/categories_test.rb#test_groups_create` |
+| `getCategoryGroupCategories` | GET | `/category_groups/{category_group_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/categories_test.rb#test_groups_categories_walks_every_page` |
+| `getCategoryGroup` | GET | `/category_groups/{id}` | yes | yes | unverified: no sandbox access | `test/resources/categories_test.rb#test_groups_find` |
+| `putCategoryGroup` | PUT | `/category_groups/{id}` | yes | yes | unverified: no sandbox access | `test/resources/categories_test.rb#test_groups_update` |
 
 ## Changelogs (0 of 9 named)
 
@@ -257,14 +257,14 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `getPaRegistrations` | GET | `/pa_registrations` | yes | no | unverified: no sandbox access |  |
 
-## Products (0 of 4 named)
+## Products (4 of 4 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getProducts` | GET | `/products` | yes | no | unverified: no sandbox access |  |
-| `postProducts` | POST | `/products` | yes | no | unverified: no sandbox access |  |
-| `getProduct` | GET | `/products/{id}` | yes | no | unverified: no sandbox access |  |
-| `putProduct` | PUT | `/products/{id}` | yes | no | unverified: no sandbox access |  |
+| `getProducts` | GET | `/products` | yes | yes | unverified: no sandbox access | `test/resources/products_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `postProducts` | POST | `/products` | yes | yes | unverified: no sandbox access | `test/resources/products_test.rb#test_create_encodes_a_big_decimal_price` |
+| `getProduct` | GET | `/products/{id}` | yes | yes | unverified: no sandbox access | `test/resources/products_test.rb#test_find` |
+| `putProduct` | PUT | `/products/{id}` | yes | yes | unverified: no sandbox access | `test/resources/products_test.rb#test_update` |
 
 ## Purchase Requests (0 of 3 named)
 

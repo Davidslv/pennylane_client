@@ -370,6 +370,30 @@ client.trial_balance.list(period_start: Date.new(2026, 1, 1), period_end: Date.n
 
 To attach a receipt to an entry, upload it with `client.file_attachments.upload` and pass the id as `file_attachment_id:`. The contract says that field will soon be deprecated. The deprecated `postLedgerAttachments` has no named method.
 
+## Work with categories and products
+
+`client.categories`, `client.category_groups` and `client.products` name every Categories, Category Groups and Products operation.
+
+An analytical category lives in a category group. Create the group first; its `kind:` is `"profit_and_loss"`, `"treasury"` or `"building"`. A treasury category also takes `direction:`, which defaults to `"cash_out"`:
+
+```ruby
+group = client.category_groups.create(label: "Teams", kind: "profit_and_loss")
+marketing = client.categories.create(label: "Marketing", category_group_id: group[:id], analytical_code: "MKT")
+client.category_groups.categories(group[:id]).map { _1[:label] }   # => ["Marketing"]
+```
+
+`category_groups.update` requires `label:` even when you change only `kind:`. `categories.update` takes `label:`, `analytical_code:` and `direction:`; it does not move a category to another group.
+
+These resources manage the categories themselves. To put a category on an invoice, transaction, customer, supplier or ledger entry line, use `categorize` on that resource. It takes the bare array of `{ id:, weight: }`.
+
+A product needs `label:`, `price_before_tax:` and `vat_rate:`. Invoice and quote lines can point at it with `product_id:`:
+
+```ruby
+day = client.products.create(label: "Consulting day", price_before_tax: BigDecimal("650"), vat_rate: "FR_200",
+                             unit: "day", reference: "CONS-DAY")
+client.products.list(filter: [{ field: "reference", operator: "eq", value: "CONS-DAY" }]).first
+```
+
 ## Handle a validation error
 
 ```ruby

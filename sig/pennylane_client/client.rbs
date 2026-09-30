@@ -59,6 +59,12 @@ module PennylaneClient
 
     def trial_balance: () -> Resources::TrialBalance
 
+    def categories: () -> Resources::Categories
+
+    def category_groups: () -> Resources::CategoryGroups
+
+    def products: () -> Resources::Products
+
     def inspect: () -> String
 
     private
@@ -104,6 +110,12 @@ module PennylaneClient
     @ledger_entry_lines: Resources::LedgerEntryLines?
 
     @trial_balance: Resources::TrialBalance?
+
+    @categories: Resources::Categories?
+
+    @category_groups: Resources::CategoryGroups?
+
+    @products: Resources::Products?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end
