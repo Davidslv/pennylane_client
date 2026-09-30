@@ -27,6 +27,7 @@ module PennylaneClient
     @upload_timeout: Numeric
     @keep_alive_timeout: Numeric
     @key: Symbol
+    @owners: ConnectionOwners
 
     def exchange: (Request request, untyped uri) -> Response
     def send_request: (untyped http, Request request, untyped uri) -> untyped
