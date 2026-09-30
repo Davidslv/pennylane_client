@@ -256,5 +256,13 @@ module PennylaneClient
 
       def upload_appendix: (Integer commercial_document_id, file file) -> item
     end
+
+    class CustomerInvoiceTemplates < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+    end
+
+    class Numberings < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+    end
   end
 end

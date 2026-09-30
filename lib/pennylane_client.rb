@@ -33,6 +33,8 @@ require_relative "pennylane_client/resources/bank_establishments"
 require_relative "pennylane_client/resources/transactions"
 require_relative "pennylane_client/resources/quotes"
 require_relative "pennylane_client/resources/commercial_documents"
+require_relative "pennylane_client/resources/customer_invoice_templates"
+require_relative "pennylane_client/resources/numberings"
 require_relative "pennylane_client/client"
 
 # Unofficial Ruby client for the Pennylane Company API v2.

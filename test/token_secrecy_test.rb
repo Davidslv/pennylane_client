@@ -12,7 +12,8 @@ class TokenSecrecyTest < Minitest::Test
   TOKEN = "pl-secret-token-7f3a9c"
   # Every Client method that returns a Resource.
   RESOURCES = %i[customer_invoices customers supplier_invoices suppliers sepa_mandates gocardless_mandates
-                 pro_account_mandates bank_accounts bank_establishments transactions quotes commercial_documents].freeze
+                 pro_account_mandates bank_accounts bank_establishments transactions quotes commercial_documents
+                 customer_invoice_templates numberings].freeze
 
   # max_retry_wait: 0 keeps backoff retries, and their real sleeps, out of
   # the suite; a 429 with retry-after 0 still retries.

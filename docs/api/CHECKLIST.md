@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 107 of 177 live |
+| Named | 109 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -97,11 +97,11 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `getCompanyFeatures` | GET | `/company/features` | yes | no | unverified: no sandbox access |  |
 
-## Customer Invoice Templates (0 of 1 named)
+## Customer Invoice Templates (1 of 1 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getCustomerInvoiceTemplates` | GET | `/customer_invoice_templates` | yes | no | unverified: no sandbox access |  |
+| `getCustomerInvoiceTemplates` | GET | `/customer_invoice_templates` | yes | yes | unverified: no sandbox access | `test/resources/numberings_and_templates_test.rb#test_customer_invoice_templates_walks_every_page` |
 
 ## Customer Invoices (23 of 23 named)
 
@@ -245,11 +245,11 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `getSepaMandate` | GET | `/sepa_mandates/{id}` | yes | yes | unverified: no sandbox access | `test/resources/sepa_mandates_test.rb#test_find` |
 | `putSepaMandate` | PUT | `/sepa_mandates/{id}` | yes | yes | unverified: no sandbox access | `test/resources/sepa_mandates_test.rb#test_update` |
 
-## Numberings (0 of 1 named)
+## Numberings (1 of 1 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getNumberings` | GET | `/numberings` | yes | no | unverified: no sandbox access |  |
+| `getNumberings` | GET | `/numberings` | yes | yes | unverified: no sandbox access | `test/resources/numberings_and_templates_test.rb#test_numberings_walks_every_page` |
 
 ## PA Registrations (0 of 1 named)
 

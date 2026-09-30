@@ -41,6 +41,10 @@ module PennylaneClient
 
     def commercial_documents: () -> Resources::CommercialDocuments
 
+    def customer_invoice_templates: () -> Resources::CustomerInvoiceTemplates
+
+    def numberings: () -> Resources::Numberings
+
     def inspect: () -> String
 
     private
@@ -68,6 +72,10 @@ module PennylaneClient
     @quotes: Resources::Quotes?
 
     @commercial_documents: Resources::CommercialDocuments?
+
+    @customer_invoice_templates: Resources::CustomerInvoiceTemplates?
+
+    @numberings: Resources::Numberings?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end
