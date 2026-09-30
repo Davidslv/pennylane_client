@@ -180,5 +180,17 @@ module PennylaneClient
 
       def migrate: (mandate_type: "SepaMandate" | "Mandate", mandate_id: Integer, **untyped fields) -> item
     end
+
+    class BankAccounts < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+    end
+
+    class BankEstablishments < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+    end
   end
 end

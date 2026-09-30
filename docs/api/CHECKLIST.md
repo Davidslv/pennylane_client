@@ -17,22 +17,22 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 74 of 177 live |
+| Named | 78 of 177 live |
 | Live-verified | 0 of 177 live |
 
-## Bank accounts (0 of 3 named)
+## Bank accounts (3 of 3 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getBankAccounts` | GET | `/bank_accounts` | yes | no | unverified: no sandbox access |  |
-| `postBankAccount` | POST | `/bank_accounts` | yes | no | unverified: no sandbox access |  |
-| `getBankAccount` | GET | `/bank_accounts/{id}` | yes | no | unverified: no sandbox access |  |
+| `getBankAccounts` | GET | `/bank_accounts` | yes | yes | unverified: no sandbox access | `test/resources/bank_accounts_test.rb#test_list_walks_every_page_resending_the_sort` |
+| `postBankAccount` | POST | `/bank_accounts` | yes | yes | unverified: no sandbox access | `test/resources/bank_accounts_test.rb#test_create` |
+| `getBankAccount` | GET | `/bank_accounts/{id}` | yes | yes | unverified: no sandbox access | `test/resources/bank_accounts_test.rb#test_find` |
 
-## Bank Establishments (0 of 1 named)
+## Bank Establishments (1 of 1 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getBankEstablishments` | GET | `/bank_establishments` | yes | no | unverified: no sandbox access |  |
+| `getBankEstablishments` | GET | `/bank_establishments` | yes | yes | unverified: no sandbox access | `test/resources/bank_accounts_test.rb#test_bank_establishments_list_walks_every_page_resending_the_filter` |
 
 ## Billing Subscriptions (0 of 6 named)
 
