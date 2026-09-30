@@ -1,0 +1,9 @@
+module PennylaneClient
+  class ConnectionOwners
+    def initialize: () -> void
+
+    def register: (Hash[String, untyped] connections) -> Hash[String, untyped]
+    def finished: () -> Array[Hash[String, untyped]]
+    def inspect: () -> String
+  end
+end
