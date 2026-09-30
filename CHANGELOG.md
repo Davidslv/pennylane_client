@@ -21,7 +21,7 @@ First release. All 178 operations of the Company API v2 (contract snapshot of 20
 - Path parameters are escaped. A missing, nil or empty one, or `.` or `..`, raises `ArgumentError` before anything is sent.
 - Errors under `PennylaneClient::Error` (`status`, `code`, `details`, `body`, `headers`): `ValidationError` (400, 422), `AuthenticationError` (401), `PermissionError` (403), `NotFoundError` (404), `ConflictError` (409), `RateLimitError` (429, `#retry_after`), `ServerError` (5xx), `ConnectionError` and `TimeoutError`. An unknown operationId raises `UnknownOperationError`, an `ArgumentError`.
 - Cursor pagination: `client.paginate(:operationId, **params)` returns every item as an `Enumerator::Lazy` at the operation's largest page size, resending `filter` and `sort` on every page and sending `start_date` with the first page only. `client.pages` gives the pages.
-- Multipart uploads for the 7 upload operations: pass a `File`, IO, `Pathname` or `PennylaneClient::Upload` (to set the filename or content type). Files stream from disk.
+- Multipart uploads for the 7 upload operations: pass a `File`, IO, `Pathname` or `PennylaneClient::Upload` (to set the filename or content type). Files stream from disk. An IO is read from its position when the call starts, and a retry after a 429 sends the same bytes again.
 
 #### Rate limit, retries and transport
 

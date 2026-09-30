@@ -171,7 +171,7 @@ A timeout raises `TimeoutError`, after the retries a GET gets. A write that time
 
 ## Upload a file
 
-Pass a `Pathname`, a `File` or an IO as the file. The file streams from disk, so a 100 MB upload does not load 100 MB into memory. The filename comes from the path and the content type from the extension (`.pdf`, `.png`, `.jpg`, `.jpeg`, `.tif`, `.tiff`, `.bmp`, `.gif`, `.xml`):
+Pass a `Pathname`, a `File` or an IO as the file. A file on disk is streamed, so a 100 MB upload does not load 100 MB into memory. The filename comes from the path and the content type from the extension (`.pdf`, `.png`, `.jpg`, `.jpeg`, `.tif`, `.tiff`, `.bmp`, `.gif`, `.xml`):
 
 <!-- example -->
 ```ruby
@@ -183,14 +183,31 @@ File.open("timesheet.pdf", "rb") do |file|
 end
 ```
 
-Wrap the file in `PennylaneClient::Upload` to set the filename or the content type yourself. An IO with no path, such as a `StringIO`, has neither: unwrapped, it goes as `upload` with `application/octet-stream`, and a `filename:` field does not change that. Upload takes the content type from the filename when you give only the filename. Hash and Array fields go as JSON parts:
+Hash and Array fields go as JSON parts:
 
 <!-- example -->
 ```ruby
-xml = PennylaneClient::Upload.new(StringIO.new(File.read("invoice.xml")),
-                                  filename: "invoice.xml", content_type: "application/xml")
-client.customer_invoices.import_e_invoice(xml, invoice_options: { customer_id: 42 })
+client.customer_invoices.import_e_invoice(Pathname("invoice.xml"), invoice_options: { customer_id: 42 })
 ```
+
+### Upload a file you built in memory
+
+A PDF you generate in memory has no path, so it has no filename and no content type. Wrap it in `PennylaneClient::Upload` to give it both, and rewind it first:
+
+<!-- example upload_from_memory -->
+```ruby
+pdf = StringIO.new
+pdf.write("%PDF-1.4\n")   # your PDF library writes the document here
+pdf.write("%%EOF\n")
+pdf.rewind                # back to the first byte
+
+upload = PennylaneClient::Upload.new(pdf, filename: "receipt-2026-09.pdf", content_type: "application/pdf")
+client.file_attachments.upload(upload)[:id]
+```
+
+The client reads an IO from where it stands when the call starts, to its end. A `StringIO` you have just written to stands at its end, so without `rewind` the file part is empty, and nothing raises. A retry after a 429 goes back to the same starting point, so every attempt sends the same bytes.
+
+`Upload.new(io, filename:, content_type:)` takes both keywords as optional. With only `filename:`, the content type comes from its extension. An IO with no path sent without an `Upload` goes as `upload`, with `application/octet-stream`, and a `filename:` field next to it does not change that. Each upload operation's reference lists the content types Pennylane accepts: for `file_attachments.upload`, a PDF or a PNG, JPEG, TIFF, BMP or GIF image.
 
 The file is always positional. A `file:` keyword next to it raises `ArgumentError`, as a keyword naming a positional id does.
 

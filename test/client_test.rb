@@ -166,6 +166,36 @@ class ClientUploadTest < Minitest::Test
     assert_equal bodies.first, bodies.last
     assert_includes bodies.last, "%PDF-1.7"
   end
+
+  # An IO is read from where it stands when the call starts, as IO.copy_stream
+  # would read it, and a retry goes back to that position, not to byte 0:
+  # the first attempt and the retry send the same bytes.
+  def test_an_io_goes_from_its_position_on_the_first_attempt_and_the_retry
+    bodies = []
+    stub_request(:post, "#{API}/file_attachments").with { bodies << _1.body }
+                                                  .to_return({ status: 429, headers: { "Retry-After" => "0" } },
+                                                             { status: 201, body: '{"id":5}' })
+    io = StringIO.new("skipped%PDF-1.7")
+    io.seek(7)
+
+    client.file_attachments.upload(PennylaneClient::Upload.new(io, filename: "receipt.pdf"))
+
+    parts = bodies.map { _1[%r{application/pdf\r\n\r\n(.*?)\r\n--}m, 1] }
+    assert_equal ["%PDF-1.7", "%PDF-1.7"], parts
+  end
+
+  # A StringIO just written to stands at its end, so its file part is
+  # empty. The docs say to rewind it; this pins what happens when you do not.
+  def test_an_io_at_its_end_sends_an_empty_file_part
+    body = nil
+    stub_request(:post, "#{API}/file_attachments").with { body = _1.body }.to_return(status: 201, body: '{"id":5}')
+    io = StringIO.new
+    io.write("%PDF-1.7")
+
+    client.file_attachments.upload(PennylaneClient::Upload.new(io, filename: "receipt.pdf"))
+
+    assert_includes body, "Content-Type: application/pdf\r\n\r\n\r\n--"
+  end
 end
 
 # client.paginate and client.pages end to end, with WebMock as Pennylane.

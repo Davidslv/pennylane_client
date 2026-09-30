@@ -12,7 +12,8 @@ require_relative "doc_shims"
 module DocSetups
   API = "https://app.pennylane.com/api/external/v2"
   SECRET = "whsec_docs"
-  NAMES = %w[validation_error unauthorized_once export_ready export_error webhook rails sidekiq rails_webhook].freeze
+  NAMES = %w[validation_error unauthorized_once export_ready export_error webhook rails sidekiq rails_webhook
+             upload_from_memory].freeze
 
   def prepare(setup, sandbox)
     return nil unless setup
@@ -45,6 +46,14 @@ module DocSetups
     failed = @contract.body_for(:getGeneralLedgerExport).merge("status" => "error")
     stub_request(:get, %r{#{API}/exports/general_ledgers/\d+\z}).to_return(json(failed))
     nil
+  end
+
+  # The in-memory PDF must reach Pennylane whole: a StringIO left at its end
+  # sends an empty file part.
+  def setup_upload_from_memory(_sandbox)
+    lambda do |_box|
+      assert_requested(:post, "#{API}/file_attachments") { _1.body.include?("\r\n\r\n%PDF-1.4\n%%EOF\n\r\n") }
+    end
   end
 
   def setup_webhook(sandbox)

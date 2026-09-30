@@ -129,7 +129,7 @@ The how-to has more on [lists](how-to.md#walk-a-list) and [filters](how-to.md#fi
 
 ## Attach a file
 
-Pass a `Pathname`, a `File` or an IO. The file streams from disk:
+Pass a `Pathname`, a `File` or an IO. A file on disk is streamed, not read into memory:
 
 <!-- example continued -->
 ```ruby
@@ -139,7 +139,7 @@ attachment = client.file_attachments.upload(Pathname("receipt.pdf"))
 attachment[:id]   # use it as file_attachment_id: when importing an invoice
 ```
 
-The filename comes from the path and the content type from the extension. See [upload a file](how-to.md#upload-a-file) to set either yourself.
+The filename comes from the path and the content type from the extension. See [upload a file](how-to.md#upload-a-file) to set either yourself, and [upload a file you built in memory](how-to.md#upload-a-file-you-built-in-memory) for a PDF you generate.
 
 ## Handle errors
 
