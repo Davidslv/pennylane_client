@@ -19,6 +19,10 @@ module PennylaneClient
   #   is needed. Clients share NetHttpTransport.default, so building a
   #   Client per request or per token opens no new sockets; the token
   #   travels in each request, not in the connection.
+  # - Connections of a thread or fiber that has finished are closed the
+  #   next time any thread or fiber opens a new connection, so a thread per
+  #   job does not leave a socket per finished job. Only opening a
+  #   connection takes a lock; a call on an open connection takes none.
   # - Timeouts: open 5 s, read 30 s, write 30 s (proposal 0001). An upload
   #   gets 300 s to read and write, then the connection goes back to 30 s.
   # - An idle connection is kept for 10 s (`keep_alive_timeout`). Net::HTTP
@@ -50,6 +54,7 @@ module PennylaneClient
       @upload_timeout = upload_timeout
       @keep_alive_timeout = keep_alive_timeout
       @key = :"pennylane_client_connections_#{object_id}"
+      @owners = ConnectionOwners.new
     end
 
     def call(request)
@@ -82,11 +87,16 @@ module PennylaneClient
     end
 
     def connections
-      Thread.current[@key] ||= {}
+      Thread.current[@key] ||= @owners.register({})
     end
 
+    # Opening a connection is also when those of finished threads and
+    # fibers are closed.
     def connection(uri)
-      connections["#{uri.host}:#{uri.port}"] ||= build_connection(uri)
+      connections["#{uri.host}:#{uri.port}"] ||= begin
+        @owners.finished.each { |owned| owned.each_value { finish(_1) }.clear }
+        build_connection(uri)
+      end
     end
 
     def build_connection(uri)
@@ -138,7 +148,11 @@ module PennylaneClient
 
     def drop(uri)
       http = connections.delete("#{uri.host}:#{uri.port}")
-      http.finish if http&.started?
+      finish(http) if http
+    end
+
+    def finish(http)
+      http.finish if http.started?
     rescue IOError
       nil
     end

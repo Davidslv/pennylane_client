@@ -31,5 +31,6 @@ module PennylaneClient
     def to_response: (untyped response) -> Response
     def fail_with: (singleton(Error) klass, Exception error, untyped uri) -> bot
     def drop: (untyped uri) -> void
+    def finish: (untyped http) -> void
   end
 end

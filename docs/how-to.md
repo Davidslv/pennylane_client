@@ -78,6 +78,8 @@ limiters = PennylaneClient::LimiterRegistry.new { |key| MyRedisLimiter.new("penn
 client = PennylaneClient.new(token:, limiters:)
 ```
 
+The registry drops a limiter no one has fetched for 60 s (`idle_after:` changes it) and builds a new one the next time the token is used. If your limiter answers `idle?`, it is dropped only when that returns true.
+
 ## Walk a list
 
 `client.paginate` returns every item of a list operation, lazily. It follows `next_cursor` and sends your `filter` and `sort` again on every page, because Pennylane's cursor does not remember them. Pass `filter` as an Array of Hashes; the client sends the JSON string Pennylane expects.
