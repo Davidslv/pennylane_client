@@ -10,14 +10,12 @@ require "uri"
 # It is a Transport (`call(request) -> Response`), so a Client can use it in
 # process, and FakePennylane::Server puts the same fake on a local socket.
 #
-# It enforces Pennylane's rate limit as guides/rate-limiting.md describes
-# it: `limit` requests per `period` seconds per token, with
-# `ratelimit-limit`, `ratelimit-remaining` and `ratelimit-reset` (a Unix
-# time in whole seconds) on every answer, and `retry-after` on a 429. The
-# windows are fixed and start on multiples of `period` since the epoch, so
-# with the default 5 s every reset is a whole second, as Pennylane reports
-# it. How Pennylane places its windows is not documented; this is the
-# simplest reading that fits the headers.
+# - Rate limit: Pennylane's, per token (FakePennylane::RateLimit).
+# - `collection(path, size:)`: a GET on `path` answers with cursor pages of
+#   generated items (FakePennylane::Collection).
+# - A request with a body is read to the end and answered with
+#   `{"id": 1, "received": <bytes>}`, so an upload can be checked.
+# - Anything else is `{"id": 1}`.
 #
 # Every answer is counted by verb and status (`count("GET 429")`).
 class FakePennylane
@@ -28,15 +26,19 @@ class FakePennylane
   end
 
   JSON_HEADERS = { "content-type" => "application/json; charset=utf-8" }.freeze
+  CHUNK = 64 * 1024
 
   def initialize(limit: 25, period: 5, clock: -> { Time.now.to_f }, sleeper: ->(seconds) { sleep(seconds) })
-    @limit = limit
-    @period = period
-    @clock = clock
+    @rate_limit = RateLimit.new(limit:, period:, clock:)
     @sleeper = sleeper
     @lock = Mutex.new
-    @windows = {}
+    @collections = {}
     @counts = Hash.new(0)
+  end
+
+  def collection(path, size:)
+    @lock.synchronize { @collections[path] = Collection.new(size) }
+    self
   end
 
   # The Transport interface, for a Client in the same process.
@@ -59,64 +61,133 @@ class FakePennylane
 
   def requests = @lock.synchronize { @counts.values.sum }
 
-  def inspect = "#<#{self.class.name} limit=#{@limit} period=#{@period}>"
+  def inspect = "#<#{self.class.name} #{@rate_limit.inspect}>"
+
+  def self.json(status, body, headers = {})
+    PennylaneClient::Response.new(status:, headers: JSON_HEADERS.merge(headers), body: JSON.generate(body))
+  end
+
+  def self.error(status, code, message, headers = {}) = json(status, { error: code, message: }, headers)
 
   private
 
   def answer(request)
     token = bearer(request)
-    return Reply.new(response: error(401, "unauthorized", "Missing or invalid token")) unless token
+    return Reply.new(response: self.class.error(401, "unauthorized", "Missing or invalid token")) unless token
 
-    allowed, headers = admit(token)
-    return Reply.new(response: rate_limited(headers)) unless allowed
+    allowed, headers = @rate_limit.admit(token)
+    return Reply.new(response: RateLimit.refusal(headers)) unless allowed
 
-    Reply.new(response: json(200, { id: 1 }, headers))
+    Reply.new(response: route(request, headers))
   end
 
   def bearer(request)
-    value = header(request, "authorization").to_s
+    value = request.headers.find { |name, _| name.casecmp?("authorization") }&.last.to_s
     value.delete_prefix("Bearer ") if value.start_with?("Bearer ") && value.length > 7
   end
 
-  def header(request, name)
-    request.headers.find { |key, _| key.casecmp?(name) }&.last
+  def route(request, headers)
+    uri = URI(request.url)
+    collection = @lock.synchronize { @collections[uri.path] } if request.verb == :get
+    return collection.page(uri.query, headers) if collection
+    return self.class.json(200, { id: 1 }, headers) if request.body.nil?
+
+    self.class.json(200, { id: 1, received: read_all(request.body) }, headers)
   end
 
-  # Takes one request from the token's window. Returns whether it was
-  # allowed and the rate-limit headers to send back.
-  def admit(token)
-    now = @clock.call
-    window = (now / @period).floor
-    used = @lock.synchronize { take(Digest::SHA256.hexdigest(token), window) }
-    reset = ((window + 1) * @period).ceil
-    headers = rate_headers(@limit - used, reset)
-    return [true, headers] if used <= @limit
+  # A Transport rewinds a streamed body before sending it.
+  def read_all(body)
+    return body.to_s.bytesize unless body.respond_to?(:read)
 
-    [false, headers.merge("retry-after" => [(reset - now).ceil, 1].max.to_s)]
+    body.rewind if body.respond_to?(:rewind)
+    buffer = String.new
+    size = 0
+    size += buffer.bytesize while body.read(CHUNK, buffer)
+    size
   end
 
-  def rate_headers(remaining, reset)
-    { "ratelimit-limit" => @limit.to_s, "ratelimit-remaining" => [remaining, 0].max.to_s,
-      "ratelimit-reset" => reset.to_s }
+  # Pennylane's rate limit as guides/rate-limiting.md describes it: `limit`
+  # requests per `period` seconds per token, with `ratelimit-limit`,
+  # `ratelimit-remaining` and `ratelimit-reset` (a Unix time in whole
+  # seconds) on every answer, and `retry-after` on a 429.
+  #
+  # Windows are fixed and start on multiples of `period` since the epoch, so
+  # with the default 5 s every reset is a whole second, as Pennylane reports
+  # it. How Pennylane places its windows is not documented; this is the
+  # simplest reading that fits the headers. A refused request is not
+  # counted. Tokens are kept as SHA-256 digests.
+  class RateLimit
+    def initialize(limit:, period:, clock:)
+      @limit = limit
+      @period = period
+      @clock = clock
+      @lock = Mutex.new
+      @windows = {}
+    end
+
+    # Takes one request from the token's window. Returns whether it was
+    # allowed and the headers to answer with.
+    def admit(token)
+      now = @clock.call
+      window = (now / @period).floor
+      used = @lock.synchronize { take(Digest::SHA256.hexdigest(token), window) }
+      reset = ((window + 1) * @period).ceil
+      headers = headers(used, reset)
+      return [true, headers] if used <= @limit
+
+      [false, headers.merge("retry-after" => [(reset - now).ceil, 1].max.to_s)]
+    end
+
+    def headers(used, reset)
+      { "ratelimit-limit" => @limit.to_s, "ratelimit-remaining" => [@limit - used, 0].max.to_s,
+        "ratelimit-reset" => reset.to_s }
+    end
+
+    def self.refusal(headers)
+      body = "Rate limit exceeded. Please retry in #{headers.fetch("retry-after")} seconds."
+      PennylaneClient::Response.new(status: 429, headers: headers.merge("content-type" => "text/plain"), body:)
+    end
+
+    def inspect = "limit=#{@limit} period=#{@period}"
+
+    private
+
+    # The count in the window including this request.
+    def take(key, window)
+      seen, used = @windows[key]
+      used = 0 unless seen == window
+      @windows[key] = [window, [used + 1, @limit].min]
+      used + 1
+    end
   end
 
-  # Returns the count in the window including this request; a request over
-  # the limit is refused and not counted.
-  def take(key, window)
-    seen, used = @windows[key]
-    used = 0 unless seen == window
-    @windows[key] = [window, [used + 1, @limit].min]
-    used + 1
-  end
+  # `size` generated items served in cursor pages
+  # (guides/cursor-pagination.md). Items are built per page, so a
+  # collection of 100k costs nothing until it is read.
+  class Collection
+    # Pennylane's default page size.
+    DEFAULT_LIMIT = 20
+    CURSOR = /\Ac([0-9a-z]+)\z/
 
-  def rate_limited(headers)
-    body = "Rate limit exceeded. Please retry in #{headers.fetch("retry-after")} seconds."
-    PennylaneClient::Response.new(status: 429, headers: headers.merge("content-type" => "text/plain"), body:)
-  end
+    def initialize(size)
+      @size = size
+    end
 
-  def json(status, body, headers = {})
-    PennylaneClient::Response.new(status:, headers: JSON_HEADERS.merge(headers), body: JSON.generate(body))
-  end
+    def page(query, headers)
+      params = URI.decode_www_form(query.to_s).to_h
+      offset = params.key?("cursor") ? CURSOR.match(params["cursor"])&.[](1)&.to_i(36) : 0
+      return FakePennylane.error(400, "invalid_cursor", "Unknown cursor", headers) unless offset
 
-  def error(status, code, message, headers = {}) = json(status, { error: code, message: }, headers)
+      last = [offset + Integer(params.fetch("limit", DEFAULT_LIMIT)), @size].min
+      FakePennylane.json(200, body(offset, last), headers)
+    end
+
+    private
+
+    def body(offset, last)
+      more = last < @size
+      { items: (offset...last).map { { id: _1 + 1, label: "Item #{_1 + 1}", amount: "10.00" } },
+        has_more: more, next_cursor: more ? "c#{last.to_s(36)}" : nil }
+    end
+  end
 end

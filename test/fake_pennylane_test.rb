@@ -2,6 +2,7 @@
 
 require "test_helper"
 require "support/fake_pennylane"
+require "stringio"
 
 class FakePennylaneTest < Minitest::Test
   BASE = "https://app.pennylane.com/api/external/v2"
@@ -15,6 +16,14 @@ class FakePennylaneTest < Minitest::Test
 
   def get(path = "/me", token: "tok")
     @fake.call(request(:get, path, token:))
+  end
+
+  # A real Client on the same virtual clock as the fake.
+  def client
+    @client ||= PennylaneClient.new(token: "tok", transport: @fake, logger: nil, on_request: nil,
+                                    limiters: PennylaneClient::LimiterRegistry.new do
+                                      PennylaneClient::Limiter.new(clock: @time.clock, sleeper: @time.sleeper)
+                                    end)
   end
 
   def request(verb, path, token: "tok", headers: {}, body: nil)
@@ -79,12 +88,46 @@ class FakePennylaneTest < Minitest::Test
     assert_equal 27, @fake.requests
   end
 
+  def test_serves_a_collection_in_cursor_pages
+    @fake.collection("/api/external/v2/customer_invoices", size: 5)
+
+    first = page("/customer_invoices?limit=2")
+    last = page("/customer_invoices?limit=4&cursor=#{first.fetch("next_cursor")}")
+
+    assert_equal [[1, 2], true], [ids(first), first.fetch("has_more")]
+    assert_equal [[3, 4, 5], false, nil], [ids(last), last.fetch("has_more"), last.fetch("next_cursor")]
+  end
+
+  def page(path) = JSON.parse(get(path).body)
+
+  def ids(page) = page.fetch("items").map { _1.fetch("id") }
+
+  def test_an_unknown_cursor_is_invalid
+    @fake.collection("/api/external/v2/customer_invoices", size: 5)
+
+    assert_equal 400, get("/customer_invoices?cursor=nope").status
+  end
+
+  def test_a_client_paginates_the_whole_collection
+    @fake.collection("/api/external/v2/customer_invoices", size: 250)
+
+    ids = client.paginate(:getCustomerInvoices).map { _1[:id] }.to_a
+
+    assert_equal (1..250).to_a, ids
+    assert_equal 3, @fake.count("GET 200")
+  end
+
+  def test_reads_an_upload_to_the_end_and_answers_with_its_size
+    form = PennylaneClient::Multipart.new(file: StringIO.new("x" * 70_000), label: "a")
+    form.read(100)
+
+    received = JSON.parse(@fake.call(request(:post, "/file_attachments", body: form)).body).fetch("received")
+
+    assert_equal form.size, received
+  end
+
   # The client's limiter and the fake agree: sequential calls never see a 429.
   def test_a_client_never_hits_the_limit
-    limiters = PennylaneClient::LimiterRegistry.new do
-      PennylaneClient::Limiter.new(clock: @time.clock, sleeper: @time.sleeper)
-    end
-    client = PennylaneClient.new(token: "tok", transport: @fake, limiters:, logger: nil, on_request: nil)
     @time.sleeper.call(2.5) # start mid-window
     100.times { client.call(:getMe) }
 
