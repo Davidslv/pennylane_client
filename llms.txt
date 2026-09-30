@@ -6,7 +6,7 @@ Usage: `gem install pennylane_client`, `require "pennylane_client"`, then `Penny
 
 ## Docs
 
-- [README](README.md): What it is, status, usage
+- [README](README.md): What it is, status, usage, the public API and what is Experimental
 - [Getting started](docs/getting-started.md): Install and first call
 - [Architecture](docs/architecture.md): Components, request path, design rationale, where the design strains
 - [Design diagram](docs/architecture/design-diagram.md): The whole gem on one page
@@ -14,11 +14,11 @@ Usage: `gem install pennylane_client`, `require "pennylane_client"`, then `Penny
 - [Performance](docs/performance.md): Load and stress results against FakePennylane, and how to reproduce them
 - [Contract snapshot](docs/api/README.md): The dated, generated copy of the Pennylane API the gem is measured against
 - [Checklist](docs/api/CHECKLIST.md): Every operation with its registered, named and live status (generated)
-- [Domain language](CONTEXT.md): Operation, Registered and Named operation, Contract snapshot, Clean room, Drift
+- [Domain language](CONTEXT.md): Operation, Registered and Named operation, Experimental, Contract snapshot, Clean room, Drift
 
 ## Design
 
-- [Proposal 0001](proposals/0001-pennylane-client-gem.md): Scope, architecture and decisions D1 to D8
+- [Proposal 0001](proposals/0001-pennylane-client-gem.md): Scope, architecture and decisions D1 to D11
 
 ## Meta
 
