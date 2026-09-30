@@ -19,7 +19,7 @@ An Operation that appears in the gem's operation table, so a caller can reach it
 
 ## Named operation
 
-A Registered operation that also has a stable, hand-chosen Ruby method (e.g. `customer_invoices.finalize`) and a behaviour test that names its operationId.
+A Registered operation that also has a stable, hand-chosen Ruby method (e.g. `customer_invoices.finalize`) and a behaviour test that names its operationId and sends it.
 
 - The Ruby name is a promise to callers. It survives Pennylane renaming the operationId.
 - "Done" in the checklist means Named. The gem reaches 1.0 when every live Operation is Named.

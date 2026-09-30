@@ -47,3 +47,6 @@ class VirtualClock
     end
   end
 end
+
+# A "# names:" marker must name an Operation its test sends.
+require "support/named_trace"

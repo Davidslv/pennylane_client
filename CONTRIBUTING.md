@@ -37,7 +37,7 @@ A behaviour test names an Operation with a marker comment directly above the tes
 def test_finalize
 ```
 
-Only tests under `test/resources/` are read. The marker must name an operationId in the snapshot and sit directly above a `def test_` line (other comments in between are fine), or `rake checklist` fails.
+Only tests under `test/resources/` are read. The marker must name an operationId in the snapshot and sit directly above a `def test_` line (other comments in between are fine), or `rake checklist` fails. The test must also send that Operation: the suite records the operationId of every request that reaches the transport during a test under `test/resources/`, and fails a passing test that did not send an Operation its markers name (`test/support/named_trace.rb`).
 
 ## What every change needs
 

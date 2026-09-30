@@ -10,7 +10,7 @@
 Contract snapshot of 2026-09-30. One row per Operation, grouped by resource group (Pennylane's tag). Paths are relative to `/api/external/v2`.
 
 - **registered**: in the generated operation table, so `client.call` can reach it.
-- **named**: a behaviour test in `test/resources/` names the operationId with `# names: <operationId>` directly above it. The contract test never counts.
+- **named**: a behaviour test in `test/resources/` names the operationId with `# names: <operationId>` directly above it, and the suite checks that the test sends it. The contract test never counts.
 - **live**: `sandbox-verified <date> (by @user)` when the latest sandbox report in `docs/api/live/` that ran it passed (`rake smoke`), `unverified: no sandbox access`, or `skipped: deprecated`.
 
 | | Operations |
