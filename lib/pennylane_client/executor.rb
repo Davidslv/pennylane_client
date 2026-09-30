@@ -24,6 +24,7 @@ module PennylaneClient
   # The transport is usually the middleware pipeline Client composes.
   class Executor
     PATH_PARAMETER = /\{(\w+)\}/
+    DOT_SEGMENTS = %w[. ..].freeze
 
     def initialize(registry:, transport:, base_url:)
       @registry = registry
@@ -90,8 +91,21 @@ module PennylaneClient
           raise ArgumentError, "missing path parameter #{name.inspect} for #{operation.id.inspect}"
         end
 
-        URI.encode_uri_component(Encoder.encode(params.delete(name)).to_s)
+        path_segment(operation, name, params.delete(name))
       end
+    end
+
+    # One escaped path segment. An empty value would leave an empty segment
+    # (GET /customer_invoices/ is the list), and "." or ".." a dot segment
+    # that a server may resolve to another Operation, so both are refused.
+    def path_segment(operation, name, value)
+      text = Encoder.encode(value).to_s
+      raise ArgumentError, "path parameter #{name.inspect} for #{operation.id.inspect} is empty" if text.empty?
+      if DOT_SEGMENTS.include?(text)
+        raise ArgumentError, "path parameter #{name.inspect} for #{operation.id.inspect} cannot be #{text.inspect}"
+      end
+
+      URI.encode_uri_component(text)
     end
 
     def query(params)

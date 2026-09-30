@@ -45,6 +45,14 @@ class CustomerInvoicesTest < Minitest::Test
     assert_equal({ id: 42, status: "draft" }, invoices.find(42))
   end
 
+  # A missing id must not reach GET /customer_invoices/, which lists invoices.
+  def test_find_refuses_a_nil_id_without_sending_anything
+    stub = stub_request(:get, "#{API}/customer_invoices/").to_return(status: 200, body: page(1))
+
+    assert_raises(ArgumentError) { invoices.find(nil) }
+    assert_not_requested stub
+  end
+
   # names: postCustomerInvoices
   def test_create_sends_the_attributes_as_the_json_body
     body = { customer_id: 7, date: "2026-09-30", deadline: "2026-10-30", draft: true,

@@ -39,7 +39,7 @@ What happens on `client.call(:getJournal, id: 42)`:
 1. **Client** hands the operationId and params to the Executor. It holds no logic of its own.
 2. **Registry** turns `:getJournal` into its Operation (verb, path template, body kind). A typo raises `UnknownOperationError` before anything is sent.
 3. **Executor** builds a `Request`:
-   - Names in the path template (`{id}`) are taken from the params and escaped. A missing one raises `ArgumentError`.
+   - Names in the path template (`{id}`) are taken from the params and escaped. A missing one raises `ArgumentError`, and so does one that is nil or empty (it would leave an empty segment, and `GET /customer_invoices/` is the list) or exactly `.` or `..` (a dot segment a server may resolve to another Operation).
    - If the Operation takes a JSON body, every other param goes into the body, run through the **Encoder** and `JSON.generate`. This covers `DELETE` with a body (`deleteLedgerEntryLinesUnletter`).
    - Six Operations (`putCustomerCategories` and its siblings) take a JSON array, which keywords cannot build. The caller passes the body as the second argument, `client.call(:putCustomerCategories, [...], customer_id: 9)`; keywords then fill only the path, and any left over raise `ArgumentError`.
    - Otherwise every other param goes into the query. `nil` values are left out. Hash and Array values are sent as JSON strings, because Pennylane's `filter` is a JSON array in a query string.
