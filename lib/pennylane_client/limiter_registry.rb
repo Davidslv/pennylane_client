@@ -18,8 +18,14 @@ module PennylaneClient
       @lock = Mutex.new
     end
 
+    # Builds outside the lock, so a slow limiter (one that connects to a
+    # store) never blocks other tokens. When two threads race, the first
+    # limiter stored wins.
     def fetch(key)
-      @lock.synchronize { @limiters[key] ||= @build.call(key) }
+      @lock.synchronize { @limiters[key] } || begin
+        built = @build.call(key)
+        @lock.synchronize { @limiters[key] ||= built }
+      end
     end
 
     def inspect = "#<#{self.class.name} size=#{@lock.synchronize { @limiters.size }}>"

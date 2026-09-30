@@ -1,7 +1,7 @@
 module PennylaneClient
   def self.new: (token: token, ?base_url: String, ?transport: _Transport, ?logger: untyped,
                  ?on_request: (^(Instrumentation::event) -> void)?, ?limiters: _LimiterRegistry,
-                 ?max_retry_wait: Float) -> Client
+                 ?max_retry_wait: Numeric) -> Client
 
   class Client
     DEFAULT_BASE_URL: String
@@ -9,7 +9,7 @@ module PennylaneClient
 
     def initialize: (token: token, ?base_url: String, ?transport: _Transport, ?logger: untyped,
                      ?on_request: (^(Instrumentation::event) -> void)?, ?limiters: _LimiterRegistry,
-                     ?max_retry_wait: Float) -> void
+                     ?max_retry_wait: Numeric) -> void
 
     def call: (Symbol | String operation_id, ?untyped body, **untyped params) -> untyped
 

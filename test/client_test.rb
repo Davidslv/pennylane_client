@@ -24,7 +24,7 @@ class ClientTest < Minitest::Test
   def test_takes_a_token_provider
     stub_request(:get, "#{API}/me").with(headers: { "Authorization" => "Bearer fresh" }).to_return(status: 200)
 
-    assert PennylaneClient.new(token: -> { "fresh" }).call(:getMe)
+    assert PennylaneClient.new(token: -> { "fresh" }, limiters: PennylaneClient::LimiterRegistry.new).call(:getMe)
   end
 
   def test_get
@@ -112,14 +112,20 @@ class ClientTest < Minitest::Test
 
   def test_rate_limit_headers_reach_the_injected_limiter
     stub_request(:get, "#{API}/me").to_return(status: 200, headers: { "RateLimit-Remaining" => "7" })
-    updates = []
-    limiter = Object.new
-    limiter.define_singleton_method(:acquire) { 0.0 }
-    limiter.define_singleton_method(:update) { |**headers| updates << headers }
+    limiter = RecordingLimiter.new
 
     PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new { limiter }).call(:getMe)
 
-    assert_equal [{ remaining: 7, reset_at: nil }], updates
+    assert_equal [{ remaining: 7, reset_at: nil }], limiter.updates
+  end
+
+  # A limiter that never waits and keeps every header update.
+  class RecordingLimiter
+    attr_reader :updates
+
+    def initialize = @updates = []
+    def acquire = 0.0
+    def update(**headers) = @updates << headers
   end
 
   def test_base_url_and_transport_can_be_injected

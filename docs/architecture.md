@@ -84,7 +84,8 @@ The reasoning behind each choice is recorded as decisions D1 to D8 in [proposal 
 Honest limits, known before the code exists:
 
 - **Multi-process deployments share one token's budget.** The limiter is per process. Header self-correction and 429 retries absorb the overflow; a shared store needs a limiter you inject yourself.
-- **The bucket follows Pennylane's window, not a sliding one.** It refills in full when the window ends, as `ratelimit-reset` describes. Until the first response arrives, the local window may not line up with Pennylane's; the headers then move it. `ratelimit-reset` is whole seconds, so the local reset can be up to a second off.
+- **The bucket follows Pennylane's window, not a sliding one.** It refills in full when the window ends, as `ratelimit-reset` describes. Until the first response arrives, the local window may not line up with Pennylane's; the headers then move it. `ratelimit-reset` is whole seconds, so the local reset can be up to a second off (an open question in proposal 0001).
+- **Header correction needs a roughly correct clock.** `ratelimit-reset` is a Unix time. If the host clock is more than one window ahead of Pennylane's, every reset looks past and is ignored, so the bucket stops correcting and only 429 retries catch the overlap. Keep NTP running.
 - **D5 rests on an assumption.** A 429 is retried for writes because it should mean the request was not run. That is unconfirmed until a sandbox run (proposal 0001, open questions).
 - **No live verification yet.** The maintainer has no Pennylane account, so behaviour is checked against the documentation, not a sandbox.
 - **Responses are untyped.** Callers convert money and dates themselves.

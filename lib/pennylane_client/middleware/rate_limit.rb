@@ -32,6 +32,7 @@ module PennylaneClient
 
       private
 
+      # Auth, outside this middleware, has set the header as "Bearer <token>".
       def key(request)
         Digest::SHA256.hexdigest(request.headers.fetch("Authorization").delete_prefix("Bearer "))
       end

@@ -26,7 +26,7 @@ module PennylaneClient
       NO_RESPONSE: Array[singleton(Error)]
 
       def initialize: (_Transport app, Instrumentation instrumentation, ?max_attempts: Integer,
-                       ?base_delay: Float, ?max_wait: Float, ?sleeper: ^(Float) -> void,
+                       ?base_delay: Numeric, ?max_wait: Numeric, ?sleeper: ^(Float) -> void,
                        ?random: _Rand) -> void
 
       interface _Rand
