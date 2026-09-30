@@ -31,4 +31,9 @@ task :checklist do
   ruby "tools/checklist.rb"
 end
 
-task default: %i[test rubocop rbs]
+desc "Fail if operations.rb or CHECKLIST.md differs from what its generator writes"
+task :stale do
+  ruby "tools/stale.rb"
+end
+
+task default: %i[test rubocop rbs stale]
