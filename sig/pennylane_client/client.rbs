@@ -51,6 +51,10 @@ module PennylaneClient
 
     def file_attachments: () -> Resources::FileAttachments
 
+    def ledger_accounts: () -> Resources::LedgerAccounts
+
+    def ledger_entries: () -> Resources::LedgerEntries
+
     def inspect: () -> String
 
     private
@@ -88,6 +92,10 @@ module PennylaneClient
     @fiscal_years: Resources::FiscalYears?
 
     @file_attachments: Resources::FileAttachments?
+
+    @ledger_accounts: Resources::LedgerAccounts?
+
+    @ledger_entries: Resources::LedgerEntries?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end

@@ -119,6 +119,12 @@ module PennylaneClient
     # The named File Attachments operation (Resources::FileAttachments).
     def file_attachments = @file_attachments ||= Resources::FileAttachments.new(self)
 
+    # The named Ledger Accounts operations (Resources::LedgerAccounts).
+    def ledger_accounts = @ledger_accounts ||= Resources::LedgerAccounts.new(self)
+
+    # The named Ledger Entries operations (Resources::LedgerEntries).
+    def ledger_entries = @ledger_entries ||= Resources::LedgerEntries.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

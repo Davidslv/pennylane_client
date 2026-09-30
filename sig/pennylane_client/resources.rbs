@@ -280,5 +280,27 @@ module PennylaneClient
     class FileAttachments < Resource
       def upload: (file file, **untyped fields) -> item
     end
+
+    class LedgerAccounts < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+    end
+
+    class LedgerEntries < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+
+      def lines: (Integer ledger_entry_id, **untyped params) -> Enumerator::Lazy[item, void]
+    end
   end
 end
