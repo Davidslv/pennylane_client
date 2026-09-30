@@ -17,11 +17,25 @@ You need Ruby 3.3 or newer and a recent Bundler (4.x recommended). The Gemfile u
 
 1. the Minitest suite (`test/`), which stubs all HTTP with WebMock and never reaches Pennylane;
 2. RuboCop;
-3. `rbs validate` on `sig/`.
+3. `rbs validate` on `sig/`;
+4. `rake stale`, which fails if `lib/pennylane_client/operations.rb` or `docs/api/CHECKLIST.md` differs from what its generator writes.
 
 The repository does not commit a `Gemfile.lock`, as recommended for gems.
 
 `bundle exec rake contract:snapshot` takes a new [contract snapshot](docs/api/README.md) from Pennylane's docs site. It is not part of the gate and is the only task that reaches the network.
+
+`bundle exec rake contract:sync checklist` regenerates the operation table and the checklist. Run it after a new snapshot and after adding a behaviour test that names an operation. Commit what it writes; never edit either file by hand.
+
+### Naming an operation
+
+A behaviour test names an Operation with a marker comment directly above the test method, one operationId per line:
+
+```ruby
+# names: finalizeCustomerInvoice
+def test_finalize
+```
+
+Only tests under `test/resources/` are read. The marker must name an operationId in the snapshot and sit directly above a `def test_` line (other comments in between are fine), or `rake checklist` fails.
 
 ## What every change needs
 
@@ -50,7 +64,7 @@ Open an issue first for features, API changes or behaviour changes. Significant 
 
 ## Verifying against a real Pennylane sandbox
 
-The maintainer has no Pennylane account, so no operation has been verified against a live sandbox. The planned checklist (Epic #1) records this per operation in a `live` column. If you have a Pennylane company account with a sandbox, you can help by running the smoke suite once it exists (tracked in the Epic) and submitting the report. Never run load or stress tests against Pennylane's servers, sandbox included.
+The maintainer has no Pennylane account, so no operation has been verified against a live sandbox. The [checklist](docs/api/CHECKLIST.md) records this per operation in its `live` column. If you have a Pennylane company account with a sandbox, you can help by running the smoke suite once it exists (tracked in the Epic) and submitting the report. Never run load or stress tests against Pennylane's servers, sandbox included.
 
 ## Code of conduct
 

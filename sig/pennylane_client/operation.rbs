@@ -1,0 +1,14 @@
+module PennylaneClient
+  class Operation < Data
+    attr_reader id: Symbol
+    attr_reader verb: Symbol
+    attr_reader path: String
+    attr_reader paginated: bool
+    attr_reader body: (:json | :multipart)?
+    attr_reader success: Integer
+    attr_reader deprecated: bool
+
+    def initialize: (id: Symbol, verb: Symbol, path: String, paginated: bool, body: (:json | :multipart)?,
+                     success: Integer, deprecated: bool) -> void
+  end
+end

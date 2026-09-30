@@ -19,6 +19,21 @@ namespace :contract do
   task :snapshot do
     ruby "tools/snapshot_contract.rb"
   end
+
+  desc "Regenerate lib/pennylane_client/operations.rb from the latest contract snapshot"
+  task :sync do
+    ruby "tools/operation_table.rb"
+  end
 end
 
-task default: %i[test rubocop rbs]
+desc "Regenerate docs/api/CHECKLIST.md from the snapshot, the operation table and the behaviour tests"
+task :checklist do
+  ruby "tools/checklist.rb"
+end
+
+desc "Fail if operations.rb or CHECKLIST.md differs from what its generator writes"
+task :stale do
+  ruby "tools/stale.rb"
+end
+
+task default: %i[test rubocop rbs stale]

@@ -10,17 +10,21 @@ How the gem is put together, and why. Written for someone about to change the co
 |---|---|---|
 | `PennylaneClient` | `lib/pennylane_client.rb` | The namespace. |
 | `PennylaneClient::VERSION` | `lib/pennylane_client/version.rb` | Gem version. |
+| `PennylaneClient::Operation` | `lib/pennylane_client/operation.rb` | One Operation as plain data: operationId, verb, path, paginated, body kind, success code, deprecated. |
+| `PennylaneClient::OPERATIONS` | `lib/pennylane_client/operations.rb` | The generated operation table: every Operation in the latest snapshot, one row per line. Every live Operation is Registered here. |
 | `SnapshotContract` (dev time, not shipped) | `tools/snapshot_contract.rb` | Builds the dated [contract snapshot](api/README.md) in `docs/api/contract/<date>/`. Run by `rake contract:snapshot`. |
+| `OperationTable` (dev time, not shipped) | `tools/operation_table.rb` | Generates `operations.rb` from the latest snapshot. Run by `rake contract:sync`. |
+| `Checklist` (dev time, not shipped) | `tools/checklist.rb` | Generates [`docs/api/CHECKLIST.md`](api/CHECKLIST.md). Run by `rake checklist`. |
+| `Stale` (dev time, not shipped) | `tools/stale.rb` | Fails the gate when a generated file differs from its generator. Run by `rake stale`. |
 
 ## Planned components
 
 From the design diagram, in the order they are built (Epic #1):
 
-1. **Contract tooling (dev time).** A generated operation table and a generated checklist, both built from the contract snapshot.
-2. **Runtime core.** `Client` (wiring only), `Operation`, `Registry`, `Executor`, the error hierarchy, the request encoder, `Transport`.
-3. **Middleware.** `Auth` (token provider), `RateLimit` (25 requests per 5 seconds per token), `Retry` (429 for any method, 5xx for GET only).
-4. **Pagination and uploads.** Cursor pagination that re-sends filters on every page; multipart uploads.
-5. **Resources.** Hand-written one-liner methods per resource group.
+1. **Runtime core.** `Client` (wiring only), `Registry`, `Executor`, the error hierarchy, the request encoder, `Transport`.
+2. **Middleware.** `Auth` (token provider), `RateLimit` (25 requests per 5 seconds per token), `Retry` (429 for any method, 5xx for GET only).
+3. **Pagination and uploads.** Cursor pagination that re-sends filters on every page; multipart uploads.
+4. **Resources.** Hand-written one-liner methods per resource group.
 
 ## Design rationale
 

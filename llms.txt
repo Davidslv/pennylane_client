@@ -12,6 +12,7 @@ Planned usage: `require "pennylane_client"`, then `PennylaneClient.new(token: ..
 - [Design diagram](docs/architecture/design-diagram.md): The whole gem on one page
 - [How-to recipes](docs/how-to.md): Task-oriented recipes
 - [Contract snapshot](docs/api/README.md): The dated, generated copy of the Pennylane API the gem is measured against
+- [Checklist](docs/api/CHECKLIST.md): Every operation with its registered, named and live status (generated)
 - [Domain language](CONTEXT.md): Operation, Registered and Named operation, Contract snapshot, Clean room, Drift
 
 ## Design
