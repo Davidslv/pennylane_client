@@ -26,7 +26,9 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all"
+        [
+          "supplier_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -1013,7 +1015,9 @@
         "Fiscal years"
       ],
       "scopes": [
-        "fiscal_years:readonly"
+        [
+          "fiscal_years:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -1448,7 +1452,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -2203,7 +2209,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -3364,7 +3372,9 @@
         "Purchase Requests"
       ],
       "scopes": [
-        "purchase_requests:all"
+        [
+          "purchase_requests:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -4612,7 +4622,9 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all"
+        [
+          "supplier_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -5300,7 +5312,9 @@
         "Transactions"
       ],
       "scopes": [
-        "transactions:all"
+        [
+          "transactions:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -6174,7 +6188,9 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all"
+        [
+          "customers:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -6518,7 +6534,9 @@
         "Transactions"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -6884,7 +6902,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -7244,7 +7264,9 @@
         "Ledger Entry Lines"
       ],
       "scopes": [
-        "ledger_entries:all"
+        [
+          "ledger_entries:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -7637,7 +7659,9 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all"
+        [
+          "customer_mandates:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -7972,7 +7996,9 @@
         "Transactions"
       ],
       "scopes": [
-        "supplier_invoices:all"
+        [
+          "supplier_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -8337,7 +8363,9 @@
       "tags": [
         "Webhooks"
       ],
-      "scopes": [],
+      "scopes": [
+        []
+      ],
       "deprecated": false,
       "parameters": [
         {
@@ -8670,7 +8698,9 @@
         "Exports"
       ],
       "scopes": [
-        "exports:agl"
+        [
+          "exports:agl"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -9072,7 +9102,9 @@
         "Exports"
       ],
       "scopes": [
-        "exports:fec"
+        [
+          "exports:fec"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -9465,7 +9497,9 @@
         "Exports"
       ],
       "scopes": [
-        "exports:gl"
+        [
+          "exports:gl"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -9858,7 +9892,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -10992,7 +11028,9 @@
         "Exports"
       ],
       "scopes": [
-        "exports:agl"
+        [
+          "exports:agl"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -11375,8 +11413,10 @@
         "Bank accounts"
       ],
       "scopes": [
-        "bank_accounts:all",
-        "bank_accounts:readonly"
+        [
+          "bank_accounts:all",
+          "bank_accounts:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -11982,8 +12022,10 @@
         "Bank accounts"
       ],
       "scopes": [
-        "bank_accounts:all",
-        "bank_accounts:readonly"
+        [
+          "bank_accounts:all",
+          "bank_accounts:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -12637,7 +12679,9 @@
         "Bank Establishments"
       ],
       "scopes": [
-        "bank_establishments:readonly"
+        [
+          "bank_establishments:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -13063,8 +13107,10 @@
         "Billing Subscriptions"
       ],
       "scopes": [
-        "billing_subscriptions:all",
-        "billing_subscriptions:readonly"
+        [
+          "billing_subscriptions:all",
+          "billing_subscriptions:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -13994,8 +14040,10 @@
         "Billing Subscriptions"
       ],
       "scopes": [
-        "billing_subscriptions:all",
-        "billing_subscriptions:readonly"
+        [
+          "billing_subscriptions:all",
+          "billing_subscriptions:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -14437,8 +14485,10 @@
         "Billing Subscriptions"
       ],
       "scopes": [
-        "billing_subscriptions:all",
-        "billing_subscriptions:readonly"
+        [
+          "billing_subscriptions:all",
+          "billing_subscriptions:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -15183,8 +15233,10 @@
         "Billing Subscriptions"
       ],
       "scopes": [
-        "billing_subscriptions:all",
-        "billing_subscriptions:readonly"
+        [
+          "billing_subscriptions:all",
+          "billing_subscriptions:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -16170,8 +16222,10 @@
         "Categories"
       ],
       "scopes": [
-        "categories:all",
-        "categories:readonly"
+        [
+          "categories:all",
+          "categories:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -16638,8 +16692,10 @@
         "Categories"
       ],
       "scopes": [
-        "categories:all",
-        "categories:readonly"
+        [
+          "categories:all",
+          "categories:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -17049,8 +17105,10 @@
         "Category Groups"
       ],
       "scopes": [
-        "categories:all",
-        "categories:readonly"
+        [
+          "categories:all",
+          "categories:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -17434,8 +17492,10 @@
         "Category Groups"
       ],
       "scopes": [
-        "categories:all",
-        "categories:readonly"
+        [
+          "categories:all",
+          "categories:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -17878,8 +17938,10 @@
         "Categories"
       ],
       "scopes": [
-        "categories:all",
-        "categories:readonly"
+        [
+          "categories:all",
+          "categories:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -18301,8 +18363,10 @@
         "Commercial Documents"
       ],
       "scopes": [
-        "commercial_documents:all",
-        "commercial_documents:readonly"
+        [
+          "commercial_documents:all",
+          "commercial_documents:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -19108,8 +19172,10 @@
         "Commercial Documents"
       ],
       "scopes": [
-        "commercial_documents:all",
-        "commercial_documents:readonly"
+        [
+          "commercial_documents:all",
+          "commercial_documents:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -19529,8 +19595,10 @@
         "Commercial Documents"
       ],
       "scopes": [
-        "commercial_documents:all",
-        "commercial_documents:readonly"
+        [
+          "commercial_documents:all",
+          "commercial_documents:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -19972,8 +20040,10 @@
         "Commercial Documents"
       ],
       "scopes": [
-        "commercial_documents:all",
-        "commercial_documents:readonly"
+        [
+          "commercial_documents:all",
+          "commercial_documents:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -20694,8 +20764,10 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all",
-        "customers:readonly"
+        [
+          "customers:all",
+          "customers:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -21257,7 +21329,9 @@
       "tags": [
         "Company"
       ],
-      "scopes": [],
+      "scopes": [
+        []
+      ],
       "deprecated": false,
       "parameters": [],
       "request_body": null,
@@ -21573,8 +21647,10 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all",
-        "customers:readonly"
+        [
+          "customers:all",
+          "customers:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -22381,8 +22457,10 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all",
-        "customers:readonly"
+        [
+          "customers:all",
+          "customers:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -22824,8 +22902,10 @@
         "Changelogs"
       ],
       "scopes": [
-        "customers:all",
-        "customers:readonly"
+        [
+          "customers:all",
+          "customers:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -23279,8 +23359,10 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all",
-        "customers:readonly"
+        [
+          "customers:all",
+          "customers:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -23682,8 +23764,10 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all",
-        "customers:readonly"
+        [
+          "customers:all",
+          "customers:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -24131,8 +24215,10 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all",
-        "customer_invoices:readonly"
+        [
+          "customer_invoices:all",
+          "customer_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -25241,8 +25327,10 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all",
-        "customer_invoices:readonly"
+        [
+          "customer_invoices:all",
+          "customer_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -25662,8 +25750,10 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all",
-        "customer_invoices:readonly"
+        [
+          "customer_invoices:all",
+          "customer_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -26105,8 +26195,10 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all",
-        "customer_invoices:readonly"
+        [
+          "customer_invoices:all",
+          "customer_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -26547,8 +26639,10 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all",
-        "customer_invoices:readonly"
+        [
+          "customer_invoices:all",
+          "customer_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -26990,8 +27084,10 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all",
-        "customer_invoices:readonly"
+        [
+          "customer_invoices:all",
+          "customer_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -27790,8 +27886,10 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all",
-        "customer_invoices:readonly"
+        [
+          "customer_invoices:all",
+          "customer_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -28615,8 +28713,10 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all",
-        "customer_invoices:readonly"
+        [
+          "customer_invoices:all",
+          "customer_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -29263,7 +29363,9 @@
         "Customer Invoice Templates"
       ],
       "scopes": [
-        "customer_invoice_templates:readonly"
+        [
+          "customer_invoice_templates:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -29680,8 +29782,10 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all",
-        "customer_invoices:readonly"
+        [
+          "customer_invoices:all",
+          "customer_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -31307,8 +31411,10 @@
         "Changelogs"
       ],
       "scopes": [
-        "customer_invoices:all",
-        "customer_invoices:readonly"
+        [
+          "customer_invoices:all",
+          "customer_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -31763,8 +31869,10 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all",
-        "customers:readonly"
+        [
+          "customers:all",
+          "customers:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -32627,7 +32735,9 @@
         "Exports"
       ],
       "scopes": [
-        "exports:fec"
+        [
+          "exports:fec"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -33010,7 +33120,9 @@
         "Exports"
       ],
       "scopes": [
-        "exports:gl"
+        [
+          "exports:gl"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -33393,8 +33505,10 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all",
-        "customer_mandates:readonly"
+        [
+          "customer_mandates:all",
+          "customer_mandates:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -33819,8 +33933,10 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all",
-        "customer_mandates:readonly"
+        [
+          "customer_mandates:all",
+          "customer_mandates:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -34301,8 +34417,10 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all",
-        "customers:readonly"
+        [
+          "customers:all",
+          "customers:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -34864,8 +34982,10 @@
         "Journals"
       ],
       "scopes": [
-        "journals:all",
-        "journals:readonly"
+        [
+          "journals:all",
+          "journals:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -35229,8 +35349,10 @@
         "Journals"
       ],
       "scopes": [
-        "journals:all",
-        "journals:readonly"
+        [
+          "journals:all",
+          "journals:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -35647,8 +35769,10 @@
         "Ledger Accounts"
       ],
       "scopes": [
-        "ledger_accounts:all",
-        "ledger_accounts:readonly"
+        [
+          "ledger_accounts:all",
+          "ledger_accounts:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -36052,8 +36176,10 @@
         "Ledger Accounts"
       ],
       "scopes": [
-        "ledger_accounts:all",
-        "ledger_accounts:readonly"
+        [
+          "ledger_accounts:all",
+          "ledger_accounts:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -36510,8 +36636,10 @@
         "Ledger Entries"
       ],
       "scopes": [
-        "ledger_entries:all",
-        "ledger_entries:readonly"
+        [
+          "ledger_entries:all",
+          "ledger_entries:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -37102,8 +37230,10 @@
         "Changelogs"
       ],
       "scopes": [
-        "ledger_entries:all",
-        "ledger_entries:readonly"
+        [
+          "ledger_entries:all",
+          "ledger_entries:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -37578,8 +37708,10 @@
         "Ledger Entries"
       ],
       "scopes": [
-        "ledger_entries:all",
-        "ledger_entries:readonly"
+        [
+          "ledger_entries:all",
+          "ledger_entries:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -38050,8 +38182,10 @@
         "Ledger Entries"
       ],
       "scopes": [
-        "ledger_entries:all",
-        "ledger_entries:readonly"
+        [
+          "ledger_entries:all",
+          "ledger_entries:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -38637,8 +38771,10 @@
         "Ledger Entry Lines"
       ],
       "scopes": [
-        "ledger_entries:all",
-        "ledger_entries:readonly"
+        [
+          "ledger_entries:all",
+          "ledger_entries:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -39185,8 +39321,10 @@
         "Changelogs"
       ],
       "scopes": [
-        "ledger_entries:all",
-        "ledger_entries:readonly"
+        [
+          "ledger_entries:all",
+          "ledger_entries:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -39640,8 +39778,10 @@
         "Ledger Entry Lines"
       ],
       "scopes": [
-        "ledger_entries:all",
-        "ledger_entries:readonly"
+        [
+          "ledger_entries:all",
+          "ledger_entries:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -40244,8 +40384,10 @@
         "Ledger Entry Lines"
       ],
       "scopes": [
-        "ledger_entries:all",
-        "ledger_entries:readonly"
+        [
+          "ledger_entries:all",
+          "ledger_entries:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -40694,8 +40836,10 @@
         "Changelogs"
       ],
       "scopes": [
-        "ledger_entries:all",
-        "ledger_entries:readonly"
+        [
+          "ledger_entries:all",
+          "ledger_entries:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -41191,8 +41335,10 @@
         "Ledger Entry Lines"
       ],
       "scopes": [
-        "ledger_entries:all",
-        "ledger_entries:readonly"
+        [
+          "ledger_entries:all",
+          "ledger_entries:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -41787,7 +41933,9 @@
       "tags": [
         "Users"
       ],
-      "scopes": [],
+      "scopes": [
+        []
+      ],
       "deprecated": false,
       "parameters": [],
       "request_body": null,
@@ -42191,12 +42339,14 @@
         "Numberings"
       ],
       "scopes": [
-        "commercial_documents:all",
-        "commercial_documents:readonly",
-        "customer_invoices:all",
-        "customer_invoices:readonly",
-        "quotes:all",
-        "quotes:readonly"
+        [
+          "commercial_documents:all",
+          "commercial_documents:readonly",
+          "customer_invoices:all",
+          "customer_invoices:readonly",
+          "quotes:all",
+          "quotes:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -42597,7 +42747,9 @@
         "PA Registrations"
       ],
       "scopes": [
-        "pa_registrations:readonly"
+        [
+          "pa_registrations:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -43013,8 +43165,10 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all",
-        "customer_mandates:readonly"
+        [
+          "customer_mandates:all",
+          "customer_mandates:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -43552,8 +43706,10 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all",
-        "customer_mandates:readonly"
+        [
+          "customer_mandates:all",
+          "customer_mandates:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -44022,8 +44178,10 @@
         "Products"
       ],
       "scopes": [
-        "products:all",
-        "products:readonly"
+        [
+          "products:all",
+          "products:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -44891,8 +45049,10 @@
         "Changelogs"
       ],
       "scopes": [
-        "products:all",
-        "products:readonly"
+        [
+          "products:all",
+          "products:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -45346,8 +45506,10 @@
         "Products"
       ],
       "scopes": [
-        "products:all",
-        "products:readonly"
+        [
+          "products:all",
+          "products:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -46246,8 +46408,10 @@
         "Purchase Requests"
       ],
       "scopes": [
-        "purchase_requests:all",
-        "purchase_requests:readonly"
+        [
+          "purchase_requests:all",
+          "purchase_requests:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -46965,8 +47129,10 @@
         "Purchase Requests"
       ],
       "scopes": [
-        "purchase_requests:all",
-        "purchase_requests:readonly"
+        [
+          "purchase_requests:all",
+          "purchase_requests:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -47716,8 +47882,10 @@
         "Quotes"
       ],
       "scopes": [
-        "quotes:all",
-        "quotes:readonly"
+        [
+          "quotes:all",
+          "quotes:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -48526,8 +48694,10 @@
         "Quotes"
       ],
       "scopes": [
-        "quotes:all",
-        "quotes:readonly"
+        [
+          "quotes:all",
+          "quotes:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -48947,8 +49117,10 @@
         "Quotes"
       ],
       "scopes": [
-        "quotes:all",
-        "quotes:readonly"
+        [
+          "quotes:all",
+          "quotes:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -49402,8 +49574,10 @@
         "Quotes"
       ],
       "scopes": [
-        "quotes:all",
-        "quotes:readonly"
+        [
+          "quotes:all",
+          "quotes:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -49844,8 +50018,10 @@
         "Quotes"
       ],
       "scopes": [
-        "quotes:all",
-        "quotes:readonly"
+        [
+          "quotes:all",
+          "quotes:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -50599,8 +50775,10 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all",
-        "customer_mandates:readonly"
+        [
+          "customer_mandates:all",
+          "customer_mandates:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -51033,8 +51211,10 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all",
-        "customer_mandates:readonly"
+        [
+          "customer_mandates:all",
+          "customer_mandates:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -51523,8 +51703,10 @@
         "Suppliers"
       ],
       "scopes": [
-        "suppliers:all",
-        "suppliers:readonly"
+        [
+          "suppliers:all",
+          "suppliers:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -52004,8 +52186,10 @@
         "Suppliers"
       ],
       "scopes": [
-        "suppliers:all",
-        "suppliers:readonly"
+        [
+          "suppliers:all",
+          "suppliers:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -52447,8 +52631,10 @@
         "Changelogs"
       ],
       "scopes": [
-        "suppliers:all",
-        "suppliers:readonly"
+        [
+          "suppliers:all",
+          "suppliers:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -52902,8 +53088,10 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all",
-        "supplier_invoices:readonly"
+        [
+          "supplier_invoices:all",
+          "supplier_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -53866,8 +54054,10 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all",
-        "supplier_invoices:readonly"
+        [
+          "supplier_invoices:all",
+          "supplier_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -54309,8 +54499,10 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all",
-        "supplier_invoices:readonly"
+        [
+          "supplier_invoices:all",
+          "supplier_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -54982,8 +55174,10 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all",
-        "supplier_invoices:readonly"
+        [
+          "supplier_invoices:all",
+          "supplier_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -55807,8 +56001,10 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all",
-        "supplier_invoices:readonly"
+        [
+          "supplier_invoices:all",
+          "supplier_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -56455,8 +56651,10 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all",
-        "supplier_invoices:readonly"
+        [
+          "supplier_invoices:all",
+          "supplier_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -57474,8 +57672,10 @@
         "Changelogs"
       ],
       "scopes": [
-        "supplier_invoices:all",
-        "supplier_invoices:readonly"
+        [
+          "supplier_invoices:all",
+          "supplier_invoices:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -57929,8 +58129,10 @@
         "Suppliers"
       ],
       "scopes": [
-        "suppliers:all",
-        "suppliers:readonly"
+        [
+          "suppliers:all",
+          "suppliers:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -58467,8 +58669,10 @@
         "Transactions"
       ],
       "scopes": [
-        "transactions:all",
-        "transactions:readonly"
+        [
+          "transactions:all",
+          "transactions:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -59282,8 +59486,10 @@
         "Transactions"
       ],
       "scopes": [
-        "transactions:all",
-        "transactions:readonly"
+        [
+          "transactions:all",
+          "transactions:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -59725,8 +59931,10 @@
         "Changelogs"
       ],
       "scopes": [
-        "transactions:all",
-        "transactions:readonly"
+        [
+          "transactions:all",
+          "transactions:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -60180,8 +60388,10 @@
         "Transactions"
       ],
       "scopes": [
-        "transactions:all",
-        "transactions:readonly"
+        [
+          "transactions:all",
+          "transactions:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -60594,8 +60804,10 @@
         "Transactions"
       ],
       "scopes": [
-        "transactions:all",
-        "transactions:readonly"
+        [
+          "transactions:all",
+          "transactions:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -61466,7 +61678,9 @@
         "Trial balance"
       ],
       "scopes": [
-        "trial_balance:readonly"
+        [
+          "trial_balance:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -61881,7 +62095,9 @@
       "tags": [
         "Webhooks"
       ],
-      "scopes": [],
+      "scopes": [
+        []
+      ],
       "deprecated": false,
       "parameters": [
         {
@@ -62317,7 +62533,9 @@
       "tags": [
         "Webhooks"
       ],
-      "scopes": [],
+      "scopes": [
+        []
+      ],
       "deprecated": false,
       "parameters": [
         {
@@ -62764,7 +62982,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -64746,7 +64966,9 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all"
+        [
+          "supplier_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -66462,7 +66684,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -67617,8 +67841,10 @@
         "Commercial Documents"
       ],
       "scopes": [
-        "commercial_documents:all",
-        "commercial_documents:readonly"
+        [
+          "commercial_documents:all",
+          "commercial_documents:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -68480,8 +68706,10 @@
         "Quotes"
       ],
       "scopes": [
-        "quotes:all",
-        "quotes:readonly"
+        [
+          "quotes:all",
+          "quotes:readonly"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -69346,7 +69574,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -69706,7 +69936,9 @@
         "Hidden"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -70078,7 +70310,9 @@
         "Bank accounts"
       ],
       "scopes": [
-        "bank_accounts:all"
+        [
+          "bank_accounts:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -70925,7 +71159,9 @@
         "Billing Subscriptions"
       ],
       "scopes": [
-        "billing_subscriptions:all"
+        [
+          "billing_subscriptions:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -72654,7 +72890,9 @@
         "Categories"
       ],
       "scopes": [
-        "categories:all"
+        [
+          "categories:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -73129,7 +73367,9 @@
         "Category Groups"
       ],
       "scopes": [
-        "categories:all"
+        [
+          "categories:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -73532,7 +73772,9 @@
         "Commercial Documents"
       ],
       "scopes": [
-        "commercial_documents:all"
+        [
+          "commercial_documents:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -73950,7 +74192,9 @@
         "Commercial Documents"
       ],
       "scopes": [
-        "commercial_documents:all"
+        [
+          "commercial_documents:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -75627,7 +75871,9 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all"
+        [
+          "customers:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -76398,7 +76644,9 @@
         "Hidden"
       ],
       "scopes": [
-        "customers:all"
+        [
+          "customers:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -77568,7 +77816,9 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all"
+        [
+          "customers:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -78038,7 +78288,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -78456,7 +78708,9 @@
         "Transactions"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -78835,7 +79089,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -82030,7 +82286,9 @@
         "File Attachments"
       ],
       "scopes": [
-        "file_attachments:all"
+        [
+          "file_attachments:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -82444,7 +82702,9 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all"
+        [
+          "customer_mandates:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -82824,7 +83084,9 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all"
+        [
+          "customer_mandates:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -83183,7 +83445,9 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all"
+        [
+          "customer_mandates:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -83584,7 +83848,9 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all"
+        [
+          "customers:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -84352,7 +84618,9 @@
         "Journals"
       ],
       "scopes": [
-        "journals:all"
+        [
+          "journals:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -84756,7 +85024,9 @@
         "Ledger Accounts"
       ],
       "scopes": [
-        "ledger_accounts:all"
+        [
+          "ledger_accounts:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -85421,7 +85691,9 @@
         "Ledger Attachments"
       ],
       "scopes": [
-        "ledger"
+        [
+          "ledger"
+        ]
       ],
       "deprecated": true,
       "parameters": [],
@@ -85796,7 +86068,9 @@
         "Ledger Entries"
       ],
       "scopes": [
-        "ledger_entries:all"
+        [
+          "ledger_entries:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -86697,7 +86971,9 @@
         "Ledger Entry Lines"
       ],
       "scopes": [
-        "ledger_entries:all"
+        [
+          "ledger_entries:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -87113,7 +87389,9 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all"
+        [
+          "customer_mandates:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -87483,7 +87761,9 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all"
+        [
+          "customer_mandates:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -88013,7 +88293,9 @@
         "Products"
       ],
       "scopes": [
-        "products:all"
+        [
+          "products:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -89335,7 +89617,9 @@
         "Quotes"
       ],
       "scopes": [
-        "quotes:all"
+        [
+          "quotes:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -89753,7 +90037,9 @@
         "Quotes"
       ],
       "scopes": [
-        "quotes:all"
+        [
+          "quotes:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -91504,7 +91790,9 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all"
+        [
+          "customer_mandates:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -92015,7 +92303,9 @@
         "Suppliers"
       ],
       "scopes": [
-        "suppliers:all"
+        [
+          "suppliers:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [],
@@ -92657,7 +92947,9 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all"
+        [
+          "supplier_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -93036,7 +93328,9 @@
         "Transactions"
       ],
       "scopes": [
-        "supplier_invoices:all"
+        [
+          "supplier_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -93414,7 +93708,9 @@
       "tags": [
         "Webhooks"
       ],
-      "scopes": [],
+      "scopes": [
+        []
+      ],
       "deprecated": false,
       "parameters": [],
       "request_body": {
@@ -93852,7 +94148,9 @@
         "Billing Subscriptions"
       ],
       "scopes": [
-        "billing_subscriptions:all"
+        [
+          "billing_subscriptions:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -95946,7 +96244,9 @@
         "Category Groups"
       ],
       "scopes": [
-        "categories:all"
+        [
+          "categories:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -96384,7 +96684,9 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all"
+        [
+          "customers:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -97144,7 +97446,9 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all"
+        [
+          "customers:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -97597,7 +97901,9 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all"
+        [
+          "customers:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -98072,7 +98378,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -98525,7 +98833,9 @@
         "Customers"
       ],
       "scopes": [
-        "customers:all"
+        [
+          "customers:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -99272,7 +99582,9 @@
         "Ledger Entries"
       ],
       "scopes": [
-        "ledger_entries:all"
+        [
+          "ledger_entries:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -100248,7 +100560,9 @@
         "Ledger Entry Lines"
       ],
       "scopes": [
-        "ledger_entries:all"
+        [
+          "ledger_entries:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -100729,7 +101043,9 @@
         "Products"
       ],
       "scopes": [
-        "products:all"
+        [
+          "products:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -102054,7 +102370,9 @@
         "Mandates"
       ],
       "scopes": [
-        "customer_mandates:all"
+        [
+          "customer_mandates:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -102569,7 +102887,9 @@
         "Suppliers"
       ],
       "scopes": [
-        "suppliers:all"
+        [
+          "suppliers:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -103184,7 +103504,9 @@
         "Suppliers"
       ],
       "scopes": [
-        "suppliers:all"
+        [
+          "suppliers:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -103637,7 +103959,9 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all"
+        [
+          "supplier_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -105681,7 +106005,9 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all"
+        [
+          "supplier_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -106134,7 +106460,9 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all"
+        [
+          "supplier_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -107208,7 +107536,9 @@
         "Transactions"
       ],
       "scopes": [
-        "transactions:all"
+        [
+          "transactions:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -107660,7 +107990,9 @@
       "tags": [
         "Webhooks"
       ],
-      "scopes": [],
+      "scopes": [
+        []
+      ],
       "deprecated": false,
       "parameters": [
         {
@@ -108163,7 +108495,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -108567,7 +108901,9 @@
         "Quotes"
       ],
       "scopes": [
-        "quotes:all"
+        [
+          "quotes:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -108975,7 +109311,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -109361,7 +109699,9 @@
         "Categories"
       ],
       "scopes": [
-        "categories:all"
+        [
+          "categories:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -109825,7 +110165,9 @@
         "Commercial Documents"
       ],
       "scopes": [
-        "commercial_documents:all"
+        [
+          "commercial_documents:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -111845,7 +112187,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -114453,7 +114797,9 @@
         "Customer Invoices"
       ],
       "scopes": [
-        "customer_invoices:all"
+        [
+          "customer_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -116735,7 +117081,9 @@
         "Ledger Accounts"
       ],
       "scopes": [
-        "ledger_accounts:all"
+        [
+          "ledger_accounts:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -117186,7 +117534,9 @@
         "Quotes"
       ],
       "scopes": [
-        "quotes:all"
+        [
+          "quotes:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -119065,7 +119415,9 @@
         "Quotes"
       ],
       "scopes": [
-        "quotes:all"
+        [
+          "quotes:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -119925,7 +120277,9 @@
         "Supplier Invoices"
       ],
       "scopes": [
-        "supplier_invoices:all"
+        [
+          "supplier_invoices:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
@@ -120307,7 +120661,9 @@
         "Transactions"
       ],
       "scopes": [
-        "transactions:all"
+        [
+          "transactions:all"
+        ]
       ],
       "deprecated": false,
       "parameters": [
