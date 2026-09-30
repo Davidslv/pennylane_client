@@ -28,9 +28,9 @@ module PennylaneClient
       @base_url = base_url
     end
 
-    def call(operation_id, params = {}, body = nil)
+    def call(operation_id, params = {}, body = nil, retry_policy: :default)
       operation = @registry.fetch(operation_id)
-      handle(@transport.call(build(operation, params, body)))
+      handle(@transport.call(build(operation, params, body).with(retry_policy:)))
     end
 
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"

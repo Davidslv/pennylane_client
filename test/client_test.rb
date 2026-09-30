@@ -75,6 +75,41 @@ class ClientTest < Minitest::Test
     assert_raises(PennylaneClient::UnknownOperationError) { client.call(:getNothing) }
   end
 
+  def test_retries_a_post_when_rate_limited
+    stub_request(:post, "#{API}/journals").to_return({ status: 429, headers: { "Retry-After" => "0" } },
+                                                     { status: 201, body: '{"id":7}' })
+
+    assert_equal({ id: 7 }, client.call(:postJournals, code: "HA"))
+  end
+
+  def test_raises_rate_limit_error_when_retries_run_out
+    stub_request(:get, "#{API}/me").to_return(status: 429, headers: { "Retry-After" => "0" })
+
+    error = assert_raises(PennylaneClient::RateLimitError) { client.call(:getMe) }
+
+    assert_in_delta 0.0, error.retry_after
+    assert_requested :get, "#{API}/me", times: 3
+  end
+
+  def test_never_retries_a_post_after_a_5xx
+    stub_request(:post, "#{API}/journals").to_return(status: 503)
+
+    assert_raises(PennylaneClient::ServerError) { client.call(:postJournals, code: "HA") }
+    assert_requested :post, "#{API}/journals", times: 1
+  end
+
+  def test_retry_always_is_not_sent_to_pennylane
+    stub_request(:post, "#{API}/journals").with(body: '{"code":"HA"}').to_return(status: 201, body: "{}")
+
+    assert_equal({}, client.call(:postJournals, code: "HA", retry: :always))
+  end
+
+  def test_refuses_an_unknown_retry_policy
+    error = assert_raises(ArgumentError) { client.call(:getMe, retry: true) }
+
+    assert_equal "retry must be :always, got true", error.message
+  end
+
   def test_rate_limit_headers_reach_the_injected_limiter
     stub_request(:get, "#{API}/me").to_return(status: 200, headers: { "RateLimit-Remaining" => "7" })
     updates = []

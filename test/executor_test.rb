@@ -24,7 +24,7 @@ class ExecutorTest < Minitest::Test
   include ExecutorHelpers
 
   def test_fills_path_parameters_and_sends_the_rest_as_the_query
-    executor.call(:getCustomerInvoiceMatchedTransactions, customer_invoice_id: 42, limit: 5, cursor: "abc")
+    executor.call(:getCustomerInvoiceMatchedTransactions, { customer_invoice_id: 42, limit: 5, cursor: "abc" })
 
     assert_equal :get, sent.verb
     assert_equal "#{BASE}/api/external/v2/customer_invoices/42/matched_transactions?limit=5&cursor=abc", sent.url
@@ -32,13 +32,13 @@ class ExecutorTest < Minitest::Test
   end
 
   def test_escapes_path_parameters
-    executor.call(:getJournal, id: "a/b c")
+    executor.call(:getJournal, { id: "a/b c" })
 
     assert_equal "#{BASE}/api/external/v2/journals/a%2Fb%20c", sent.url
   end
 
   def test_sends_filter_and_other_structured_query_values_as_json
-    executor.call(:getJournals, filter: [{ field: "code", operator: "eq", value: "HA" }], sort: "-id")
+    executor.call(:getJournals, { filter: [{ field: "code", operator: "eq", value: "HA" }], sort: "-id" })
 
     query = URI.decode_www_form(URI(sent.url).query).to_h
 
@@ -47,13 +47,13 @@ class ExecutorTest < Minitest::Test
   end
 
   def test_leaves_out_nil_query_values
-    executor.call(:getJournals, cursor: nil)
+    executor.call(:getJournals, { cursor: nil })
 
     assert_equal "#{BASE}/api/external/v2/journals", sent.url
   end
 
   def test_sends_the_rest_as_an_encoded_json_body_when_the_operation_takes_one
-    executor.call(:putCategoryGroup, id: 7, label: "Sales", amount: BigDecimal("12.50"), date: Date.new(2026, 1, 2))
+    executor.call(:putCategoryGroup, { id: 7, label: "Sales", amount: BigDecimal("12.50"), date: Date.new(2026, 1, 2) })
 
     assert_equal [:put, "#{BASE}/api/external/v2/category_groups/7"], [sent.verb, sent.url]
     assert_equal({ "label" => "Sales", "amount" => "12.5", "date" => "2026-01-02" }, JSON.parse(sent.body))
@@ -104,11 +104,11 @@ class ExecutorTest < Minitest::Test
   end
 
   def test_refuses_multipart_operations_until_uploads_land
-    assert_raises(NotImplementedError) { executor.call(:postFileAttachments, file: "x") }
+    assert_raises(NotImplementedError) { executor.call(:postFileAttachments, { file: "x" }) }
   end
 
   def test_returns_a_deep_frozen_hash_with_symbol_keys
-    result = executor(ok(200, '{"id":1,"lines":[{"label":"Rent"}]}')).call(:getJournal, id: 1)
+    result = executor(ok(200, '{"id":1,"lines":[{"label":"Rent"}]}')).call(:getJournal, { id: 1 })
 
     assert_equal({ id: 1, lines: [{ label: "Rent" }] }, result)
     assert_predicate result, :frozen?
@@ -116,7 +116,7 @@ class ExecutorTest < Minitest::Test
   end
 
   def test_returns_true_for_an_empty_success_body
-    assert(executor(ok(204, "")).call(:markAsPaidCustomerInvoice, id: 1))
+    assert(executor(ok(204, "")).call(:markAsPaidCustomerInvoice, { id: 1 }))
   end
 
   def test_treats_a_nil_body_from_a_custom_transport_as_empty
@@ -125,7 +125,7 @@ class ExecutorTest < Minitest::Test
 
   def test_raises_the_mapped_error_for_a_failure_status
     error = assert_raises(PennylaneClient::NotFoundError) do
-      executor(ok(404, '{"error":"not_found","message":"Journal not found"}')).call(:getJournal, id: 1)
+      executor(ok(404, '{"error":"not_found","message":"Journal not found"}')).call(:getJournal, { id: 1 })
     end
 
     assert_equal "404 not_found: Journal not found", error.message
@@ -141,5 +141,12 @@ class ExecutorTest < Minitest::Test
     executor.call(:getMe)
 
     assert_equal :getMe, sent.operation_id
+    assert_equal :default, sent.retry_policy
+  end
+
+  def test_passes_the_retry_policy_on_the_request
+    executor(ok(201)).call(:postJournals, { code: "HA" }, nil, retry_policy: :always)
+
+    assert_equal :always, sent.retry_policy
   end
 end

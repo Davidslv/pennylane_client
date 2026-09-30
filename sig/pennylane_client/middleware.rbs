@@ -19,6 +19,31 @@ module PennylaneClient
       def valid?: (untyped token) -> bool
     end
 
+    class Retry
+      include _Transport
+
+      RETRY_STATUSES: Array[Integer]
+      NO_RESPONSE: Array[singleton(Error)]
+
+      def initialize: (_Transport app, Instrumentation instrumentation, ?max_attempts: Integer,
+                       ?base_delay: Float, ?max_wait: Float, ?sleeper: ^(Float) -> void,
+                       ?random: _Rand) -> void
+
+      interface _Rand
+        def rand: () -> Float
+      end
+
+      private
+
+      def send_once: (Request request) -> [Response?, Error?]
+      def finish: (Response? response, Error? error) -> Response
+      def delay: (Request request, Response? response, Error? error, Integer attempt) -> Float?
+      def repeatable?: (Request request) -> bool
+      def backoff: (Integer attempt) -> Float
+      def retry_after: (Response response) -> Float?
+      def report: (Request request, Integer attempt, Float wait, Response? response, Error? error) -> void
+    end
+
     class RateLimit
       include _Transport
 

@@ -41,4 +41,16 @@ class InstrumentationTest < Minitest::Test
 
     assert_includes log.string, "pennylane_client getMe GET /api/external/v2/me waited 0.8 s for the rate limit"
   end
+
+  def test_logs_a_retry
+    log = StringIO.new
+    PennylaneClient::Instrumentation.new(logger: Logger.new(log))
+                                    .record({ type: :retry, operation_id: :getMe, method: "GET",
+                                              path: "/api/external/v2/me", attempt: 2, wait: 0.3,
+                                              status: nil, error: "PennylaneClient::TimeoutError" })
+
+    assert_includes log.string,
+                    "WARN -- : pennylane_client getMe GET /api/external/v2/me retry 2 in 0.3 s " \
+                    "after PennylaneClient::TimeoutError"
+  end
 end

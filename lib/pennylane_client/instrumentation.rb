@@ -18,6 +18,13 @@ module PennylaneClient
   #   { type: :wait, operation_id: :getMe, method: "GET",
   #     path: "/api/external/v2/me", wait: 0.8 }
   #
+  # Each retry is one `type: :retry` event, naming the attempt about to be
+  # sent, the seconds waited first, and what the last attempt got:
+  #
+  #   { type: :retry, operation_id: :getMe, method: "GET",
+  #     path: "/api/external/v2/me", attempt: 2, wait: 0.3,
+  #     status: 503, error: nil }
+  #
   # The path never has a query, and nothing in an event comes from the
   # request headers, so the token cannot appear.
   class Instrumentation
@@ -51,6 +58,8 @@ module PennylaneClient
       line = "pennylane_client #{event[:operation_id]} #{event[:method]} #{event[:path]}"
       case event
       in { type: :wait } then @logger.info("#{line} waited #{event[:wait]} s for the rate limit")
+      in { type: :retry }
+        @logger.warn("#{line} retry #{event[:attempt]} in #{event[:wait]} s after #{event[:status] || event[:error]}")
       in { error: String } then @logger.warn("#{line} failed: #{event[:error]} (#{event[:duration]} ms)")
       else @logger.info("#{line} -> #{event[:status]} (#{event[:duration]} ms)")
       end

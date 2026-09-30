@@ -4,7 +4,8 @@ module PennylaneClient
 
     def initialize: (registry: Registry, transport: _Transport, base_url: String) -> void
 
-    def call: (Symbol | String operation_id, ?Hash[Symbol, untyped] params, ?untyped body) -> untyped
+    def call: (Symbol | String operation_id, ?Hash[Symbol, untyped] params, ?untyped body,
+               ?retry_policy: :default | :always) -> untyped
 
     def inspect: () -> String
 

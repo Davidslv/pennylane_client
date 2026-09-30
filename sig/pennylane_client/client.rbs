@@ -1,12 +1,15 @@
 module PennylaneClient
   def self.new: (token: token, ?base_url: String, ?transport: _Transport, ?logger: untyped,
-                 ?on_request: (^(Instrumentation::event) -> void)?, ?limiters: _LimiterRegistry) -> Client
+                 ?on_request: (^(Instrumentation::event) -> void)?, ?limiters: _LimiterRegistry,
+                 ?max_retry_wait: Float) -> Client
 
   class Client
     DEFAULT_BASE_URL: String
+    RETRY_POLICIES: Hash[Symbol?, :default | :always]
 
     def initialize: (token: token, ?base_url: String, ?transport: _Transport, ?logger: untyped,
-                     ?on_request: (^(Instrumentation::event) -> void)?, ?limiters: _LimiterRegistry) -> void
+                     ?on_request: (^(Instrumentation::event) -> void)?, ?limiters: _LimiterRegistry,
+                     ?max_retry_wait: Float) -> void
 
     def call: (Symbol | String operation_id, ?untyped body, **untyped params) -> untyped
 
