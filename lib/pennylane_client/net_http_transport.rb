@@ -29,6 +29,8 @@ module PennylaneClient
   #   the server closes it.
   # - A body that responds to `read` (Multipart) is rewound and streamed
   #   as `body_stream`; a String body is sent as is.
+  # - A call that does not complete, for any reason, drops its connection,
+  #   so an unread answer is never read as the next call's response.
   # - Never retries. Net::HTTP retries idempotent verbs once by default,
   #   and PUT and DELETE have side effects at Pennylane (D5).
   class NetHttpTransport
@@ -52,13 +54,17 @@ module PennylaneClient
 
     def call(request)
       uri = URI(request.url)
-      http = connection(uri)
-      http.start unless http.started?
-      to_response(send_request(http, request, uri))
+      response = exchange(request, uri)
     rescue *TIMEOUT_ERRORS => e
       fail_with(TimeoutError, e, uri)
     rescue *CONNECTION_ERRORS => e
       fail_with(ConnectionError, e, uri)
+    ensure
+      # Anything else that cuts the call short (Timeout.timeout,
+      # rack-timeout, Interrupt) may leave a request sent and its answer
+      # unread. Reusing that connection would hand the answer to the next
+      # call, whichever token it is for, so it is dropped.
+      drop(uri) if uri && response.nil?
     end
 
     # Closes this thread's connections.
@@ -68,6 +74,12 @@ module PennylaneClient
     end
 
     private
+
+    def exchange(request, uri)
+      http = connection(uri)
+      http.start unless http.started?
+      to_response(send_request(http, request, uri))
+    end
 
     def connections
       Thread.current[@key] ||= {}
