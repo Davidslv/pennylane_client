@@ -102,5 +102,49 @@ module PennylaneClient
 
       def categorize: (Integer customer_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
     end
+
+    class SupplierInvoices < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def import: (**untyped attributes) -> item
+
+      def import_e_invoice: (file file, **untyped fields) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+
+      def validate_accounting: (Integer id) -> item
+
+      def update_payment_status: (Integer supplier_invoice_id, payment_status: "paid" | "to_be_paid") -> result
+
+      def update_e_invoice_status: (Integer supplier_invoice_id, status: "disputed" | "refused" | "approved", **untyped fields) -> item
+
+      def link_purchase_request: (Integer supplier_invoice_id, purchase_request_id: Integer) -> result
+
+      def invoice_lines: (Integer supplier_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def payments: (Integer supplier_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def matched_transactions: (Integer supplier_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def categories: (Integer supplier_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def categorize: (Integer supplier_invoice_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
+    end
+
+    class Suppliers < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+
+      def categories: (Integer supplier_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def categorize: (Integer supplier_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
+    end
   end
 end
