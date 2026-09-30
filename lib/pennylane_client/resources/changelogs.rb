@@ -57,8 +57,12 @@ module PennylaneClient
 
       private
 
+      # A String key counts too: "start_date" would go next to the one from
+      # since:, and "since" would go as a param Pennylane does not take.
       def feed(operation_id, since, params)
-        raise ArgumentError, "changelogs take since:, not start_date:" if params.key?(:start_date)
+        keys = params.keys.map(&:to_s)
+        raise ArgumentError, "changelogs take since:, not start_date:" if keys.include?("start_date")
+        raise ArgumentError, "changelogs take since: as a keyword, not a String key" if keys.include?("since")
 
         paginate(operation_id, start_date: since, **params)
       end

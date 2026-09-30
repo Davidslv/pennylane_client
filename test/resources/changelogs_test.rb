@@ -78,6 +78,20 @@ class ChangelogsTest < Minitest::Test
     end
   end
 
+  # A String key would slip past a Symbol-only guard: "start_date" next to
+  # since: sent two start_date params, and "since" went as a param Pennylane
+  # does not take.
+  def test_every_feed_refuses_string_keys_for_since_and_start_date
+    stub = stub_request(:get, %r{/changelogs/}).to_return(status: 200, body: page(7))
+    FEEDS.each do |feed|
+      [{ "start_date" => SINCE }, { since: SINCE, "start_date" => SINCE }, { "since" => SINCE }].each do |args|
+        error = assert_raises(ArgumentError, "#{feed}(#{args})") { changelogs.public_send(feed, **args).first }
+        assert_includes error.message, "since:"
+      end
+    end
+    assert_not_requested stub
+  end
+
   # names: getCustomerChanges
   def test_customers
     stub_since("customers")
