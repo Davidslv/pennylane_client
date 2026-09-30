@@ -2,7 +2,8 @@
 
 module PennylaneClient
   module Resources
-    # The company's document numberings: `client.numberings`. Read only.
+    # The company's document numberings: `client.numberings`. Read only;
+    # numberings are configured in the Pennylane app.
     class Numberings < Resource
       # Every numbering, one per configured document type, as an
       # Enumerator::Lazy of Hashes. Takes `sort:`. A type with no numbering is

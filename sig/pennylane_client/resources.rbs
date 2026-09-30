@@ -228,7 +228,7 @@ module PennylaneClient
 
       def send_by_email: (Integer id, **untyped fields) -> result
 
-      def update_status: (Integer id, status: String) -> item
+      def update_status: (Integer id, status: "pending" | "accepted" | "denied" | "invoiced" | "expired") -> item
 
       def invoice_lines: (Integer quote_id, **untyped params) -> Enumerator::Lazy[item, void]
 

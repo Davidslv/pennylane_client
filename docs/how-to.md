@@ -313,7 +313,7 @@ client.commercial_documents.create(document_type: "proforma", customer_id: 7, da
                                    deadline: Date.today + 30, invoice_lines: lines)
 ```
 
-Pennylane numbers each document from the company's numbering for its type, and refuses one with no numbering. `client.numberings.list` shows what is configured: `estimate` for quotes, `proforma`, `shipping_order` and `purchasing_order` for commercial documents, `invoice` for finalizing a customer invoice:
+Pennylane numbers each document from the company's numbering for its type. Without one, it refuses to create that commercial document, number a quote or finalize a customer invoice. Numberings are configured in the Pennylane app; `client.numberings.list` shows which exist: `estimate` for quotes, `proforma`, `shipping_order` and `purchasing_order` for commercial documents, `invoice` for customer invoices:
 
 ```ruby
 client.numberings.list.map { _1[:document_type] }   # => ["invoice", "estimate", ...]
@@ -331,7 +331,7 @@ client.customer_invoices.create_from_quote(quote_id: quote[:id], draft: true)
 
 Both resources list what hangs off one document: `invoice_lines` and `invoice_line_sections` (both take `sort:`) and `appendices` (no `sort:`). `upload_appendix(id, file)` attaches a PDF or image, streamed like any [upload](#upload-a-file).
 
-`client.customer_invoice_templates.list` lists the invoice templates made in Pennylane. It is read only.
+`client.customer_invoice_templates.list` lists the customer invoice templates. The API has no call to create or change one.
 
 ## Handle a validation error
 

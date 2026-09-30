@@ -3,7 +3,7 @@
 module PennylaneClient
   module Resources
     # Customer invoice templates: `client.customer_invoice_templates`. Read
-    # only; templates are made in Pennylane.
+    # only.
     class CustomerInvoiceTemplates < Resource
       # Every customer invoice template, as an Enumerator::Lazy of Hashes.
       # Takes `sort:`.
