@@ -21,8 +21,8 @@ module WebhookVectors
 
   def digest = sign.split("v1=").last
 
-  def verify(body = BODY, header = sign, secret: SECRET, **)
-    PennylaneClient::Webhook.verify!(body, header, secret:, now: NOW, **)
+  def verify(body = BODY, header = sign, secret: SECRET, now: NOW, **)
+    PennylaneClient::Webhook.verify!(body, header, secret:, now:, **)
   end
 
   def assert_rejected(message, &)
@@ -40,6 +40,14 @@ class WebhookTest < Minitest::Test
     assert_equal 987_654, event[:id]
     assert_equal "customer_invoice.e_invoicing_status_updated", event[:event]
     assert_equal "accepted", event.dig(:data, :object, :e_invoicing, :status)
+  end
+
+  # A literal vector, so a change to how the signed string is built fails
+  # here even if the `sign` helper changes with it.
+  def test_a_fixed_vector_verifies
+    header = "t=1782864000,v1=0b5f56510ee62370106bc74036198c6f9076a048d31c6fccb594642ec5f3201f"
+
+    assert_equal "dms_file.created", verify('{"id":1,"event":"dms_file.created"}', header)[:event]
   end
 
   def test_the_event_is_deep_frozen
@@ -73,9 +81,10 @@ class WebhookTest < Minitest::Test
     assert_rejected(/JSON/) { verify("[1]", sign("[1]")) }
   end
 
-  def test_a_blank_secret_is_an_argument_error
+  def test_a_blank_or_non_string_secret_is_an_argument_error
     assert_raises(ArgumentError) { verify(BODY, sign, secret: "") }
     assert_raises(ArgumentError) { verify(BODY, sign, secret: nil) }
+    assert_raises(ArgumentError) { verify(BODY, sign, secret: 5) }
   end
 
   def test_the_error_never_carries_the_secret_or_the_expected_digest
@@ -137,9 +146,24 @@ class WebhookHeaderTest < Minitest::Test
     assert_equal 987_654, PennylaneClient::Webhook.verify!(BODY, sign(at: fresh), secret: SECRET)[:id]
   end
 
+  def test_now_can_be_a_time
+    assert_equal 987_654, verify(BODY, sign, now: Time.at(NOW + 10))[:id]
+  end
+
+  def test_t_is_signed_as_sent
+    assert_equal 987_654, verify(BODY, sign(at: "0#{NOW}"))[:id]
+  end
+
   def test_a_missing_header_is_rejected
     assert_rejected(/missing/) { verify(BODY, nil) }
     assert_rejected(/missing/) { verify(BODY, "  ") }
+    assert_rejected(/missing/) { verify(BODY, 123) }
+    assert_rejected(/missing/) { verify(BODY, ["t=1"]) }
+  end
+
+  def test_a_header_in_a_hostile_encoding_is_rejected
+    assert_rejected(/malformed/) { verify(BODY, "\xff,t=1".dup.force_encoding(Encoding::UTF_8)) }
+    assert_rejected(/malformed/) { verify(BODY, "t=1,v1=00".encode(Encoding::UTF_16LE)) }
   end
 
   def test_malformed_headers_are_rejected

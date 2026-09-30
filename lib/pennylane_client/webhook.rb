@@ -30,35 +30,43 @@ module PennylaneClient
     # matches, when `t` is more than `tolerance` seconds from `now` (either
     # way; nil skips the check), or when the body is not a JSON object.
     # `raw_body` must be the bytes as received, before any JSON parsing.
-    def verify!(raw_body, signature_header, secret:, tolerance: DEFAULT_TOLERANCE, now: Time.now.to_i)
-      raise ArgumentError, "secret is required" if secret.nil? || secret.empty?
+    # A blank or non-String secret is an ArgumentError: a bug in the caller,
+    # not a bad delivery. `now` is a Time or Unix seconds.
+    def verify!(raw_body, signature_header, secret:, tolerance: DEFAULT_TOLERANCE, now: Time.now)
+      raise ArgumentError, "secret must be a non-empty String" unless secret.is_a?(String) && !secret.empty?
 
       timestamp, signatures = parse(signature_header)
       authenticate(raw_body, timestamp, signatures, secret)
-      if tolerance && (now - timestamp).abs > tolerance
+      if tolerance && (now.to_i - Integer(timestamp, 10)).abs > tolerance
         raise SignatureError, "timestamp is outside the #{tolerance} second tolerance"
       end
 
       event(raw_body)
     end
 
-    # [timestamp, [v1, ...]] from "t=1657875952,v1=5257a8...". Every v1 is
-    # kept, so a header carrying more than one matches on any of them.
+    # [t, [v1, ...]] from "t=1657875952,v1=5257a8...", both as sent: the
+    # HMAC covers `t` exactly as signed. Every v1 is kept, so a header
+    # carrying more than one matches on any of them. The header comes from
+    # anyone, so it is read as bytes and never raises anything but
+    # SignatureError.
     def parse(header)
-      raise SignatureError, "#{HEADER} header is missing" if header.nil? || header.strip.empty?
-
       values = fields(header)
       timestamp = values.fetch("t", []).first.to_s
       signatures = values.fetch("v1", []).map(&:downcase).grep(DIGEST_HEX)
       raise SignatureError, "#{HEADER} header is malformed" unless timestamp.match?(TIMESTAMP) && signatures.any?
 
-      [Integer(timestamp, 10), signatures]
+      [timestamp, signatures]
     end
 
-    # {"t" => ["1657875952"], "v1" => ["5257a8...", ...]}
+    # {"t" => ["1657875952"], "v1" => ["5257a8...", ...]}, read as bytes.
     def fields(header)
-      header.split(",").map { _1.strip.split("=", 2) }.select { _1.length == 2 }
-            .group_by(&:first).transform_values { |pairs| pairs.map(&:last) }
+      header = header.b.strip if header.is_a?(String)
+      raise SignatureError, "#{HEADER} header is missing" if !header.is_a?(String) || header.empty?
+
+      header.split(",").each_with_object({}) do |part, values|
+        name, value = part.strip.split("=", 2)
+        (values[name] ||= []) << value if value
+      end
     end
 
     # Each comparison is fixed-length and constant-time: `signatures` holds

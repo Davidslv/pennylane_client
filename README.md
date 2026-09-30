@@ -49,7 +49,7 @@ event[:id]     # the delivery id
 event[:event]  # "customer_invoice.e_invoicing_status_updated"
 ```
 
-`verify!` checks the HMAC-SHA256 signature in constant time, rejects a timestamp more than 300 seconds old (`tolerance:`), and returns the deep-frozen event. Any failure raises `PennylaneClient::SignatureError`. Pass the raw body bytes, not re-serialised JSON.
+`verify!` checks the HMAC-SHA256 signature in constant time, rejects a timestamp more than 300 seconds from now (`tolerance:`), and returns the deep-frozen event. A bad delivery raises `PennylaneClient::SignatureError`; a blank secret raises `ArgumentError`. Pass the raw body bytes, not re-serialised JSON.
 
 Pennylane delivers at least once and in no particular order. De-duplicate on the delivery `id` and make your handler idempotent; storing seen ids is up to you. See [how-to](docs/how-to.md#verify-an-inbound-webhook).
 

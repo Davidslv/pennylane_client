@@ -526,7 +526,7 @@ end
 - Pass the raw body bytes as received. Parsing and re-serialising the JSON changes the bytes and the signature will not match.
 - Delivery is at-least-once and unordered. De-duplicate on the delivery `event[:id]`, and reconcile state from the payload, not from arrival order. Storing seen ids is up to you.
 - Answer 2xx within a few seconds and do the work in a background job; a slow answer counts as a failed delivery and is retried.
-- `tolerance: nil` skips the timestamp check. `SignatureError` never carries the secret or the expected digest.
+- `tolerance: nil` skips the timestamp check. A header that is missing, malformed or in a broken encoding raises `SignatureError`, never anything else. `SignatureError` never carries the secret or the expected digest. A blank secret raises `ArgumentError`.
 
 ## Handle a validation error
 
