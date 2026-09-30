@@ -30,5 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `NetHttpTransport` keeps an idle connection for 10 s (`keep_alive_timeout:`) instead of `Net::HTTP`'s 2 s, so a rate-limit wait no longer costs a new connection.
 - `client.customer_invoices`: all 24 Customer Invoices operations Named, including the Hidden installment action. `list` and the lists under one invoice walk every page; `import_e_invoice` and `upload_appendix` stream their file; `categorize` takes the bare array. RBS in `sig/pennylane_client/resources.rbs`.
 - `client.customers`: all 16 Customers operations Named, company and individual, with contacts and categories. `create_company` and `create_individual` are the documented creates; `create(customer_type:, ...)` is the Hidden one that makes either kind.
+- `client.supplier_invoices` and `client.suppliers`: all 20 Supplier Invoices and Suppliers operations Named. Supplier invoices come in by `import` or `import_e_invoice`; importing a file twice raises `ConflictError`. `validate_accounting`, `update_payment_status(id, payment_status:)` and `update_e_invoice_status(id, status:, reason:)` cover the lifecycle.
 
 [Unreleased]: https://github.com/Davidslv/pennylane_client/commits/main
