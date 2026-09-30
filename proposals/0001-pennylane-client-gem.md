@@ -4,6 +4,30 @@
 **Created:** 2026-09-30
 **Project:** pennylane_client
 **Author:** David Silva
+**Epic:** https://github.com/Davidslv/pennylane_client/issues/1
+**Sub-issues:**
+- https://github.com/Davidslv/pennylane_client/issues/2 — Scaffold the gem and ship the notes#117 repository layers
+- https://github.com/Davidslv/pennylane_client/issues/3 — Build the contract snapshot tool and commit the first snapshot
+- https://github.com/Davidslv/pennylane_client/issues/4 — Generate the operation table and CHECKLIST.md with a CI stale gate
+- https://github.com/Davidslv/pennylane_client/issues/5 — Add the weekly contract drift workflow
+- https://github.com/Davidslv/pennylane_client/issues/6 — Build Operation, Registry, Executor, errors, encoder and transport; add client.call
+- https://github.com/Davidslv/pennylane_client/issues/7 — Add the middleware pipeline: Auth, RateLimit, Retry
+- https://github.com/Davidslv/pennylane_client/issues/8 — Add cursor pagination and multipart uploads
+- https://github.com/Davidslv/pennylane_client/issues/9 — Build FakePennylane with rake load and rake stress
+- https://github.com/Davidslv/pennylane_client/issues/10 — Name the Customer Invoices operations
+- https://github.com/Davidslv/pennylane_client/issues/11 — Name the Customers operations
+- https://github.com/Davidslv/pennylane_client/issues/12 — Name the Supplier Invoices and Suppliers operations
+- https://github.com/Davidslv/pennylane_client/issues/13 — Name the Mandates operations
+- https://github.com/Davidslv/pennylane_client/issues/14 — Name the Transactions and bank operations
+- https://github.com/Davidslv/pennylane_client/issues/15 — Name the Quotes, Commercial Documents and numbering operations
+- https://github.com/Davidslv/pennylane_client/issues/16 — Name the ledger operations
+- https://github.com/Davidslv/pennylane_client/issues/17 — Name the Categories, Category Groups and Products operations
+- https://github.com/Davidslv/pennylane_client/issues/18 — Name the Changelogs and Exports operations
+- https://github.com/Davidslv/pennylane_client/issues/19 — Name the account, subscription and webhook operations
+- https://github.com/Davidslv/pennylane_client/issues/20 — Add PennylaneClient::Webhook.verify!
+- https://github.com/Davidslv/pennylane_client/issues/21 — Add rake smoke and the contributor live-verification path
+- https://github.com/Davidslv/pennylane_client/issues/22 — Release 0.1.0 via Trusted Publishing
+- https://github.com/Davidslv/pennylane_client/issues/23 — Release 1.0.0
 
 ---
 
