@@ -188,7 +188,7 @@ Only `Middleware::Auth` holds the token, and only `Request#headers` carries it, 
 
 ## Exports and webhooks
 
-- **Exports.** `exports.generate_*` creates the export, reads it straight away, then every `interval` seconds (5) until its `status` is `ready`, and returns it. It raises `ExportError` when the status is `error` or the export is not ready within `timeout` (300 s); the error's `#export` has the id to read later. `retry:` applies to the create only; the reads are GETs.
+- **Exports.** `exports.generate_*` creates the export, reads it straight away, then every `interval` seconds (5) until its `status` is `ready`, and returns it. It raises `ExportError` when the status is `error`, or when the export is pending and the next read would fall after `timeout` (300 s), so it never sleeps past the deadline and can give up up to one `interval` early; the error's `#export` has the id to read later. `retry:` applies to the create only; the reads are GETs.
 - **Webhooks.** `Webhook.verify!(raw_body, signature_header, secret:)` parses `X-Pennylane-Signature: t=<unix seconds>,v1=<hex>`, computes HMAC-SHA256 of `"{t}.{raw_body}"`, and compares each 64-character `v1` with `OpenSSL.fixed_length_secure_compare`. It rejects a timestamp more than `tolerance` (300 s) from now, either way, and a body that is not a JSON object. Everything it rejects raises `SignatureError`; a blank secret raises `ArgumentError`. The header is read as bytes, so no header can raise anything else.
 
 ## Public API, Experimental tier and the private boundary

@@ -560,7 +560,7 @@ export[:status]     # => "ready"
 export[:file_url]   # download it within 30 minutes; the URL expires
 ```
 
-It reads the export every 5 s for up to 300 s. Change both with `interval:` and `timeout:`. It raises `ExportError` when the export ends in `error` or is still pending at the timeout. The error's `export` is the export as last read, so you can check on it later:
+It reads the export straight away, then every 5 s, for up to 300 s. Change both with `interval:` and `timeout:`. It raises `ExportError` when the export ends in `error`, or when it is still pending and the next read would come after `timeout`. It never waits past `timeout`, so it can give up as much as one `interval` before it. The error's `export` is the export as last read, so you can check on it later:
 
 <!-- example export_error -->
 ```ruby
