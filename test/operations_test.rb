@@ -26,6 +26,14 @@ class OperationsTest < Minitest::Test
     assert_equal deprecated.sort, PennylaneClient::OPERATIONS.select(&:deprecated).map(&:id).sort
   end
 
+  def test_every_paginated_operation_carries_a_largest_page_size
+    paginated = PennylaneClient::OPERATIONS.select(&:paginated)
+
+    assert_equal 65, paginated.size
+    assert_equal [100, 1000], paginated.map(&:max_limit).uniq.sort
+    assert(PennylaneClient::OPERATIONS.reject(&:paginated).all? { _1.max_limit.nil? })
+  end
+
   def test_is_a_frozen_table_of_operations
     assert_predicate PennylaneClient::OPERATIONS, :frozen?
     assert(PennylaneClient::OPERATIONS.all?(PennylaneClient::Operation))

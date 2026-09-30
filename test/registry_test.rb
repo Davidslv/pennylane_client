@@ -5,7 +5,7 @@ require "test_helper"
 class RegistryTest < Minitest::Test
   JOURNAL = PennylaneClient::Operation.new(
     id: :getJournal, verb: :get, path: "/api/external/v2/journals/{id}",
-    paginated: false, body: nil, success: 200, deprecated: false
+    paginated: false, max_limit: nil, body: nil, success: 200, deprecated: false
   )
 
   def registry = PennylaneClient::Registry.new([JOURNAL])

@@ -6,7 +6,7 @@ class OperationTest < Minitest::Test
   def row(**overrides)
     PennylaneClient::Operation.new(
       id: :getJournal, verb: :get, path: "/api/external/v2/journals/{id}",
-      paginated: false, body: nil, success: 200, deprecated: false, **overrides
+      paginated: false, max_limit: nil, body: nil, success: 200, deprecated: false, **overrides
     )
   end
 
