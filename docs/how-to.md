@@ -78,6 +78,43 @@ limiters = PennylaneClient::LimiterRegistry.new { |key| MyRedisLimiter.new("penn
 client = PennylaneClient.new(token:, limiters:)
 ```
 
+## Walk a list
+
+`client.paginate` returns every item of a list operation, lazily. It follows `next_cursor` and sends your `filter` and `sort` again on every page, because Pennylane's cursor does not remember them. Pass `filter` as an Array of Hashes; the client sends the JSON string Pennylane expects.
+
+```ruby
+drafts = [{ field: "status", operator: "eq", value: "draft" }]
+
+client.paginate(:getCustomerInvoices, filter: drafts, sort: "-id").each do |invoice|
+  puts invoice[:invoice_number]
+end
+
+client.paginate(:getCustomerInvoices).first(10)   # one request
+```
+
+Each page asks for the largest `limit` the operation allows (100, or 1000 for the changelogs, ledger accounts and trial balance). Pass a smaller `limit:` to get smaller pages. To see each page, with `has_more` and `next_cursor`, use `client.pages` instead.
+
+## Upload a file
+
+Pass a `File`, an IO or a `Pathname` as the file field. The file streams from disk, so a 100 MB upload does not load 100 MB into memory. The filename comes from the path and the content type from the extension (`.pdf`, `.png`, `.jpg`, `.tiff`, `.bmp`, `.gif`, `.xml`).
+
+```ruby
+client.call(:postFileAttachments, file: Pathname("receipt.pdf"))
+
+File.open("invoice.pdf", "rb") do |file|
+  client.call(:postCustomerInvoiceAppendices, customer_invoice_id: 42, file:)
+end
+```
+
+Wrap it in `PennylaneClient::Upload` to set the filename or the content type yourself. Hash and Array fields go as JSON parts:
+
+```ruby
+xml = PennylaneClient::Upload.new(io, filename: "invoice.xml", content_type: "application/xml")
+client.call(:createCustomerInvoiceEInvoiceImport, file: xml, invoice_options: { customer_id: 12 })
+```
+
+An upload gets 300 s to read and write. Change it with `PennylaneClient::NetHttpTransport.new(upload_timeout: 600)`, passed as `transport:`. A file you open stays open; the client closes only what it opened from a `Pathname`. An IO must respond to `size`, so a pipe cannot be uploaded.
+
 ## Handle a validation error
 
 ```ruby
