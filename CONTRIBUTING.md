@@ -23,7 +23,7 @@ You need Ruby 3.3 or newer and a recent Bundler (4.x recommended). The Gemfile u
    - `test/named_write_retry_test.rb`: every named write takes `retry:`, and the number of named writes is pinned.
    - `test/readme_test.rb` and `test/gemspec_test.rb`: the README's operation counts match the checklist, `CHANGELOG.md` has a dated entry for `VERSION`, and the gem ships no runtime dependency.
    - `test/token_secrecy_test.rb`: the token never shows in `inspect`, errors or events.
-   - Tests that run the Ruby examples in the docs, where a doc has them: an example that no longer matches the API fails the gate.
+   - `test/docs_examples_test.rb`: every Ruby block in `README.md`, `docs/getting-started.md` and `docs/how-to.md` is tagged `<!-- example -->` (and runs against the answers in the contract snapshot) or `<!-- not run: reason -->`, and every link to a heading finds it. An example that no longer matches the API, or sends a field the snapshot does not document, fails the gate.
 2. **RuboCop.**
 3. **`rbs validate`** on `sig/`. It checks that the signatures are well formed; `test/signatures_test.rb` checks that they match the code.
 4. **`rake stale`.** It fails if `lib/pennylane_client/operations.rb`, `docs/api/CHECKLIST.md` or the live-verified count in `README.md` differs from what its generator writes.

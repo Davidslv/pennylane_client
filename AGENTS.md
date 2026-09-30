@@ -12,7 +12,7 @@ Instructions for AI agents (and humans) working in this repository.
 - `test/stability_test.rb`: the README's Experimental list equals the `@note Experimental:` methods.
 - `test/named_write_retry_test.rb`: every named write takes `retry:`; the count of writes is pinned.
 - `test/readme_test.rb`, `test/gemspec_test.rb`: README counts, the dated CHANGELOG entry, zero runtime dependencies.
-- Any test that runs the Ruby examples in the docs.
+- `test/docs_examples_test.rb`: every Ruby example in the README, getting-started and how-to runs against the contract snapshot's answers.
 
 Working rules:
 
