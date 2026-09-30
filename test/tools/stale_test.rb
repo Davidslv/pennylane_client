@@ -16,6 +16,7 @@ class StaleTest < Minitest::Test
     Dir.mktmpdir do |root|
       write(root, "docs/api/contract/2026-09-30/operations.json",
             JSON.generate("retrieved_on" => "2026-09-30", "operations" => [RECORD]))
+      write(root, Stale::README, "# gem\n\n#{Checklist::Readme::START}\ntyped\n#{Checklist::Readme::FINISH}\n")
       Stale.expected(root: root, registered: %w[getJournal]).each { |path, content| write(root, path, content) }
       yield root
     end
@@ -57,6 +58,25 @@ class StaleTest < Minitest::Test
       write(root, "test/resources/journals_test.rb", "# names: getJournal\ndef test_find\nend\n")
 
       assert_equal [Stale::CHECKLIST], stale(root)
+    end
+  end
+
+  def test_a_hand_typed_readme_count_is_stale
+    with_repo do |root|
+      readme = File.join(root, Stale::README)
+      File.write(readme, File.read(readme).sub("0 of 1", "1 of 1"))
+
+      assert_equal [Stale::README], stale(root)
+    end
+  end
+
+  def test_a_new_sandbox_report_makes_the_checklist_and_readme_stale_until_regenerated
+    with_repo do |root|
+      write(root, "docs/api/live/2026-10-01-octocat.json",
+            JSON.generate("format" => 1, "verified_on" => "2026-10-01", "by" => "octocat",
+                          "operations" => { "getJournal" => "pass" }))
+
+      assert_equal [Stale::CHECKLIST, Stale::README], stale(root)
     end
   end
 

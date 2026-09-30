@@ -16,12 +16,15 @@ require_relative "checklist"
 module Stale
   TABLE = "lib/pennylane_client/operations.rb"
   CHECKLIST = "docs/api/CHECKLIST.md"
+  README = Checklist::Readme::PATH
 
   # What each generated file should hold, keyed by its path under root.
+  # Only the live-verified count in README.md is generated.
   def self.expected(root:, registered:)
     {
       TABLE => OperationTable.generate(contract_root: File.join(root, "docs/api/contract"), relative_to: root),
-      CHECKLIST => Checklist.generate(root: root, registered: registered)
+      CHECKLIST => Checklist.generate(root: root, registered: registered),
+      README => Checklist.readme(root: root)
     }
   end
 

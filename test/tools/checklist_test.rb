@@ -177,6 +177,42 @@ class ChecklistLiveReportsTest < Minitest::Test
   end
 end
 
+class ChecklistReadmeTest < Minitest::Test
+  README = <<~MARKDOWN.freeze
+    # gem
+
+    #{Checklist::Readme::START}
+    anything typed here
+    #{Checklist::Readme::FINISH}
+
+    ## Next
+  MARKDOWN
+
+  def test_replaces_only_the_marked_region_with_the_generated_count
+    updated = Checklist::Readme.update(README, verified: 3, live: 177)
+
+    assert_equal <<~MARKDOWN, updated
+      # gem
+
+      #{Checklist::Readme::START}
+      Live-verified against a Pennylane sandbox: **3 of 177** live operations. The [checklist](docs/api/CHECKLIST.md) lists which, and [CONTRIBUTING.md](CONTRIBUTING.md#verifying-against-a-real-pennylane-sandbox) says how to add to it.
+      #{Checklist::Readme::FINISH}
+
+      ## Next
+    MARKDOWN
+  end
+
+  def test_updating_twice_changes_nothing
+    once = Checklist::Readme.update(README, verified: 0, live: 177)
+
+    assert_equal once, Checklist::Readme.update(once, verified: 0, live: 177)
+  end
+
+  def test_refuses_a_readme_without_the_markers
+    assert_raises(Checklist::Error) { Checklist::Readme.update("# gem\n", verified: 0, live: 177) }
+  end
+end
+
 class ChecklistRenderTest < Minitest::Test
   include ChecklistFixtures
 

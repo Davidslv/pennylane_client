@@ -1,22 +1,22 @@
 # frozen_string_literal: true
 
 # Generate docs/api/CHECKLIST.md from the latest contract snapshot, the
-# generated operation table and the behaviour tests.
+# generated operation table, the behaviour tests and the sandbox reports,
+# and the live-verified count in README.md.
 #
 # Why: "complete" has to be something CI checks, not something we claim.
 # Every column is derived: registered from the operation table, named from
-# behaviour tests that name the operationId, live from sandbox evidence
-# (none yet). Nothing is ticked by hand, so the checklist cannot lie.
+# behaviour tests that name the operationId, live from the reports
+# `rake smoke` writes. Nothing is ticked by hand, so the checklist cannot lie.
 #
 # Standard library only. Run it with `bundle exec rake checklist`.
 
 require "json"
 require_relative "operation_table"
+require_relative "live_reports"
 
 # Renders the operation checklist.
 module Checklist
-  class Error < StandardError; end
-
   PREFIX = "/api/external/v2"
   UNVERIFIED = "unverified: no sandbox access"
   DEPRECATED = "skipped: deprecated"
@@ -73,65 +73,6 @@ module Checklist
       raise Error, "#{file}:#{number}: \"# names: #{id}\" must sit directly above a test method"
     end
     private_class_method :each_marker, :read_line, :refuse_stray
-  end
-
-  # Reads the sandbox reports `rake smoke` writes to docs/api/live/. A report
-  # is JSON:
-  #
-  #   {"format": 1, "verified_on": "2026-10-01", "by": "octocat",
-  #    "operations": {"getMe": "pass", "getJournals": "fail: 403 ..."},
-  #    "checks": {"webhook_signature": "pass"}}
-  #
-  # Reports are read oldest first, so for each operation the latest report
-  # that ran it decides: "pass" verifies it, anything else leaves it
-  # unverified. A check keeps its latest result other than "not run".
-  module LiveReports
-    GLOB = "docs/api/live/*.json"
-    FORMAT = 1
-    DATE = /\A\d{4}-\d{2}-\d{2}\z/
-    # A GitHub username.
-    USER = /\A[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})\z/
-    PASS = "pass"
-    NOT_RUN = "not run"
-
-    # verified: { operationId => [date, user] }
-    # checks:   { check => [result, date, user] }
-    Live = Data.define(:verified, :checks)
-    NONE = Live.new(verified: {}.freeze, checks: {}.freeze)
-
-    def self.scan(root:, known:)
-      reports = Dir.glob(GLOB, base: root).map { |file| read(File.join(root, file), file, known) }
-      reports.sort_by { [_1.fetch("verified_on"), _1.fetch("file")] }
-             .each_with_object(Live.new(verified: {}, checks: {})) { |report, live| apply(report, live) }
-    end
-
-    def self.read(path, file, known)
-      report = JSON.parse(File.read(path))
-      validate(report, file)
-      unknown = report.fetch("operations").keys - known
-      raise Error, "#{file}: #{unknown.join(", ")} not an operationId in the snapshot" if unknown.any?
-
-      report.merge("file" => file)
-    rescue JSON::ParserError, KeyError, NoMethodError => e
-      raise Error, "#{file}: not a sandbox report (#{e.message})"
-    end
-
-    def self.validate(report, file)
-      raise Error, "#{file}: format must be #{FORMAT}" unless report["format"] == FORMAT
-      raise Error, "#{file}: verified_on must be YYYY-MM-DD" unless DATE.match?(report["verified_on"].to_s)
-      raise Error, "#{file}: by must be a GitHub username" unless USER.match?(report["by"].to_s)
-    end
-
-    def self.apply(report, live)
-      stamp = report.values_at("verified_on", "by")
-      report.fetch("operations").each do |id, result|
-        result == PASS ? live.verified[id] = stamp : live.verified.delete(id)
-      end
-      report.fetch("checks", {}).each do |check, result|
-        live.checks[check] = [result, *stamp] unless result == NOT_RUN
-      end
-    end
-    private_class_method :read, :validate, :apply
   end
 
   def self.render(document, source:, registered:, named:, live: LiveReports::NONE)
@@ -236,13 +177,28 @@ module Checklist
   # Reads the latest snapshot, the behaviour tests and the sandbox reports
   # under root and returns the checklist.
   def self.generate(root:, registered:)
-    snapshot = OperationTable.latest_snapshot(File.join(root, "docs/api/contract"))
-    document = JSON.parse(File.read(snapshot))
-    known = document.fetch("operations").map { _1["operation_id"] }
-    render(document, source: snapshot.delete_prefix("#{root}/"),
+    document, source, known = snapshot(root)
+    render(document, source: source,
                      registered: registered, named: NamedTests.scan(root: root, known: known),
                      live: LiveReports.scan(root: root, known: known))
   end
+
+  # Returns README.md under root with its live-verified count regenerated.
+  def self.readme(root:)
+    document, _source, known = snapshot(root)
+    operations = document.fetch("operations")
+    Readme.update(File.read(File.join(root, Readme::PATH)),
+                  verified: verified_count(operations, LiveReports.scan(root: root, known: known)),
+                  live: operations.count { !_1["deprecated"] })
+  end
+
+  # [document, its path under root, its operationIds]
+  def self.snapshot(root)
+    path = OperationTable.latest_snapshot(File.join(root, "docs/api/contract"))
+    document = JSON.parse(File.read(path))
+    [document, path.delete_prefix("#{root}/"), document.fetch("operations").map { _1["operation_id"] }]
+  end
+  private_class_method :snapshot
 end
 
 if $PROGRAM_NAME == __FILE__
@@ -252,4 +208,7 @@ if $PROGRAM_NAME == __FILE__
   target = File.join(root, "docs/api/CHECKLIST.md")
   File.write(target, Checklist.generate(root: root, registered: PennylaneClient::OPERATIONS.map { _1.id.to_s }))
   puts "Wrote #{target}"
+  readme = File.join(root, Checklist::Readme::PATH)
+  File.write(readme, Checklist.readme(root: root))
+  puts "Updated the live-verified count in #{readme}"
 end
