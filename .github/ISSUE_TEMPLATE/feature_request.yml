@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an improvement to pennylane_client
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Coverage of the Company API v2 is tracked operation by operation in the checklist. For a missing Ruby name, say which operationId; every operation is already callable through `client.call`.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is missing or awkward today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-api
+    attributes:
+      label: Proposed API or behaviour
+      render: ruby
+    validations:
+      required: true
+  - type: textarea
+    id: docs
+    attributes:
+      label: Pennylane documentation
+      description: Link the reference page(s) this relies on.
+    validations:
+      required: false
