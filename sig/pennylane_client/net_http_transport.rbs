@@ -21,6 +21,14 @@ module PennylaneClient
 
     private
 
+    @open_timeout: Numeric
+    @read_timeout: Numeric
+    @write_timeout: Numeric
+    @upload_timeout: Numeric
+    @keep_alive_timeout: Numeric
+    @key: Symbol
+
+    def exchange: (Request request, untyped uri) -> Response
     def send_request: (untyped http, Request request, untyped uri) -> untyped
     def stream?: (untyped body) -> bool
 

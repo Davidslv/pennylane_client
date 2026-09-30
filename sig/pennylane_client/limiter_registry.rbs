@@ -18,6 +18,13 @@ module PennylaneClient
 
     private
 
+    @build: ^(String key) -> _Limiter
+    @idle_after: Float
+    @clock: ^() -> Float
+    @limiters: Hash[String, untyped]
+    @sweep_at: Float?
+    @lock: Thread::Mutex
+
     def touch: (String key) -> _Limiter?
     def store: (String key, _Limiter limiter) -> _Limiter
     def sweep: (Float now) -> void

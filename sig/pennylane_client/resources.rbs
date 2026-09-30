@@ -1,7 +1,6 @@
 module PennylaneClient
   module Resources
     type item = Hash[Symbol, untyped]
-    type result = Hash[Symbol, untyped] | bool
     # What Multipart streams as a file part.
     type file = File | IO | StringIO | Pathname | Upload
 
@@ -34,7 +33,7 @@ module PennylaneClient
 
       def update: (Integer id, **untyped attributes) -> item
 
-      def delete: (Integer id) -> result
+      def delete: (Integer id) -> true
 
       def create_from_quote: (**untyped attributes) -> item
 
@@ -44,19 +43,19 @@ module PennylaneClient
 
       def finalize: (Integer id) -> item
 
-      def mark_as_paid: (Integer id) -> result
+      def mark_as_paid: (Integer id) -> true
 
-      def mark_installment_as_paid: (Integer customer_invoice_id, Integer id) -> result
+      def mark_installment_as_paid: (Integer customer_invoice_id, Integer id) -> true
 
-      def send_by_email: (Integer id, **untyped fields) -> result
+      def send_by_email: (Integer id, **untyped fields) -> true
 
-      def send_to_pa: (Integer id) -> result
+      def send_to_pa: (Integer id) -> true
 
       def link_credit_note: (Integer id, credit_note_id: Integer) -> item
 
-      def match_transaction: (Integer customer_invoice_id, transaction_id: Integer) -> result
+      def match_transaction: (Integer customer_invoice_id, transaction_id: Integer) -> true
 
-      def unmatch_transaction: (Integer customer_invoice_id, Integer transaction_id) -> result
+      def unmatch_transaction: (Integer customer_invoice_id, Integer transaction_id) -> true
 
       def update_imported: (Integer id, **untyped attributes) -> item
 
@@ -106,7 +105,7 @@ module PennylaneClient
 
       def update_contact: (Integer customer_id, Integer id, **untyped attributes) -> item
 
-      def delete_contact: (Integer customer_id, Integer id) -> result
+      def delete_contact: (Integer customer_id, Integer id) -> true
 
       def categories: (Integer customer_id, **untyped params) -> Enumerator::Lazy[item, void]
 
@@ -126,15 +125,15 @@ module PennylaneClient
 
       def validate_accounting: (Integer id) -> item
 
-      def update_payment_status: (Integer supplier_invoice_id, payment_status: "paid" | "to_be_paid") -> result
+      def update_payment_status: (Integer supplier_invoice_id, payment_status: "paid" | "to_be_paid") -> true
 
       def update_e_invoice_status: (Integer supplier_invoice_id, status: "disputed" | "refused" | "approved", **untyped fields) -> item
 
-      def link_purchase_request: (Integer supplier_invoice_id, purchase_request_id: Integer) -> result
+      def link_purchase_request: (Integer supplier_invoice_id, purchase_request_id: Integer) -> true
 
-      def match_transaction: (Integer supplier_invoice_id, transaction_id: Integer) -> result
+      def match_transaction: (Integer supplier_invoice_id, transaction_id: Integer) -> true
 
-      def unmatch_transaction: (Integer supplier_invoice_id, Integer transaction_id) -> result
+      def unmatch_transaction: (Integer supplier_invoice_id, Integer transaction_id) -> true
 
       def invoice_lines: (Integer supplier_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
 
@@ -170,7 +169,7 @@ module PennylaneClient
 
       def update: (Integer id, **untyped attributes) -> item
 
-      def delete: (Integer id) -> result
+      def delete: (Integer id) -> true
     end
 
     class GocardlessMandates < Resource
@@ -178,17 +177,17 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def send_request: (customer_id: Integer, email: { recipients: Array[String], ?subject: String?, ?body: String? }) -> result
+      def send_request: (customer_id: Integer, email: { recipients: Array[String], ?subject: String?, ?body: String? }) -> true
 
-      def associate: (Integer gocardless_mandate_id, customer_id: Integer) -> result
+      def associate: (Integer gocardless_mandate_id, customer_id: Integer) -> true
 
-      def cancel: (Integer gocardless_mandate_id) -> result
+      def cancel: (Integer gocardless_mandate_id) -> true
     end
 
     class ProAccountMandates < Resource
       def list: (**untyped params) -> Enumerator::Lazy[item, void]
 
-      def send_request: (customer_id: Integer) -> result
+      def send_request: (customer_id: Integer) -> true
 
       def migration_candidates: (**untyped params) -> Enumerator::Lazy[item, void]
 
@@ -232,7 +231,7 @@ module PennylaneClient
 
       def update: (Integer id, **untyped attributes) -> item
 
-      def send_by_email: (Integer id, **untyped fields) -> result
+      def send_by_email: (Integer id, **untyped fields) -> true
 
       def update_status: (Integer id, status: "pending" | "accepted" | "denied" | "invoiced" | "expired") -> item
 
@@ -320,7 +319,7 @@ module PennylaneClient
                    unbalanced_lettering_strategy: unbalanced_lettering_strategy) -> Array[item]
 
       def unletter: (Array[{ id: Integer }] ledger_entry_lines,
-                     unbalanced_lettering_strategy: unbalanced_lettering_strategy) -> result
+                     unbalanced_lettering_strategy: unbalanced_lettering_strategy) -> true
 
       def lettered_lines: (Integer ledger_entry_line_id, **untyped params) -> Enumerator::Lazy[item, void]
 
@@ -330,7 +329,7 @@ module PennylaneClient
     end
 
     class TrialBalance < Resource
-      def list: (period_start: untyped, period_end: untyped, **untyped params) -> Enumerator::Lazy[item, void]
+      def list: (period_start: Date | String, period_end: Date | String, **untyped params) -> Enumerator::Lazy[item, void]
     end
 
     class Categories < Resource
@@ -462,7 +461,7 @@ module PennylaneClient
 
       def update: (Integer id, **untyped attributes) -> item
 
-      def delete: (Integer id) -> result
+      def delete: (Integer id) -> true
     end
   end
 end

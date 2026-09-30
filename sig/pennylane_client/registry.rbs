@@ -12,5 +12,9 @@ module PennylaneClient
     def fetch: (Symbol | String id) -> Operation
 
     def size: () -> Integer
+
+    private
+
+    @operations: Hash[Symbol, Operation]
   end
 end

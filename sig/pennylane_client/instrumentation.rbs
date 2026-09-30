@@ -8,6 +8,9 @@ module PennylaneClient
 
     private
 
+    @logger: untyped
+    @on_request: (^(event) -> void)?
+
     def guard: (?String prefix) { () -> void } -> void
     def report_failure: (String line) -> void
     def log: (event event) -> void

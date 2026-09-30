@@ -12,6 +12,10 @@ module PennylaneClient
 
     private
 
+    @registry: Registry
+    @transport: _Transport
+    @base_url: String
+
     def build: (Operation operation, Hash[Symbol, untyped] params, untyped body) -> Request
     def explicit_body: (Operation operation, Hash[Symbol, untyped] rest, untyped body) -> untyped
     def refuse_path_keys: (Operation operation, Hash[untyped, untyped] body) -> void
