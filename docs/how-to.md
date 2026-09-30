@@ -92,6 +92,8 @@ end
 client.paginate(:getCustomerInvoices).first(10)   # one request
 ```
 
+A named list method does the same: `client.customer_invoices.list(filter: drafts, sort: "-id")`.
+
 Each page asks for the largest `limit` the operation allows (100, or 1000 for the changelogs, ledger accounts and trial balance). Pass a smaller `limit:` to get smaller pages. To see each page, with `has_more` and `next_cursor`, use `client.pages` instead.
 
 ## Upload a file
@@ -114,6 +116,46 @@ client.call(:createCustomerInvoiceEInvoiceImport, file: xml, invoice_options: { 
 ```
 
 An upload gets 300 s to read and write. Change it with `PennylaneClient::NetHttpTransport.new(upload_timeout: 600)`, passed as `transport:`. A file you open stays open; the client closes only what it opened from a `Pathname`. An IO must respond to `size`, so a pipe cannot be uploaded.
+
+## Work with customer invoices
+
+`client.customer_invoices` names every Customer Invoices operation. Most names say what they do (`find`, `update`, `finalize`, `mark_as_paid`). These are the ones you would not guess.
+
+Every list walks all its pages lazily, including the ones under one invoice:
+
+```ruby
+invoices = client.customer_invoices
+
+invoices.invoice_lines(42).each { |line| ... }
+invoices.payments(42, sort: "-id").first(5)
+# also: invoice_line_sections, matched_transactions, custom_header_fields, appendices, categories
+```
+
+`send_by_email` and `send_to_pa` raise `ConflictError` while Pennylane is still generating the PDF or processing an e-invoice import. The client never retries a 409, so try again later:
+
+```ruby
+invoices.send_by_email(42)                                     # to the customer's addresses
+invoices.send_by_email(42, recipients: ["billing@example.com"])
+invoices.send_to_pa(42)                                        # to the Partner Dematerialization Platform
+```
+
+`categorize` replaces an invoice's categories. The body is a bare array, so it is the second argument. Within one category group the weights must add up to 1:
+
+```ruby
+invoices.categorize(42, [{ id: 426, weight: "0.6575" }, { id: 427, weight: "0.3425" }])
+```
+
+Three ways to bring in an invoice issued elsewhere:
+
+```ruby
+invoices.create_from_quote(quote_id: 9, draft: true)
+invoices.import(file_attachment_id: 5, customer_id: 7, ...)     # PDF uploaded first with postFileAttachments
+invoices.import_e_invoice(Pathname("facturx.pdf"), invoice_options: { customer_id: 7 })
+```
+
+`import` stores the amounts exactly as sent, so they must add up. `import_e_invoice` takes a Factur-X PDF, or a UBL or CII XML invoice (alpha at Pennylane), and streams it like any [upload](#upload-a-file). `upload_appendix(42, file)` attaches a PDF or image to an invoice the same way.
+
+`link_credit_note(42, 43)` links credit note 43 to invoice 42. `mark_installment_as_paid(42, 3)` marks one installment paid; Pennylane tags it Hidden and alpha, so it may change.
 
 ## Handle a validation error
 
