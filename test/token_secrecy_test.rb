@@ -14,7 +14,7 @@ class TokenSecrecyTest < Minitest::Test
   RESOURCES = %i[customer_invoices customers supplier_invoices suppliers sepa_mandates gocardless_mandates
                  pro_account_mandates bank_accounts bank_establishments transactions quotes commercial_documents
                  customer_invoice_templates numberings journals fiscal_years file_attachments
-                 ledger_accounts ledger_entries].freeze
+                 ledger_accounts ledger_entries ledger_entry_lines].freeze
 
   # max_retry_wait: 0 keeps backoff retries, and their real sleeps, out of
   # the suite; a 429 with retry-after 0 still retries.

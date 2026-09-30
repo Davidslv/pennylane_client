@@ -302,5 +302,25 @@ module PennylaneClient
 
       def lines: (Integer ledger_entry_id, **untyped params) -> Enumerator::Lazy[item, void]
     end
+
+    type unbalanced_lettering_strategy = "none" | "partial"
+
+    class LedgerEntryLines < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def letter: (Array[{ id: Integer }] ledger_entry_lines,
+                   unbalanced_lettering_strategy: unbalanced_lettering_strategy) -> Array[item]
+
+      def unletter: (Array[{ id: Integer }] ledger_entry_lines,
+                     unbalanced_lettering_strategy: unbalanced_lettering_strategy) -> result
+
+      def lettered_lines: (Integer ledger_entry_line_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def categories: (Integer ledger_entry_line_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def categorize: (Integer ledger_entry_line_id, Array[{ id: Integer, weight: untyped }] categories) -> item
+    end
   end
 end

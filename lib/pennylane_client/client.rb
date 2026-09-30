@@ -125,6 +125,10 @@ module PennylaneClient
     # The named Ledger Entries operations (Resources::LedgerEntries).
     def ledger_entries = @ledger_entries ||= Resources::LedgerEntries.new(self)
 
+    # The named Ledger Entry Lines operations, lettering included
+    # (Resources::LedgerEntryLines).
+    def ledger_entry_lines = @ledger_entry_lines ||= Resources::LedgerEntryLines.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

@@ -55,6 +55,8 @@ module PennylaneClient
 
     def ledger_entries: () -> Resources::LedgerEntries
 
+    def ledger_entry_lines: () -> Resources::LedgerEntryLines
+
     def inspect: () -> String
 
     private
@@ -96,6 +98,8 @@ module PennylaneClient
     @ledger_accounts: Resources::LedgerAccounts?
 
     @ledger_entries: Resources::LedgerEntries?
+
+    @ledger_entry_lines: Resources::LedgerEntryLines?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end
