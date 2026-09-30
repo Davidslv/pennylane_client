@@ -135,6 +135,8 @@ module PennylaneClient
 
   # The documented statuses (errors guide). Any other 5xx is a ServerError;
   # anything else is the base Error.
+  #
+  # @api private
   STATUS_ERRORS = {
     400 => ValidationError,
     401 => AuthenticationError,

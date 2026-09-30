@@ -27,6 +27,7 @@ Instructions for AI agents (and humans) working in this repository.
 - Domain language is in `CONTEXT.md`. Say Operation, not endpoint. Registered and Named have precise meanings.
 - Design decisions live in `proposals/`. The current plan is proposal 0001 and Epic #1.
 - Public behaviour changes update `README.md` and `docs/` in the same change.
+- A new constant under `PennylaneClient` is either listed in the README's Public API section or tagged `@api private` where it is defined. `test/public_api_test.rb` fails on one that is neither. A method that wraps an operation Pennylane marks Hidden, alpha or beta carries `@note Experimental:` and goes in the README's Stability list (`test/stability_test.rb`).
 
 ## Repository map
 

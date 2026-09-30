@@ -13,6 +13,8 @@ module PennylaneClient
     #
     # Limiters come from a LimiterRegistry, keyed by the SHA-256 of the
     # token so the token is never a key. A wait emits a `type: :wait` event.
+    #
+    # @api private
     class RateLimit
       def initialize(app, limiters, instrumentation)
         @app = app

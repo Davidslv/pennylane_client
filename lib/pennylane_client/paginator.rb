@@ -21,6 +21,8 @@ module PennylaneClient
   #
   # Both `items` and `pages` start again from the first page each time they
   # are enumerated.
+  #
+  # @api private
   class Paginator
     FIRST_PAGE_ONLY = %i[start_date].freeze
 

@@ -13,6 +13,8 @@ module PennylaneClient
     # Holds the Client and gives subclasses `call` and `paginate`, and
     # `call_on` and `paginate_on` for a method that takes the Operation's
     # path parameters positionally. No state of its own.
+    #
+    # @api private
     class Resource
       def initialize(client)
         @client = client
