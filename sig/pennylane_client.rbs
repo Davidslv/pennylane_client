@@ -1,0 +1,3 @@
+module PennylaneClient
+  VERSION: String
+end

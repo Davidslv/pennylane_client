@@ -1,1 +1,10 @@
 .DS_Store
+.claude/settings.local.json
+Gemfile.lock
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/tmp/
