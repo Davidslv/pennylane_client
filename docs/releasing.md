@@ -13,9 +13,12 @@ Done once per gem, by the maintainer.
 ## Each release
 
 1. On a branch, set `PennylaneClient::VERSION` in `lib/pennylane_client/version.rb`.
-2. Move the `[Unreleased]` entries in `CHANGELOG.md` under `## [x.y.z] - YYYY-MM-DD`, and update the compare links at the bottom. The gate fails if the version has no dated entry.
-3. Merge the pull request with the gate green.
-4. Tag the merge commit and push the tag:
+2. Move the `[Unreleased]` entries in `CHANGELOG.md` under `## [x.y.z] - YYYY-MM-DD`, leave `## [Unreleased]` empty above it, and update the compare links at the bottom. The gate fails if the version has no dated entry in exactly that form, or no `[x.y.z]:` link to its release tag (`test/gemspec_test.rb`).
+
+   The first release, 0.1.0, already has its entry. Its date, 2026-09-30, is a placeholder: set it to the day you tag.
+3. If the middleware or the transport changed since the last release, run `bundle exec rake load` and `bundle exec rake stress` and update [performance.md](performance.md) in the same pull request.
+4. Merge the pull request with the gate green.
+5. Tag the merge commit and push the tag:
 
    ```sh
    git checkout main && git pull --ff-only
@@ -23,7 +26,7 @@ Done once per gem, by the maintainer.
    git push origin vX.Y.Z
    ```
 
-5. The Release workflow checks the tag matches `VERSION`, runs the gate, installs the built gem and loads it outside the repo, then publishes. Approve the `release` environment if it asks.
+6. The Release workflow checks the tag matches `VERSION`, runs the gate, installs the built gem and loads it outside the repo, then publishes. Approve the `release` environment if it asks.
 
 ## Check the release
 
