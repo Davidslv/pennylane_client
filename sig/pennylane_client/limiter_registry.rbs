@@ -8,11 +8,19 @@ module PennylaneClient
     include _LimiterRegistry
 
     DEFAULT: LimiterRegistry
+    IDLE_AFTER: Float
 
     def self.default: () -> LimiterRegistry
 
-    def initialize: () ?{ (String key) -> _Limiter } -> void
+    def initialize: (?idle_after: Numeric, ?clock: ^() -> Float) ?{ (String key) -> _Limiter } -> void
 
     def inspect: () -> String
+
+    private
+
+    def touch: (String key) -> _Limiter?
+    def store: (String key, _Limiter limiter) -> _Limiter
+    def sweep: (Float now) -> void
+    def idle?: (_Limiter limiter) -> bool
   end
 end

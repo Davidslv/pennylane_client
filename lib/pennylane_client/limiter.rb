@@ -24,6 +24,7 @@ module PennylaneClient
       @lock = Mutex.new
       @remaining = limit
       @reset_at = nil
+      @waiting = 0
     end
 
     # Takes one call from the bucket, sleeping until the window resets when
@@ -31,12 +32,18 @@ module PennylaneClient
     def acquire
       waited = 0.0
       loop do
-        wait = @lock.synchronize { take }
+        wait = @lock.synchronize { take.tap { @waiting += 1 if _1.positive? } }
         return waited unless wait.positive?
 
-        @sleeper.call(wait)
+        sleep_for(wait)
         waited += wait
       end
+    end
+
+    # Whether a new Limiter would do the same: the window has ended and no
+    # thread waits on this one. LimiterRegistry drops idle limiters.
+    def idle?
+      @lock.synchronize { @waiting.zero? && (@reset_at.nil? || @clock.call >= @reset_at) }
     end
 
     # Corrects the bucket from a response's rate-limit headers. Pennylane's
@@ -55,6 +62,12 @@ module PennylaneClient
     def inspect = "#<#{self.class.name} limit=#{@limit} period=#{@period}>"
 
     private
+
+    def sleep_for(wait)
+      @sleeper.call(wait)
+    ensure
+      @lock.synchronize { @waiting -= 1 }
+    end
 
     # Returns 0 when a call was taken, else the seconds until the reset.
     def take

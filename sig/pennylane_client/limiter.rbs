@@ -10,10 +10,13 @@ module PennylaneClient
 
     def initialize: (?limit: Integer, ?period: Numeric, ?clock: ^() -> Float, ?sleeper: ^(Float) -> void) -> void
 
+    def idle?: () -> bool
+
     def inspect: () -> String
 
     private
 
+    def sleep_for: (Float wait) -> void
     def take: () -> Float
     def plausible?: (Float reset_at, Float now) -> bool
     def refill: (Float now) -> void

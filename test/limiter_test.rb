@@ -83,6 +83,16 @@ class LimiterTest < Minitest::Test
     assert_equal [0.0, 5.0], Array.new(2) { @limiter.acquire }
   end
 
+  def test_is_idle_once_its_window_has_ended
+    assert_predicate @limiter, :idle?
+    @limiter.acquire
+
+    refute_predicate @limiter, :idle?
+    @time.sleeper.call(5)
+
+    assert_predicate @limiter, :idle?
+  end
+
   def test_limit_and_period_are_configurable
     limiter = PennylaneClient::Limiter.new(limit: 2, period: 1, clock: @time.clock, sleeper: @time.sleeper)
 
