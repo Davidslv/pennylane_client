@@ -81,3 +81,77 @@ class CustomerInvoicesTest < Minitest::Test
     assert_raises(PennylaneClient::NotFoundError) { invoices.find(404) }
   end
 end
+
+# What happens to an invoice after it exists: finalize, pay, send, link.
+class CustomerInvoiceActionsTest < Minitest::Test
+  include CustomerInvoicesTestHelper
+
+  # names: finalizeCustomerInvoice
+  def test_finalize_sends_no_body
+    stub_request(:put, "#{API}/customer_invoices/42/finalize")
+      .with(body: nil)
+      .to_return(status: 200, body: '{"id":42,"status":"upcoming"}')
+
+    assert_equal({ id: 42, status: "upcoming" }, invoices.finalize(42))
+  end
+
+  # names: markAsPaidCustomerInvoice
+  def test_mark_as_paid
+    stub_request(:put, "#{API}/customer_invoices/42/mark_as_paid").to_return(status: 204)
+
+    assert invoices.mark_as_paid(42)
+  end
+
+  # names: markAsPaidCustomerInvoiceInstallment
+  def test_mark_installment_as_paid
+    stub_request(:put, "#{API}/customer_invoices/42/installments/3/mark_as_paid").to_return(status: 204)
+
+    assert invoices.mark_installment_as_paid(42, 3)
+  end
+
+  # names: sendByEmailCustomerInvoice
+  def test_send_by_email_to_given_recipients
+    stub_request(:post, "#{API}/customer_invoices/42/send_by_email")
+      .with(body: '{"recipients":["billing@example.com"]}').to_return(status: 204)
+
+    assert invoices.send_by_email(42, recipients: ["billing@example.com"])
+  end
+
+  def test_send_by_email_to_the_customer_by_default
+    stub_request(:post, "#{API}/customer_invoices/42/send_by_email").with(body: "{}").to_return(status: 204)
+
+    assert invoices.send_by_email(42)
+  end
+
+  # Pennylane answers 409 while the PDF is still being generated.
+  def test_send_by_email_before_the_pdf_exists_raises_conflict
+    stub_request(:post, "#{API}/customer_invoices/42/send_by_email").to_return(status: 409, body: "{}")
+
+    assert_raises(PennylaneClient::ConflictError) { invoices.send_by_email(42) }
+  end
+
+  # names: sendToPaCustomerInvoice
+  def test_send_to_pa
+    stub_request(:post, "#{API}/customer_invoices/42/send_to_pa").with(body: nil).to_return(status: 204)
+
+    assert invoices.send_to_pa(42)
+  end
+
+  # names: linkCreditNote
+  def test_link_credit_note
+    stub_request(:post, "#{API}/customer_invoices/42/link_credit_note")
+      .with(body: '{"credit_note_id":43}')
+      .to_return(status: 200, body: '{"id":42}')
+
+    assert_equal({ id: 42 }, invoices.link_credit_note(42, 43))
+  end
+
+  # names: updateImportedCustomerInvoice
+  def test_update_imported
+    stub_request(:put, "#{API}/customer_invoices/42/update_imported")
+      .with(body: '{"invoice_number":"F-7"}')
+      .to_return(status: 200, body: '{"id":42}')
+
+    assert_equal({ id: 42 }, invoices.update_imported(42, invoice_number: "F-7"))
+  end
+end

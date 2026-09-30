@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 5 of 177 live |
+| Named | 12 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (0 of 3 named)
@@ -103,7 +103,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `getCustomerInvoiceTemplates` | GET | `/customer_invoice_templates` | yes | no | unverified: no sandbox access |  |
 
-## Customer Invoices (5 of 23 named)
+## Customer Invoices (11 of 23 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
@@ -124,12 +124,12 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `deleteCustomerInvoices` | DELETE | `/customer_invoices/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_delete_returns_true_on_no_content` |
 | `getCustomerInvoice` | GET | `/customer_invoices/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_find` |
 | `updateCustomerInvoice` | PUT | `/customer_invoices/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_update` |
-| `finalizeCustomerInvoice` | PUT | `/customer_invoices/{id}/finalize` | yes | no | unverified: no sandbox access |  |
-| `linkCreditNote` | POST | `/customer_invoices/{id}/link_credit_note` | yes | no | unverified: no sandbox access |  |
-| `markAsPaidCustomerInvoice` | PUT | `/customer_invoices/{id}/mark_as_paid` | yes | no | unverified: no sandbox access |  |
-| `sendByEmailCustomerInvoice` | POST | `/customer_invoices/{id}/send_by_email` | yes | no | unverified: no sandbox access |  |
-| `sendToPaCustomerInvoice` | POST | `/customer_invoices/{id}/send_to_pa` | yes | no | unverified: no sandbox access |  |
-| `updateImportedCustomerInvoice` | PUT | `/customer_invoices/{id}/update_imported` | yes | no | unverified: no sandbox access |  |
+| `finalizeCustomerInvoice` | PUT | `/customer_invoices/{id}/finalize` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_finalize_sends_no_body` |
+| `linkCreditNote` | POST | `/customer_invoices/{id}/link_credit_note` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_link_credit_note` |
+| `markAsPaidCustomerInvoice` | PUT | `/customer_invoices/{id}/mark_as_paid` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_mark_as_paid` |
+| `sendByEmailCustomerInvoice` | POST | `/customer_invoices/{id}/send_by_email` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_send_by_email_to_given_recipients` |
+| `sendToPaCustomerInvoice` | POST | `/customer_invoices/{id}/send_to_pa` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_send_to_pa` |
+| `updateImportedCustomerInvoice` | PUT | `/customer_invoices/{id}/update_imported` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_update_imported` |
 
 ## Customers (0 of 15 named)
 
@@ -174,11 +174,11 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `company-fiscal-years` | GET | `/fiscal_years` | yes | no | unverified: no sandbox access |  |
 
-## Hidden (0 of 2 named)
+## Hidden (1 of 2 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `markAsPaidCustomerInvoiceInstallment` | PUT | `/customer_invoices/{customer_invoice_id}/installments/{id}/mark_as_paid` | yes | no | unverified: no sandbox access |  |
+| `markAsPaidCustomerInvoiceInstallment` | PUT | `/customer_invoices/{customer_invoice_id}/installments/{id}/mark_as_paid` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_mark_installment_as_paid` |
 | `postCustomer` | POST | `/customers` | yes | no | unverified: no sandbox access |  |
 
 ## Journals (0 of 3 named)
