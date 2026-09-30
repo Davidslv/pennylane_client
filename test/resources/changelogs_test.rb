@@ -33,23 +33,23 @@ class ChangelogsTest < Minitest::Test
   def test_customer_invoices_walks_on_by_cursor_without_start_date
     since = { start_date: "2026-09-29T10:00:00Z", limit: "1000" }
     stub_request(:get, "#{API}/changelogs/customer_invoices").with(query: since)
-                                                              .to_return(status: 200, body: page(1, next_cursor: "c2"))
+                                                             .to_return(status: 200, body: page(1, next_cursor: "c2"))
     stub_request(:get, "#{API}/changelogs/customer_invoices").with(query: { cursor: "c2", limit: "1000" })
-                                                              .to_return(status: 200, body: page(2))
+                                                             .to_return(status: 200, body: page(2))
 
     assert_equal [1, 2], ids(changelogs.customer_invoices(since: SINCE))
   end
 
   def test_without_since_starts_from_the_oldest_change
     stub_request(:get, "#{API}/changelogs/customer_invoices").with(query: { limit: "1000" })
-                                                              .to_return(status: 200, body: page(1))
+                                                             .to_return(status: 200, body: page(1))
 
     assert_equal [1], ids(changelogs.customer_invoices)
   end
 
   def test_resumes_from_a_saved_cursor
     stub_request(:get, "#{API}/changelogs/customers").with(query: { cursor: "saved", limit: "1000" })
-                                                      .to_return(status: 200, body: page(3))
+                                                     .to_return(status: 200, body: page(3))
 
     assert_equal [3], ids(changelogs.customers(cursor: "saved"))
   end
