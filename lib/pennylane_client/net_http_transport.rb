@@ -67,9 +67,9 @@ module PennylaneClient
     rescue *CONNECTION_ERRORS => e
       fail_with(ConnectionError, e, uri)
     ensure
-      # Anything else that cuts the call short (Timeout.timeout,
-      # rack-timeout, Interrupt) may leave a request sent and its answer
-      # unread. Reusing that connection would hand the answer to the next
+      # A failure above, or anything else that cuts the call short
+      # (Timeout.timeout, rack-timeout, Interrupt), may leave a request sent
+      # and its answer unread. Reusing that connection would hand the answer to the next
       # call, whichever token it is for, so it is dropped.
       drop(uri) if uri && response.nil?
     end
@@ -147,8 +147,8 @@ module PennylaneClient
       Response.new(status: response.code.to_i, headers: response.each_header.to_h, body:)
     end
 
+    # The ensure in #call drops the connection.
     def fail_with(klass, error, uri)
-      drop(uri)
       raise klass, "#{error.class}: #{error.message} (#{uri.host})"
     end
 
