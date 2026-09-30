@@ -116,6 +116,11 @@ module PennylaneClient
     end
   end
 
+  # An inbound webhook failed verification (Webhook.verify!): the header is
+  # missing or malformed, the signature does not match, the timestamp is
+  # stale, or the body is not a JSON object.
+  class SignatureError < Error; end
+
   # The documented statuses (errors guide). Any other 5xx is a ServerError;
   # anything else is the base Error.
   STATUS_ERRORS = {

@@ -1,0 +1,17 @@
+module PennylaneClient
+  module Webhook
+    HEADER: String
+    DEFAULT_TOLERANCE: Integer
+    TIMESTAMP: Regexp
+    DIGEST_HEX: Regexp
+
+    def self?.verify!: (String raw_body, untyped signature_header, secret: String, ?tolerance: Integer?, ?now: Time | Integer) -> Hash[Symbol, untyped]
+
+    private
+
+    def self?.parse: (untyped header) -> [String, Array[String]]
+    def self?.fields: (untyped header) -> Hash[String, Array[String]]
+    def self?.authenticate: (String raw_body, String timestamp, Array[String] signatures, String secret) -> void
+    def self?.event: (String raw_body) -> Hash[Symbol, untyped]
+  end
+end

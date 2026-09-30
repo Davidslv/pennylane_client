@@ -54,5 +54,8 @@ module PennylaneClient
     def initialize: (String message, export: Hash[Symbol, untyped]) -> void
   end
 
+  class SignatureError < Error
+  end
+
   STATUS_ERRORS: Hash[Integer, singleton(Error)]
 end

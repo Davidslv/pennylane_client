@@ -507,6 +507,27 @@ The create response is the only place the secret appears. `find` and `list` leav
 
 Pennylane can disable a subscription whose endpoint keeps failing. `find(id)` shows `enabled`, `disabled_reason` and `consecutive_failures`. `update(id, enabled: true)` sends the flag to turn it back on; the contract does not say whether that works after a `permanent_error`.
 
+## Verify an inbound webhook
+
+Pennylane signs each delivery with `X-Pennylane-Signature: t=<unix seconds>,v1=<hex>`. `Webhook.verify!` recomputes the HMAC-SHA256 of `"{t}.{raw_body}"` with the subscription secret, compares it in constant time, rejects a `t` more than `tolerance` seconds (default 300) from now, and returns the event as a deep-frozen Hash with symbol keys.
+
+```ruby
+# Rails
+def create
+  event = PennylaneClient::Webhook.verify!(request.raw_post, request.headers["X-Pennylane-Signature"],
+                                           secret: ENV.fetch("PENNYLANE_WEBHOOK_SECRET"))
+  ProcessPennylaneEvent.perform_later(event[:id], event[:event], event[:data]) unless seen?(event[:id])
+  head :ok
+rescue PennylaneClient::SignatureError
+  head :bad_request
+end
+```
+
+- Pass the raw body bytes as received. Parsing and re-serialising the JSON changes the bytes and the signature will not match.
+- Delivery is at-least-once and unordered. De-duplicate on the delivery `event[:id]`, and reconcile state from the payload, not from arrival order. Storing seen ids is up to you.
+- Answer 2xx within a few seconds and do the work in a background job; a slow answer counts as a failed delivery and is retried.
+- `tolerance: nil` skips the timestamp check. A header that is missing, malformed or in a broken encoding raises `SignatureError`, never anything else. `SignatureError` never carries the secret or the expected digest. A blank secret raises `ArgumentError`.
+
 ## Handle a validation error
 
 ```ruby

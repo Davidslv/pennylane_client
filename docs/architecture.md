@@ -23,7 +23,8 @@ How the gem is put together, and why. Written for someone about to change the co
 | `PennylaneClient::Middleware::Auth`, `Retry`, `RateLimit`, `Instrument` | `lib/pennylane_client/middleware/` | One policy each, every one `call(request) -> Response` around the next. |
 | `PennylaneClient::Limiter`, `LimiterRegistry` | `lib/pennylane_client/limiter.rb`, `limiter_registry.rb` | The per-token bucket, 25 per 5 s, and the process-wide lookup that shares one per token. |
 | `PennylaneClient::NetHttpTransport` | `lib/pennylane_client/net_http_transport.rb` | The default Transport, on `Net::HTTP`. |
-| `PennylaneClient::Error` and subclasses | `lib/pennylane_client/errors.rb` | One class per documented status, plus `ConnectionError`, `TimeoutError` and `ExportError`. |
+| `PennylaneClient::Error` and subclasses | `lib/pennylane_client/errors.rb` | One class per documented status, plus `ConnectionError`, `TimeoutError`, `ExportError` and `SignatureError`. |
+| `PennylaneClient::Webhook` | `lib/pennylane_client/webhook.rb` | `verify!` checks an inbound delivery's `X-Pennylane-Signature` (HMAC-SHA256 of `"{t}.{raw_body}"`, `OpenSSL.fixed_length_secure_compare`, 300 s tolerance) and returns the deep-frozen event, or raises `SignatureError`. It uses no Client. |
 | `PennylaneClient::Instrumentation`, `Configuration` | `lib/pennylane_client/instrumentation.rb`, `configuration.rb` | One log line and one `on_request` event per attempt, retry and rate-limit wait. `PennylaneClient.configure` sets the defaults. |
 | `SnapshotContract` (dev time, not shipped) | `tools/snapshot_contract.rb` | Builds the dated [contract snapshot](api/README.md) in `docs/api/contract/<date>/`. Run by `rake contract:snapshot`. |
 | `OperationTable` (dev time, not shipped) | `tools/operation_table.rb` | Generates `operations.rb` from the latest snapshot. Run by `rake contract:sync`. |
