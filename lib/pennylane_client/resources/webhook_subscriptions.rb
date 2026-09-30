@@ -31,7 +31,7 @@ module PennylaneClient
 
       # Updates a webhook subscription: `callback_url:`, `events:` or
       # `enabled:`. It takes no secret; a new subscription gets a new one.
-      def update(id, **attributes) = call(:putWebhookSubscription, id:, **attributes)
+      def update(id, **attributes) = call_on(:putWebhookSubscription, { id: }, **attributes)
 
       # Deletes a webhook subscription.
       def delete(id) = call(:deleteWebhookSubscription, id:)

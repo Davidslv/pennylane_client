@@ -34,12 +34,12 @@ module PennylaneClient
       # Sets the transaction's third party: pass either `customer_id:` or
       # `supplier_id:`, not both. Pennylane accepts nothing else here. Both
       # are nullable in the contract, so `nil` sends `null`.
-      def update(id, **attributes) = call(:updateTransaction, id:, **attributes)
+      def update(id, **attributes) = call_on(:updateTransaction, { id: }, **attributes)
 
       # The analytical categories the transaction is split across, as an
       # Enumerator::Lazy of Hashes. No `sort:`.
       def categories(transaction_id, **params)
-        paginate(:getTransactionCategories, transaction_id:, **params)
+        paginate_on(:getTransactionCategories, { transaction_id: }, **params)
       end
 
       # Replaces the transaction's categories. `categories` is an Array of
@@ -54,7 +54,7 @@ module PennylaneClient
       # The customer and supplier invoices matched to the transaction, as an
       # Enumerator::Lazy of Hashes. No `sort:`.
       def matched_invoices(transaction_id, **params)
-        paginate(:getTransactionMatchedInvoices, transaction_id:, **params)
+        paginate_on(:getTransactionMatchedInvoices, { transaction_id: }, **params)
       end
     end
   end

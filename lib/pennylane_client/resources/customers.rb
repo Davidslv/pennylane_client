@@ -40,7 +40,7 @@ module PennylaneClient
       def find_company(id) = call(:getCompanyCustomer, id:)
 
       # Updates a company customer. Only the attributes you pass change.
-      def update_company(id, **attributes) = call(:putCompanyCustomer, id:, **attributes)
+      def update_company(id, **attributes) = call_on(:putCompanyCustomer, { id: }, **attributes)
 
       # Creates an individual customer. Pennylane requires `first_name:`,
       # `last_name:` and `billing_address:`.
@@ -50,12 +50,12 @@ module PennylaneClient
       def find_individual(id) = call(:getIndividualCustomer, id:)
 
       # Updates an individual customer. Only the attributes you pass change.
-      def update_individual(id, **attributes) = call(:putIndividualCustomer, id:, **attributes)
+      def update_individual(id, **attributes) = call_on(:putIndividualCustomer, { id: }, **attributes)
 
       # The customer's contacts, as an Enumerator::Lazy of Hashes, like
       # `list`. Takes `sort:`. A contact is its own record: it is not one of
       # the customer's invoice recipients (`emails`).
-      def contacts(customer_id, **params) = paginate(:getCustomerContacts, customer_id:, **params)
+      def contacts(customer_id, **params) = paginate_on(:getCustomerContacts, { customer_id: }, **params)
 
       # One contact of the customer.
       def find_contact(customer_id, id) = call(:getCustomerContact, customer_id:, id:)
@@ -64,12 +64,12 @@ module PennylaneClient
       # `last_name:` and `email:`. The email does not become an invoice
       # recipient.
       def create_contact(customer_id, **attributes)
-        call(:postCustomerContact, customer_id:, **attributes)
+        call_on(:postCustomerContact, { customer_id: }, **attributes)
       end
 
       # Updates a contact. Only the attributes you pass change.
       def update_contact(customer_id, id, **attributes)
-        call(:putCustomerContact, customer_id:, id:, **attributes)
+        call_on(:putCustomerContact, { customer_id:, id: }, **attributes)
       end
 
       # Deletes a contact. The customer's invoice recipients stay as they
@@ -78,7 +78,7 @@ module PennylaneClient
 
       # The analytical categories the customer is split across, as an
       # Enumerator::Lazy of Hashes. No `sort:`.
-      def categories(customer_id, **params) = paginate(:getCustomerCategories, customer_id:, **params)
+      def categories(customer_id, **params) = paginate_on(:getCustomerCategories, { customer_id: }, **params)
 
       # Replaces the customer's categories. `categories` is an Array of
       # `{ id:, weight: }`; within one category group the weights must add up

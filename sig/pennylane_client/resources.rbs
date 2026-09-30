@@ -17,6 +17,12 @@ module PennylaneClient
       def call: (Symbol operation_id, ?untyped body, **untyped params) -> untyped
 
       def paginate: (Symbol operation_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def call_on: (Symbol operation_id, Hash[Symbol, untyped] path, **untyped params) -> untyped
+
+      def paginate_on: (Symbol operation_id, Hash[Symbol, untyped] path, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def apart: (Symbol operation_id, Hash[Symbol, untyped] path, Hash[untyped, untyped] params) -> Hash[untyped, untyped]
     end
 
     class CustomerInvoices < Resource

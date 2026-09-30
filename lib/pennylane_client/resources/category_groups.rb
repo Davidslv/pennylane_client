@@ -24,12 +24,12 @@ module PennylaneClient
 
       # Updates a category group. Pennylane requires `label:` here too, even
       # when you change only `kind:`.
-      def update(id, **attributes) = call(:putCategoryGroup, id:, **attributes)
+      def update(id, **attributes) = call_on(:putCategoryGroup, { id: }, **attributes)
 
       # The group's categories, as an Enumerator::Lazy of Hashes. Pennylane
       # documents no filter or sort here.
       def categories(category_group_id, **params)
-        paginate(:getCategoryGroupCategories, category_group_id:, **params)
+        paginate_on(:getCategoryGroupCategories, { category_group_id: }, **params)
       end
     end
   end

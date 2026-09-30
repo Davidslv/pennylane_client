@@ -34,12 +34,12 @@ module PennylaneClient
       # Updates a ledger entry. Only the attributes you pass change.
       # `ledger_entry_lines:` is `{ create: [...], update: [...], delete: [...] }`,
       # not a plain Array, and the result must still balance.
-      def update(id, **attributes) = call(:putLedgerEntries, id:, **attributes)
+      def update(id, **attributes) = call_on(:putLedgerEntries, { id: }, **attributes)
 
       # The entry's lines, as an Enumerator::Lazy of Hashes. The filter
       # takes `ledger_account_id`; `sort:` takes `id`.
       def lines(ledger_entry_id, **params)
-        paginate(:getLedgerEntriesLedgerEntryLines, ledger_entry_id:, **params)
+        paginate_on(:getLedgerEntriesLedgerEntryLines, { ledger_entry_id: }, **params)
       end
     end
   end

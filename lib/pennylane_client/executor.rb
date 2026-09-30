@@ -72,11 +72,23 @@ module PennylaneClient
 
     # A body passed as is, for the Operations whose body is a JSON array.
     # Every other param must have been a path parameter.
+    # A Hash body may not name a path parameter too: which id was meant?
     def explicit_body(operation, rest, body)
-      return body if rest.empty?
+      unless rest.empty?
+        raise ArgumentError,
+              "unexpected parameters #{rest.keys.inspect} for #{operation.id.inspect} with an explicit body"
+      end
+      refuse_path_keys(operation, body) if body.is_a?(Hash)
+      body
+    end
+
+    def refuse_path_keys(operation, body)
+      names = operation.path.scan(PATH_PARAMETER).flatten
+      clashes = body.keys.select { names.include?(_1.to_s) }
+      return if clashes.empty?
 
       raise ArgumentError,
-            "unexpected parameters #{rest.keys.inspect} for #{operation.id.inspect} with an explicit body"
+            "the body names the path parameter #{clashes.inspect} of #{operation.id.inspect}; pass it only as a keyword"
     end
 
     def json_request(operation, url, params)

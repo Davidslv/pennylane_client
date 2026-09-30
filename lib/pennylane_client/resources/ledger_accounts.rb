@@ -27,7 +27,7 @@ module PennylaneClient
 
       # Updates a ledger account: `label:` and `letterable:`, the only two
       # fields Pennylane accepts here.
-      def update(id, **attributes) = call(:updateLedgerAccount, id:, **attributes)
+      def update(id, **attributes) = call_on(:updateLedgerAccount, { id: }, **attributes)
     end
   end
 end

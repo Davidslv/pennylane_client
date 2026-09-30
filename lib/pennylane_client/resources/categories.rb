@@ -31,7 +31,7 @@ module PennylaneClient
       # Updates a category: `label:`, `analytical_code:` and `direction:`,
       # the only fields Pennylane accepts here. `category_group_id:` is not
       # one of them.
-      def update(id, **attributes) = call(:updateCategory, id:, **attributes)
+      def update(id, **attributes) = call_on(:updateCategory, { id: }, **attributes)
     end
   end
 end
