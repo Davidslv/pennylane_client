@@ -302,6 +302,7 @@ class SnapshotContractHTTPTest < Minitest::Test
 
   def teardown
     @http.finish
+    super
   end
 
   def test_returns_the_body_as_utf8

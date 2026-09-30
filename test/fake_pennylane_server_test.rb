@@ -19,6 +19,7 @@ class FakePennylaneServerTest < Minitest::Test
     @transport.close
     @server.stop
     WebMock.enable!
+    super
   end
 
   def client

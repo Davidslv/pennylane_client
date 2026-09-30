@@ -46,6 +46,7 @@ class StressTest < Minitest::Test
 
   def teardown
     @server.stop
+    super
   end
 
   def test_a_429_storm_is_retried_a_bounded_number_of_times

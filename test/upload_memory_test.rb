@@ -20,7 +20,10 @@ class UploadMemoryTest < Minitest::Test
 
   def setup = WebMock.disable!
 
-  def teardown = WebMock.enable!
+  def teardown
+    WebMock.enable!
+    super
+  end
 
   def rss = Integer(`ps -o rss= -p #{Process.pid}`.strip) * 1024
 
