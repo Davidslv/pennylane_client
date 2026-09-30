@@ -2,6 +2,8 @@ module PennylaneClient
   module Resources
     type item = Hash[Symbol, untyped]
     type result = Hash[Symbol, untyped] | bool
+    # What Multipart streams as a file part.
+    type file = File | IO | StringIO | Pathname | Upload
 
     class Resource
       @client: Client
@@ -32,7 +34,7 @@ module PennylaneClient
 
       def import: (**untyped attributes) -> item
 
-      def import_e_invoice: (untyped file, **untyped fields) -> item
+      def import_e_invoice: (file file, **untyped fields) -> item
 
       def finalize: (Integer id) -> item
 
@@ -44,7 +46,7 @@ module PennylaneClient
 
       def send_to_pa: (Integer id) -> result
 
-      def link_credit_note: (Integer id, Integer credit_note_id) -> item
+      def link_credit_note: (Integer id, credit_note_id: Integer) -> item
 
       def update_imported: (Integer id, **untyped attributes) -> item
 
@@ -60,7 +62,7 @@ module PennylaneClient
 
       def appendices: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def upload_appendix: (Integer customer_invoice_id, untyped file) -> item
+      def upload_appendix: (Integer customer_invoice_id, file file) -> item
 
       def categories: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
 

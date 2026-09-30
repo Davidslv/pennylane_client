@@ -70,7 +70,7 @@ class CustomerInvoicesTest < Minitest::Test
 
   # names: deleteCustomerInvoices
   def test_delete_returns_true_on_no_content
-    stub_request(:delete, "#{API}/customer_invoices/42").to_return(status: 204)
+    stub_request(:delete, "#{API}/customer_invoices/42").with(body: nil).to_return(status: 204)
 
     assert invoices.delete(42)
   end
@@ -97,14 +97,16 @@ class CustomerInvoiceActionsTest < Minitest::Test
 
   # names: markAsPaidCustomerInvoice
   def test_mark_as_paid
-    stub_request(:put, "#{API}/customer_invoices/42/mark_as_paid").to_return(status: 204)
+    stub_request(:put, "#{API}/customer_invoices/42/mark_as_paid").with(body: nil).to_return(status: 204)
 
     assert invoices.mark_as_paid(42)
   end
 
   # names: markAsPaidCustomerInvoiceInstallment
   def test_mark_installment_as_paid
-    stub_request(:put, "#{API}/customer_invoices/42/installments/3/mark_as_paid").to_return(status: 204)
+    stub_request(:put, "#{API}/customer_invoices/42/installments/3/mark_as_paid")
+      .with(body: nil)
+      .to_return(status: 204)
 
     assert invoices.mark_installment_as_paid(42, 3)
   end
@@ -143,7 +145,7 @@ class CustomerInvoiceActionsTest < Minitest::Test
       .with(body: '{"credit_note_id":43}')
       .to_return(status: 200, body: '{"id":42}')
 
-    assert_equal({ id: 42 }, invoices.link_credit_note(42, 43))
+    assert_equal({ id: 42 }, invoices.link_credit_note(42, credit_note_id: 43))
   end
 
   # names: updateImportedCustomerInvoice
@@ -170,16 +172,21 @@ class CustomerInvoiceImportsTest < Minitest::Test
     assert_equal({ id: 44 }, invoices.create_from_quote(quote_id: 9, draft: true))
   end
 
+  # Every field importCustomerInvoices requires, amounts that add up.
+  IMPORTED = {
+    file_attachment_id: 5, customer_id: 7, invoice_number: "F-1", date: "2026-09-30", deadline: "2026-10-30",
+    currency_amount_before_tax: "100", currency_amount: "120", currency_tax: "20",
+    invoice_lines: [{ label: "Audit", quantity: 1, raw_currency_unit_price: "100", unit: "day", vat_rate: "FR_200",
+                      currency_amount: "120", currency_tax: "20" }]
+  }.freeze
+
   # names: importCustomerInvoices
   def test_import
-    body = { file_attachment_id: 5, customer_id: 7, invoice_number: "F-1", date: "2026-09-30",
-             currency_amount: "120.0" }
     stub_request(:post, "#{API}/customer_invoices/import")
-      .with(body: JSON.generate(body))
+      .with(body: JSON.generate(IMPORTED))
       .to_return(status: 201, body: '{"id":45}')
 
-    assert_equal({ id: 45 }, invoices.import(file_attachment_id: 5, customer_id: 7, invoice_number: "F-1",
-                                             date: Date.new(2026, 9, 30), currency_amount: BigDecimal("120")))
+    assert_equal({ id: 45 }, invoices.import(**IMPORTED))
   end
 
   # names: createCustomerInvoiceEInvoiceImport
@@ -258,9 +265,10 @@ class CustomerInvoiceNestedTest < Minitest::Test
 
   # names: postCustomerInvoiceAppendices
   def test_upload_appendix_streams_the_file
-    stub_request(:post, "#{API}/customer_invoices/42/appendices")
-      .with { _1.body.include?(%(name="file"; filename="terms.pdf"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.7)) }
-      .to_return(status: 201, body: '{"id":8}')
+    file_part = %(name="file"; filename="terms.pdf"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.7)
+    stub_request(:post, "#{API}/customer_invoices/42/appendices").with do |request|
+      request.headers["Content-Type"].start_with?("multipart/form-data; boundary=") && request.body.include?(file_part)
+    end.to_return(status: 201, body: '{"id":8}')
 
     file = PennylaneClient::Upload.new(StringIO.new("%PDF-1.7"), filename: "terms.pdf")
 

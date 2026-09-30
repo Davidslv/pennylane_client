@@ -131,6 +131,8 @@ invoices.payments(42, sort: "-id").first(5)
 # also: invoice_line_sections, matched_transactions, custom_header_fields, appendices, categories
 ```
 
+`appendices` and `categories` take no `sort:`; the others do.
+
 `send_by_email` and `send_to_pa` raise `ConflictError` while Pennylane is still generating the PDF or processing an e-invoice import. The client never retries a 409, so try again later:
 
 ```ruby
@@ -155,7 +157,7 @@ invoices.import_e_invoice(Pathname("facturx.pdf"), invoice_options: { customer_i
 
 `import` stores the amounts exactly as sent, so they must add up. `import_e_invoice` takes a Factur-X PDF, or a UBL or CII XML invoice (alpha at Pennylane), and streams it like any [upload](#upload-a-file). `upload_appendix(42, file)` attaches a PDF or image to an invoice the same way.
 
-`link_credit_note(42, 43)` links credit note 43 to invoice 42. `mark_installment_as_paid(42, 3)` marks one installment paid; Pennylane tags it Hidden and alpha, so it may change.
+`link_credit_note(42, credit_note_id: 43)` links credit note 43 to invoice 42. `mark_installment_as_paid(42, 3)` marks one installment paid; Pennylane tags it Hidden and alpha, so it may change.
 
 ## Handle a validation error
 

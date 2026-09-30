@@ -67,8 +67,10 @@ module PennylaneClient
       # try again in a few seconds. Returns true.
       def send_to_pa(id) = call(:sendToPaCustomerInvoice, id:)
 
-      # Links the credit note `credit_note_id` to the invoice `id`.
-      def link_credit_note(id, credit_note_id) = call(:linkCreditNote, id:, credit_note_id:)
+      # Links a credit note to the invoice `id`:
+      #
+      #   invoices.link_credit_note(42, credit_note_id: 43)
+      def link_credit_note(id, credit_note_id:) = call(:linkCreditNote, id:, credit_note_id:)
 
       # Updates an imported invoice or credit note (not a draft).
       def update_imported(id, **attributes) = call(:updateImportedCustomerInvoice, id:, **attributes)
@@ -77,27 +79,32 @@ module PennylaneClient
       # Enumerator::Lazy of Hashes, like `list`, and takes `sort:` or a
       # smaller `limit:` where Pennylane does.
 
+      # The invoice's lines. Takes `sort:`.
       def invoice_lines(customer_invoice_id, **params)
         paginate(:getCustomerInvoiceInvoiceLines, customer_invoice_id:, **params)
       end
 
+      # The sections that group the invoice's lines. Takes `sort:`.
       def invoice_line_sections(customer_invoice_id, **params)
         paginate(:getCustomerInvoiceInvoiceLineSections, customer_invoice_id:, **params)
       end
 
+      # Payments received against the invoice. Takes `sort:`.
       def payments(customer_invoice_id, **params)
         paginate(:getCustomerInvoicePayments, customer_invoice_id:, **params)
       end
 
+      # Bank transactions matched to the invoice. Takes `sort:`.
       def matched_transactions(customer_invoice_id, **params)
         paginate(:getCustomerInvoiceMatchedTransactions, customer_invoice_id:, **params)
       end
 
+      # The invoice's custom header fields. Takes `sort:`.
       def custom_header_fields(customer_invoice_id, **params)
         paginate(:getCustomerInvoiceCustomHeaderFields, customer_invoice_id:, **params)
       end
 
-      # Files attached to the invoice as appendices (not in the DMS).
+      # Files attached to the invoice as appendices (not in the DMS). No `sort:`.
       def appendices(customer_invoice_id, **params)
         paginate(:getCustomerInvoiceAppendices, customer_invoice_id:, **params)
       end
@@ -108,6 +115,7 @@ module PennylaneClient
         call(:postCustomerInvoiceAppendices, customer_invoice_id:, file:)
       end
 
+      # The analytical categories the invoice is split across. No `sort:`.
       def categories(customer_invoice_id, **params)
         paginate(:getCustomerInvoiceCategories, customer_invoice_id:, **params)
       end
