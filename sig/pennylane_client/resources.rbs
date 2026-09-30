@@ -445,7 +445,7 @@ module PennylaneClient
     end
 
     class PaRegistrations < Resource
-      def list: () -> Array[item]
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
     end
 
     class PurchaseRequests < Resource

@@ -113,10 +113,22 @@ class PaginatorTest < Minitest::Test
   # getPaRegistrations answers with items, has_more and next_cursor but takes
   # no cursor, so it is one page, sent without cursor or limit.
   def test_reads_a_list_that_takes_no_cursor_as_one_page
-    items = paginator(:getPaRegistrations, responses: [page([1, 2], next_cursor: "c2"), page([3])]).items
+    items = paginator(:getPaRegistrations, responses: [page([1, 2]), page([3])]).items
 
     assert_equal [1, 2], items.map { _1[:id] }.to_a
     assert_equal [{}], queries
+  end
+
+  # With no cursor to send, a second page cannot be asked for. Returning
+  # the first would drop the rest without a word, so the walk raises.
+  def test_raises_when_a_list_that_takes_no_cursor_has_more
+    [page([1, 2], next_cursor: "c2"), page([1, 2], has_more: true)].each do |first|
+      walk = paginator(:getPaRegistrations, responses: [first, page([3])]).items
+
+      error = assert_raises(PennylaneClient::Error) { walk.to_a }
+      assert_match(/getPaRegistrations.*has_more/, error.message)
+      assert_equal 1, @transport.requests.size
+    end
   end
 
   def test_refuses_an_operation_that_cannot_return_a_list

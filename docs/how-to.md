@@ -450,7 +450,7 @@ end
 
 With `installments` off, an invoice sent with installments either gets a 403 or is created with a single installment. Pennylane adds keys here as it gates new features.
 
-`client.pa_registrations.list` returns the company's registrations with a Plateforme Agréée. The company has finished PA onboarding when a registration is `"activated"` with the `exchange_direction` you need. A nil `siret` is the head office (SIREN). The list is one request: Pennylane takes no cursor for it. If Pennylane answers `has_more: true`, `list` raises `PennylaneClient::Error` rather than return part of the list.
+`client.pa_registrations.list` returns the company's registrations with a Plateforme Agréée. The company has finished PA onboarding when a registration is `"activated"` with the `exchange_direction` you need. A nil `siret` is the head office (SIREN). Like every `list`, it returns an `Enumerator::Lazy`. Reading it is one request: Pennylane takes no cursor for it. If Pennylane answers `has_more: true`, reading raises `PennylaneClient::Error` rather than return part of the list.
 
 ## Work with billing subscriptions
 
