@@ -17,12 +17,17 @@ Metrics/ModuleLength:
 
 # A load or stress scenario reads best top to bottom: set up the fake, run
 # the threads, report, assert. Split to fit these, one scenario scatters
-# across helpers. The library itself stays inside them.
+# across helpers, and one class holds one run's scenarios. The library
+# itself stays inside them.
 Metrics/AbcSize:
   Exclude:
     - "perf/**/*"
 
 Metrics/MethodLength:
+  Exclude:
+    - "perf/**/*"
+
+Metrics/ClassLength:
   Exclude:
     - "perf/**/*"
 

@@ -48,6 +48,18 @@ module Perf
   # Everything in a Queue, as an Array.
   def drain(queue) = Array.new(queue.size) { queue.pop }
 
+  # The block's value once it equals `expected`, or its last value after
+  # `within` seconds: threads and sockets take a moment to wind down.
+  def settle(expected, within: 2)
+    deadline = now + within
+    value = yield
+    until value == expected || now > deadline
+      sleep 0.01
+      value = yield
+    end
+    value
+  end
+
   # Runs the block in `count` threads and returns their values, failing
   # when one has not finished within `timeout` seconds: a deadlock.
   def in_threads(count, timeout:, &)
