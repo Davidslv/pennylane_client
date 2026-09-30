@@ -44,7 +44,11 @@ module PennylaneClient
       # Imports an invoice from an e-invoice file: a Factur-X PDF, or a UBL or
       # CII XML invoice. `file` is a File, IO, Pathname or
       # PennylaneClient::Upload and streams from disk. Hash and Array fields
-      # (`invoice_options:`, `installments:`) go as JSON parts.
+      # (`invoice_options:`, `installments:`) go as JSON parts. An IO with no
+      # path, such as a StringIO, goes as "upload" with
+      # application/octet-stream; wrap it in Upload to name it:
+      #
+      #   customer_invoices.import_e_invoice(PennylaneClient::Upload.new(io, filename: "invoice.xml"))
       #
       # @note Experimental: the UBL and CII XML input only, which Pennylane
       #   calls alpha. It may change in a minor release (README, Stability).
@@ -141,7 +145,11 @@ module PennylaneClient
       end
 
       # Attaches `file` (a PDF or image: File, IO, Pathname or
-      # PennylaneClient::Upload) as an appendix. It streams from disk.
+      # PennylaneClient::Upload) as an appendix. It streams from disk. An IO
+      # with no path, such as a StringIO, goes as "upload" with
+      # application/octet-stream; wrap it in Upload to name it:
+      #
+      #   customer_invoices.upload_appendix(42, PennylaneClient::Upload.new(io, filename: "timesheet.pdf"))
       def upload_appendix(customer_invoice_id, file, retry: nil)
         call(:postCustomerInvoiceAppendices, customer_invoice_id:, file:, retry:)
       end

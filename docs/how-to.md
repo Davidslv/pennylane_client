@@ -183,7 +183,7 @@ File.open("timesheet.pdf", "rb") do |file|
 end
 ```
 
-Wrap the file in `PennylaneClient::Upload` to set the filename or the content type yourself. Hash and Array fields go as JSON parts:
+Wrap the file in `PennylaneClient::Upload` to set the filename or the content type yourself. An IO with no path, such as a `StringIO`, has neither: unwrapped, it goes as `upload` with `application/octet-stream`, and a `filename:` field does not change that. Upload takes the content type from the filename when you give only the filename. Hash and Array fields go as JSON parts:
 
 <!-- example -->
 ```ruby

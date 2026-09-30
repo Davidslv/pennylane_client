@@ -53,7 +53,11 @@ module PennylaneClient
       def appendices(quote_id, **params) = paginate_on(:getQuoteAppendices, { quote_id: }, **params)
 
       # Attaches `file` (a PDF or image: File, IO, Pathname or
-      # PennylaneClient::Upload) as an appendix. It streams from disk.
+      # PennylaneClient::Upload) as an appendix. It streams from disk. An IO
+      # with no path, such as a StringIO, goes as "upload" with
+      # application/octet-stream; wrap it in Upload to name it:
+      #
+      #   quotes.upload_appendix(42, PennylaneClient::Upload.new(io, filename: "terms.pdf"))
       def upload_appendix(quote_id, file, retry: nil) = call(:postQuoteAppendices, quote_id:, file:, retry:)
     end
   end
