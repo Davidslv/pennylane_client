@@ -562,6 +562,15 @@ invoices.payments(42, sort: "-id").first(5)
 # also: invoice_line_sections, matched_transactions, custom_header_fields, appendices, categories
 ```
 
+`list` yields the invoices only. With `include: "invoice_lines"`, Pennylane adds an `included` section to each page, and `list` drops it. Read the pages to keep it. Pennylane marks `include` experimental, so it may change or go away:
+
+<!-- example -->
+```ruby
+page = client.pages(:getCustomerInvoices, include: "invoice_lines").first
+page[:items]      # the invoices
+page[:included]   # the invoice lines, when Pennylane sends them
+```
+
 `send_by_email` and `send_to_pa` raise `ConflictError` while Pennylane is still generating the PDF or processing an e-invoice import. The client never retries a 409, so try again later. Both return true:
 
 <!-- example -->
