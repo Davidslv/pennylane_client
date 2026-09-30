@@ -1,5 +1,24 @@
 module PennylaneClient
+  # A String token, or a provider returning the current one.
+  type token = String | ^() -> String
+
   module Middleware
+    class Auth
+      include _Transport
+
+      FORMAT: Regexp
+
+      def initialize: (_Transport app, token token) -> void
+
+      def inspect: () -> String
+      def pretty_print: (untyped printer) -> untyped
+
+      private
+
+      def current_token: () -> String
+      def valid?: (untyped token) -> bool
+    end
+
     class Instrument
       include _Transport
 

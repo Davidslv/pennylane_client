@@ -14,7 +14,7 @@ module ExecutorHelpers
   def executor(*responses)
     @transport = FakeTransport.new(*responses.then { _1.empty? ? [ok] : _1 })
     PennylaneClient::Executor.new(registry: PennylaneClient::Registry.default, transport: @transport,
-                                  token: "tok", base_url: BASE)
+                                  base_url: BASE)
   end
 
   def sent = @transport.requests.last
@@ -81,11 +81,12 @@ class ExecutorTest < Minitest::Test
     assert_raises(ArgumentError) { executor.call(:getMe, {}, []) }
   end
 
-  def test_sends_the_token_and_asks_for_json
+  # The token is added by Middleware::Auth; the Executor never holds it.
+  def test_asks_for_json_without_the_token
     executor.call(:getMe)
     headers = sent.headers
 
-    assert_equal "Bearer tok", headers["Authorization"]
+    refute headers.key?("Authorization")
     assert_equal "application/json", headers["Accept"]
     assert_match %r{\Apennylane_client/#{PennylaneClient::VERSION} }o, headers["User-Agent"]
     refute headers.key?("Content-Type")

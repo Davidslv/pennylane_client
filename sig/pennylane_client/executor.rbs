@@ -2,7 +2,7 @@ module PennylaneClient
   class Executor
     PATH_PARAMETER: Regexp
 
-    def initialize: (registry: Registry, transport: _Transport, token: String, base_url: String) -> void
+    def initialize: (registry: Registry, transport: _Transport, base_url: String) -> void
 
     def call: (Symbol | String operation_id, ?Hash[Symbol, untyped] params, ?untyped body) -> untyped
 

@@ -22,10 +22,9 @@ module PennylaneClient
   class Executor
     PATH_PARAMETER = /\{(\w+)\}/
 
-    def initialize(registry:, transport:, token:, base_url:)
+    def initialize(registry:, transport:, base_url:)
       @registry = registry
       @transport = transport
-      @token = token
       @base_url = base_url
     end
 
@@ -91,8 +90,7 @@ module PennylaneClient
     end
 
     def headers(json: false)
-      headers = { "Authorization" => "Bearer #{@token}", "Accept" => "application/json",
-                  "User-Agent" => "pennylane_client/#{VERSION} (ruby #{RUBY_VERSION})" }
+      headers = { "Accept" => "application/json", "User-Agent" => "pennylane_client/#{VERSION} (ruby #{RUBY_VERSION})" }
       headers["Content-Type"] = "application/json" if json
       headers
     end

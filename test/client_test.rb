@@ -19,6 +19,12 @@ class ClientTest < Minitest::Test
     assert_raises(ArgumentError) { PennylaneClient.new(token: nil) }
   end
 
+  def test_takes_a_token_provider
+    stub_request(:get, "#{API}/me").with(headers: { "Authorization" => "Bearer fresh" }).to_return(status: 200)
+
+    assert PennylaneClient.new(token: -> { "fresh" }).call(:getMe)
+  end
+
   def test_get
     stub_request(:get, "#{API}/journals/42").with(headers: { "Authorization" => "Bearer tok" })
                                             .to_return(status: 200, body: '{"id":42,"code":"HA"}')
