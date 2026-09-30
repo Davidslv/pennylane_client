@@ -209,7 +209,7 @@ invoices.import(file_attachment_id: 5, supplier_id: 12, date: Date.today, deadli
 invoices.import_e_invoice(Pathname("facturx.pdf"), invoice_options: { supplier_id: 12 })
 ```
 
-`import` stores the amounts exactly as sent, so they must add up. Pennylane de-duplicates supplier invoice files: importing the same file twice raises `ConflictError`. `import` also raises `ConflictError` while the uploaded file is not ready yet; that one clears in a few seconds. The client never retries a 409. Try once more after a few seconds; a second `ConflictError` means the file was imported before.
+Pennylane de-duplicates supplier invoice files: importing the same file twice raises `ConflictError`. `import` also raises `ConflictError` while the uploaded file is not ready yet; Pennylane says to try again after a few seconds. The client never retries a 409. A `ConflictError` that persists most likely means the file was imported before.
 
 `import_e_invoice` takes a Factur-X PDF, or a UBL or CII XML invoice (alpha at Pennylane), and streams it like any [upload](#upload-a-file).
 

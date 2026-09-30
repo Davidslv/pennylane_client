@@ -24,8 +24,7 @@ module PennylaneClient
 
       # Imports a supplier invoice with its PDF already uploaded
       # (`file_attachment_id:`). Pennylane requires `supplier_id:`, `date:`,
-      # `deadline:`, the three currency amounts and `invoice_lines:`, and
-      # stores the amounts exactly as sent, so they must add up.
+      # `deadline:`, the three currency amounts and `invoice_lines:`.
       #
       # Raises ConflictError when the file was imported before: Pennylane
       # de-duplicates supplier invoice files. It raises ConflictError too
