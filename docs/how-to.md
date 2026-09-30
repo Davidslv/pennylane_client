@@ -238,7 +238,7 @@ A String token is checked when the client is built, and a provider's token on ea
 
 ## Convert money and dates
 
-Pennylane sends amounts as decimal Strings and dates as ISO 8601 Strings. The gem returns them unchanged:
+Pennylane sends amounts as decimal Strings and dates as ISO 8601 Strings. The gem returns them unchanged. [Read money and dates](getting-started.md#read-money-and-dates) says what each amount field of an invoice means:
 
 <!-- example -->
 ```ruby
@@ -253,7 +253,7 @@ Time.iso8601(invoice[:updated_at])  # "2023-08-30T10:08:08.146343Z"
 
 On Ruby 3.4 and newer `bigdecimal` is a bundled gem, so add `gem "bigdecimal"` to your own Gemfile. The client never requires it.
 
-Send amounts as Strings too. Pennylane refuses a numeric amount with a 400. The client converts a `BigDecimal`, `Date`, `Time` or `DateTime` you pass, anywhere in the body or the query:
+Send amounts as Strings too. An Integer or a Float goes as a JSON number, and Pennylane's error guide lists "amounts not sent as strings" as a cause of a 400. The client converts a `BigDecimal`, `Date`, `Time` or `DateTime` you pass, anywhere in the body or the query:
 
 <!-- example -->
 ```ruby
@@ -261,7 +261,7 @@ client.transactions.create(bank_account_id: 42, label: "Rent", date: Date.new(20
                            amount: BigDecimal("-1200.50"))   # sends "2026-09-30" and "-1200.5"
 ```
 
-A `Time` with a fraction of a second keeps it to the microsecond, so a changelog `processed_at` read back and passed as a `Time` is sent unchanged.
+A `Time` keeps its fraction of a second, to the microsecond. So a changelog's `processed_at`, parsed with `Time.iso8601` and passed back as `since:`, is sent as Pennylane wrote it.
 
 ## Log requests and collect metrics
 

@@ -105,7 +105,7 @@ invoice[:invoice_number]   # => "F20230001"
 client.customer_invoices.send_by_email(invoice[:id])   # => true
 ```
 
-`Date.today` is sent as `"2026-09-30"`. A `BigDecimal` amount is sent as a plain decimal String. Numbers are not: Pennylane refuses a numeric amount, so pass amounts as Strings or BigDecimals.
+A `Date` is sent as an ISO 8601 date: `Date.new(2026, 9, 30)` as `"2026-09-30"`. A `BigDecimal` is sent as a plain decimal String: `BigDecimal("450")` as `"450.0"`. An Integer or a Float is sent as it is, as a JSON number (`450.0`), and the client does not warn you. Pennylane expects a String: its error guide lists "amounts not sent as strings (e.g., `"120.00"`)" as a cause of a 400. Pass amounts as Strings or BigDecimals.
 
 `send_by_email` raises `ConflictError` while Pennylane is still generating the PDF. Try again a little later.
 
@@ -189,6 +189,30 @@ Time.iso8601(invoice[:created_at])            # "2023-08-30T10:08:08.146343Z"
 ```
 
 On Ruby 3.4 and newer `bigdecimal` is a bundled gem, so add `gem "bigdecimal"` to your own Gemfile. The client never requires it.
+
+A customer invoice carries its money in these fields. The descriptions are Pennylane's own, from the `getCustomerInvoice` response in the contract snapshot:
+
+| Field | Pennylane's description |
+|---|---|
+| `amount` | "Invoice amount (total value of the invoice in euros. If the currency is euro, `currency_amount` and `amount` are identical)" |
+| `currency_amount` | "Invoice currency amount (total value of the invoice in the currency of the invoice)" |
+| `currency_amount_before_tax` | "Invoice currency amount before tax (total value before tax of the invoice in the currency of the invoice)" |
+| `tax` | "Invoice taxable amount (in euros). If the currency is euro, `currency_tax` and `tax` are identical." |
+| `currency_tax` | "Invoice taxable amount (in invoice currency)" |
+| `exchange_rate` | "Invoice exchange rate (used to convert the invoice to euros. If the invoice currency is euro it will be 1.0)" |
+| `currency` | No description. A currency code such as `"EUR"`, the default, `"USD"` or `"GBP"`. |
+
+Pennylane calls `tax` and `currency_tax` the "taxable amount", but its examples show the tax itself: `currency_amount_before_tax` "196.32" plus `currency_tax` "34.0" is `currency_amount` "230.32". So `amount` and `currency_amount` include tax.
+
+To total invoices in more than one currency, add up `amount`, which is in euros. Add up `currency_amount` only for invoices in the same `currency`:
+
+<!-- example continued -->
+```ruby
+drafts = [{ field: "draft", operator: "eq", value: "true" }]
+
+total = client.customer_invoices.list(filter: drafts).sum(BigDecimal("0")) { BigDecimal(_1[:amount]) }
+total.to_s("F")   # => "230.32"
+```
 
 A response is frozen, nested Hashes and Arrays included. `invoice.merge(label: "Audit")` gives you a changed copy.
 
