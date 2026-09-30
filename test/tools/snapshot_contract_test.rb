@@ -349,7 +349,7 @@ class SnapshotContractHTTPTest < Minitest::Test
   def test_raises_on_any_other_status
     stub_request(:get, URL).to_return(status: 503)
 
-    error = assert_raises(SnapshotContract::Error) { @http.get(URL) }
+    error = assert_raises(SnapshotContract::FetchError) { @http.get(URL) }
 
     assert_equal "GET #{URL}: HTTP 503", error.message
   end

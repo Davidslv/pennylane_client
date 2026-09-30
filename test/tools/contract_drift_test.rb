@@ -57,6 +57,17 @@ module ContractDriftFixtures
   def diff(old, new)
     ContractDrift::Diff.new(old, new)
   end
+
+  # A stand-in for the gh CLI that records [args, stdin] and answers
+  # `gh issue list` with the open drift issue's number, if any.
+  def fake_gh(open_issue: nil)
+    calls = []
+    runner = lambda do |*args, stdin: nil|
+      calls << [args, stdin]
+      args.first(2) == %w[issue list] ? "#{open_issue}\n" : ""
+    end
+    [runner, calls]
+  end
 end
 
 # What is and is not drift.
@@ -98,6 +109,29 @@ class ContractDriftNoiseTest < Minitest::Test
     reordered = edited(JOURNAL) { schema(_1)["required"] = %w[description id] }
 
     assert_empty diff([JOURNAL], [reordered])
+  end
+
+  def test_a_schema_title_is_text_but_a_field_named_title_is_not
+    with_variant = edited(JOURNAL) { schema(_1)["title"] = "Journal" }
+    renamed = edited(with_variant) { schema(_1)["title"] = "Ledger journal" }
+
+    assert_empty diff([with_variant], [renamed])
+    titled = edited(JOURNAL) { schema(_1)["properties"]["title"] = { "type" => "string" } }
+
+    assert_equal [["getJournal", :added, "#{SCHEMA}.properties.title", nil, nil]], diff([JOURNAL], [titled]).changes
+  end
+
+  # JOURNAL whose response schema is oneOf the given kinds of document.
+  def one_of(*kinds)
+    variants = kinds.map { { "title" => _1, "properties" => { "kind" => { "enum" => [_1] } } } }
+    edited(JOURNAL) { schema(_1)["oneOf"] = variants }
+  end
+
+  def test_a_variant_inserted_first_in_one_of_is_one_addition
+    changes = diff([one_of("invoice", "credit_note")], [one_of("quote", "invoice", "credit_note")]).changes
+
+    assert_equal([:added], changes.map { _1[1] })
+    assert_match(/\A#{Regexp.escape(SCHEMA)}\.oneOf\.\h{8}\z/o, changes[0][2])
   end
 end
 
@@ -210,10 +244,6 @@ class ContractDriftReportTest < Minitest::Test
     #### `getJournal` GET /api/external/v2/journals/{id}
 
     - changed `parameters.path:id.schema.type`: `"integer"` → `"string"`
-
-    #### `postLedgerAttachments` POST /api/external/v2/ledger_attachments
-
-    - changed `deprecated`: `false` → `true`
   MARKDOWN
 
   def test_the_report_lists_every_kind_of_change
@@ -251,45 +281,34 @@ end
 class ContractDriftIssueTest < Minitest::Test
   include ContractDriftFixtures
 
-  # Answers `gh issue list` with the open drift issue's number, if any.
-  def gh(open_issue: nil)
-    calls = []
-    runner = lambda do |*args|
-      calls << args
-      args.first(2) == %w[issue list] ? "#{open_issue}\n" : ""
-    end
-    [runner, calls]
-  end
-
   def report(old, new)
     ContractDrift::Report.new(diff: diff(old, new), guides: [], committed: "c", retrieved_on: "2026-10-07")
   end
 
   def test_no_drift_touches_no_issue
-    runner, calls = gh
+    runner, calls = fake_gh
 
     assert_equal "No drift.", ContractDrift::Issue.sync(report([JOURNAL], [JOURNAL]), cli: runner)
     assert_empty calls
   end
 
   def test_drift_opens_a_labelled_issue_when_none_is_open
-    runner, calls = gh
+    runner, calls = fake_gh
     drift = report([JOURNAL], [JOURNAL, ATTACHMENTS])
 
     assert_equal "Opened a drift issue.", ContractDrift::Issue.sync(drift, cli: runner)
-    assert_equal %w[issue list --label drift --state open --json number --jq .[0].number], calls[0]
-    assert_equal %w[label create drift], calls[1].first(3)
-    assert_includes calls[1], "--force"
-    assert_equal ["issue", "create", "--title", ContractDrift::Issue::TITLE, "--label", "drift",
-                  "--body", drift.to_markdown], calls[2]
+    assert_equal [%w[issue list --label drift --state open --json number --jq .[0].number], nil], calls[0]
+    assert_equal %w[label create drift], calls[1][0].first(3)
+    assert_equal [["issue", "create", "--title", ContractDrift::Issue::TITLE, "--label", "drift",
+                   "--body-file", "-"], drift.to_markdown], calls[2]
   end
 
   def test_drift_updates_the_open_issue_instead_of_opening_another
-    runner, calls = gh(open_issue: 31)
+    runner, calls = fake_gh(open_issue: 31)
     drift = report([JOURNAL], [JOURNAL, ATTACHMENTS])
 
     assert_equal "Updated drift issue #31.", ContractDrift::Issue.sync(drift, cli: runner)
-    assert_equal [%w[issue edit 31 --body] + [drift.to_markdown]], calls.drop(1)
+    assert_equal [[%w[issue edit 31 --body-file -], drift.to_markdown]], calls.drop(1)
   end
 end
 
@@ -297,6 +316,7 @@ end
 # compare with the latest committed snapshot.
 class ContractDriftRunTest < Minitest::Test
   include SnapshotContractFixtures
+  include ContractDriftFixtures
 
   def served(pages = site)
     pages.merge(SnapshotContract::GUIDES.to_h { |_name, url| [url, "# Guide\n\nBody of #{url}\n"] })
@@ -329,6 +349,45 @@ class ContractDriftRunTest < Minitest::Test
       assert_includes markdown, "- changed `responses.200.content.application/json.schema.properties.label.type`: " \
                                 "`\"string\"` → `\"integer\"`\n"
       assert_equal ["2026-09-30"], Dir.children(File.join(root, "docs/api/contract")), "drift never writes a snapshot"
+    end
+  end
+
+  def test_a_changed_page_opens_an_issue_listing_the_change
+    url = "https://pennylane.readme.io/reference/getjournal.md"
+    changed = page("getjournal").sub(/("label": \{\s+"type": )"string"/, '\1"integer"')
+    runner, calls = fake_gh
+
+    with_committed_snapshot do |root|
+      assert_equal "Opened a drift issue.", ContractDrift::Issue.sync(drift(root, served(site.merge(url => changed))),
+                                                                      cli: runner)
+    end
+    args, body = calls.last
+
+    assert_equal %w[issue create], args.first(2)
+    assert_includes body, "properties.label.type`: `\"string\"` → `\"integer\"`"
+  end
+
+  # A contract the snapshot tool refuses is drift too: say so in the issue
+  # rather than only failing the scheduled run.
+  def test_docs_the_snapshot_tool_refuses_are_reported_as_drift
+    duplicated = site.merge("https://pennylane.readme.io/reference/postjournals.md" => page("getjournal"))
+
+    with_committed_snapshot do |root|
+      report = drift(root, served(duplicated))
+
+      refute_empty report
+      assert_includes report.to_markdown, "### The snapshot tool refused the docs\n\n"
+      assert_includes report.to_markdown, "getJournal is documented more than once"
+    end
+  end
+
+  def test_a_docs_site_outage_fails_the_run_instead_of_reporting_drift
+    outage = ->(url) { raise SnapshotContract::FetchError, "GET #{url}: HTTP 503" }
+
+    with_committed_snapshot do |root|
+      assert_raises(SnapshotContract::FetchError) do
+        ContractDrift.run(fetch: outage, root: root, date: Date.new(2026, 10, 7), warn: ->(_) {})
+      end
     end
   end
 end

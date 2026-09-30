@@ -14,6 +14,7 @@
 #
 # Standard library only. Run it with `bundle exec rake contract:drift`.
 
+require "digest"
 require "json"
 require "open3"
 require "tmpdir"
@@ -27,12 +28,21 @@ module ContractDrift
   # Snapshots the docs into a temporary folder and compares it with the
   # latest snapshot committed under <root>/docs/api/contract. Writes nothing
   # under root. `fetch` is SnapshotContract's, injected so tests stay offline.
+  #
+  # Docs the snapshot tool refuses (a new security scheme, a duplicated
+  # operationId, the two sources disagreeing) are drift too, and reported.
+  # A docs site that cannot be read is not: FetchError fails the run.
   def self.run(fetch:, root:, date:, warn: Kernel.method(:warn))
     committed = File.dirname(OperationTable.latest_snapshot(File.join(root, "docs/api/contract")))
+    label = committed.delete_prefix("#{root}/")
     Dir.mktmpdir("contract-drift") do |scratch|
       fresh = SnapshotContract.run(fetch: fetch, root: scratch, date: date, warn: warn)[:dir]
-      compare(committed: committed, fresh: fresh, committed_label: committed.delete_prefix("#{root}/"))
+      compare(committed: committed, fresh: fresh, committed_label: label)
     end
+  rescue SnapshotContract::FetchError
+    raise
+  rescue SnapshotContract::Error => e
+    Report.new(diff: Diff.new([], []), guides: [], committed: label, retrieved_on: date.iso8601, refusal: e.message)
   end
 
   # Compares two snapshot folders (each holding operations.json and guides/).
@@ -75,22 +85,24 @@ module ContractDrift
                         "--jq", ".[0].number").strip
       return create(body, cli) if number.empty?
 
-      cli.call("issue", "edit", number, "--body", body)
+      cli.call("issue", "edit", number, "--body-file", "-", stdin: body)
       "Updated drift issue ##{number}."
     end
 
+    # The body goes on stdin: a single command-line argument is capped at
+    # 128 KiB on Linux, and LIMIT counts characters, not bytes.
     def self.create(body, cli)
       cli.call("label", "create", LABEL, "--color", "d93f0b", "--force",
                "--description", "Pennylane's docs differ from the committed contract snapshot")
-      cli.call("issue", "create", "--title", TITLE, "--label", LABEL, "--body", body)
+      cli.call("issue", "create", "--title", TITLE, "--label", LABEL, "--body-file", "-", stdin: body)
       "Opened a drift issue."
     end
     private_class_method :create
   end
 
   # Runs the gh CLI and returns its output; raises when it fails.
-  GH = lambda do |*args|
-    output, status = Open3.capture2("gh", *args)
+  GH = lambda do |*args, stdin: nil|
+    output, status = Open3.capture2("gh", *args, stdin_data: stdin.to_s)
     raise Error, "gh #{args.first(2).join(" ")} failed (#{status.exitstatus})" unless status.success?
 
     output
@@ -102,15 +114,17 @@ module ContractDrift
     LIMIT = 60_000
     CUT = "\n_The report was cut to fit an issue._ Run `bundle exec rake contract:drift` locally for the full report.\n"
 
-    def initialize(diff:, guides:, committed:, retrieved_on:)
+    # `refusal` is the snapshot tool's error when it could not read the docs.
+    def initialize(diff:, guides:, committed:, retrieved_on:, refusal: nil)
       @diff = diff
       @guides = guides
       @committed = committed
       @retrieved_on = retrieved_on
+      @refusal = refusal
     end
 
     def empty?
-      @diff.empty? && @guides.empty?
+      @diff.empty? && @guides.empty? && @refusal.nil?
     end
 
     # nil when there is no drift. `limit: nil` never cuts.
@@ -135,8 +149,16 @@ module ContractDrift
     def sections
       listed = { "New operations" => @diff.added, "Removed operations" => @diff.removed,
                  "Newly deprecated operations" => @diff.deprecated }
-      listed.flat_map { |title, records| section(title, records.map { "- #{heading(_1)}" }) } +
+      refused + listed.flat_map { |title, records| section(title, records.map { "- #{heading(_1)}" }) } +
         changed_operations + section("Changed guides", @guides.map { "- `#{_1}`" })
+    end
+
+    def refused
+      return [] unless @refusal
+
+      section("The snapshot tool refused the docs", ["```text", @refusal.chomp, "```", "",
+                                                     "Nothing else was compared. Decide whether the docs " \
+                                                     "or `tools/snapshot_contract.rb` need to change."])
     end
 
     def section(title, lines)
@@ -170,7 +192,7 @@ module ContractDrift
 
   # The difference between two lists of snapshot operation records.
   class Diff
-    TEXT = %w[summary description example examples source_url].freeze
+    TEXT = %w[summary description title example examples source_url].freeze
 
     # The new records by operationId.
     attr_reader :current
@@ -193,8 +215,10 @@ module ContractDrift
       @shared.reject { @before[_1]["deprecated"] }.select { @current[_1]["deprecated"] }.map { @current[_1] }
     end
 
+    # Newly deprecated operations are listed by #deprecated, not here.
     def changes
       @changes ||= @shared.flat_map { |id| Diff.changes(id, @before[id], @current[id]) }
+                          .reject { |_id, _kind, path, _from, to| path == "deprecated" && to == true }
     end
 
     def empty?
@@ -253,11 +277,13 @@ module ContractDrift
       kept.each { |key, child| walk(child, path + [key], out, key) }
     end
 
-    # Parameters are keyed by location and name, so inserting one does not
-    # shift the others. Lists of scalars (required, enum, tags) are sets.
+    # List items are keyed by what they are, never by position, so inserting
+    # one does not shift the others: parameters by location and name, other
+    # items (oneOf, anyOf, allOf variants) by a digest of their compared
+    # content. Lists of scalars (required, enum, tags) are sets.
     def self.walk_array(array, path, out)
       if !array.empty? && array.all?(Hash)
-        array.each_with_index { |item, index| walk(item, path + [item_key(item, index)], out, nil) }
+        array.each { |item| walk(item, path + [item_key(item)], out, nil) }
       elsif array.none? { _1.is_a?(Array) || _1.is_a?(Hash) }
         out[path] = array.sort_by(&:to_s)
       else
@@ -265,8 +291,11 @@ module ContractDrift
       end
     end
 
-    def self.item_key(item, index)
-      item.key?("in") && item.key?("name") ? "#{item["in"]}:#{item["name"]}" : index.to_s
+    def self.item_key(item)
+      return "#{item["in"]}:#{item["name"]}" if item.key?("in") && item.key?("name")
+
+      content = {}.tap { walk(item, [], _1, nil) }
+      Digest::SHA256.hexdigest(JSON.generate(content.sort))[0, 8]
     end
     private_class_method :changed, :roots, :nodes, :leaves, :walk, :walk_hash, :walk_array, :item_key
   end
