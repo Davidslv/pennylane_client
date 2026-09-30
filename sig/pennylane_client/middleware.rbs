@@ -1,0 +1,69 @@
+module PennylaneClient
+  # A String token, or a provider returning the current one.
+  type token = String | ^() -> String
+
+  module Middleware
+    class Auth
+      include _Transport
+
+      FORMAT: Regexp
+
+      def initialize: (_Transport app, token token) -> void
+
+      def inspect: () -> String
+      def pretty_print: (untyped printer) -> untyped
+
+      private
+
+      def current_token: () -> String
+      def valid?: (untyped token) -> bool
+    end
+
+    class Retry
+      include _Transport
+
+      RETRY_STATUSES: Array[Integer]
+      NO_RESPONSE: Array[singleton(Error)]
+
+      def initialize: (_Transport app, Instrumentation instrumentation, ?max_attempts: Integer,
+                       ?base_delay: Numeric, ?max_wait: Numeric, ?sleeper: ^(Float) -> void,
+                       ?random: _Rand) -> void
+
+      interface _Rand
+        def rand: () -> Float
+      end
+
+      private
+
+      def send_once: (Request request) -> [Response?, Error?]
+      def finish: (Response? response, Error? error) -> Response
+      def delay: (Request request, Response? response, Error? error, Integer attempt) -> Float?
+      def repeatable?: (Request request) -> bool
+      def backoff: (Integer attempt) -> Float
+      def retry_after: (Response response) -> Float?
+      def report: (Request request, Integer attempt, Float wait, Response? response, Error? error) -> void
+    end
+
+    class RateLimit
+      include _Transport
+
+      def initialize: (_Transport app, _LimiterRegistry limiters, Instrumentation instrumentation) -> void
+
+      private
+
+      def key: (Request request) -> String
+      def correct: (_Limiter limiter, Hash[String, String] headers) -> void
+      def report: (Request request, Float waited) -> void
+    end
+
+    class Instrument
+      include _Transport
+
+      def initialize: (_Transport app, Instrumentation instrumentation) -> void
+
+      private
+
+      def report: (Request request, Float started, ?status: Integer?, ?error: String?) -> void
+    end
+  end
+end

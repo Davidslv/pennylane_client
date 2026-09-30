@@ -2,10 +2,10 @@ module PennylaneClient
   class Executor
     PATH_PARAMETER: Regexp
 
-    def initialize: (registry: Registry, transport: _Transport, token: String, base_url: String,
-                     ?instrumentation: Instrumentation) -> void
+    def initialize: (registry: Registry, transport: _Transport, base_url: String) -> void
 
-    def call: (Symbol | String operation_id, ?Hash[Symbol, untyped] params, ?untyped body) -> untyped
+    def call: (Symbol | String operation_id, ?Hash[Symbol, untyped] params, ?untyped body,
+               ?retry_policy: :default | :always) -> untyped
 
     def inspect: () -> String
 
@@ -19,8 +19,6 @@ module PennylaneClient
     def query: (Hash[Symbol, untyped] params) -> String
     def query_value: (untyped value) -> String
     def headers: (?json: bool) -> Hash[String, String]
-    def perform: (Operation operation, Request request) -> Response
-    def report: (Operation operation, Request request, Float started, ?status: Integer?, ?error: String?) -> void
     def handle: (Response response) -> untyped
   end
 end

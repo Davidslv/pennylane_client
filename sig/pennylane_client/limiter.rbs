@@ -1,0 +1,20 @@
+module PennylaneClient
+  # What RateLimit needs from a limiter; bring your own through LimiterRegistry.
+  interface _Limiter
+    def acquire: () -> Float
+    def update: (remaining: Integer, ?reset_at: Float?) -> void
+  end
+
+  class Limiter
+    include _Limiter
+
+    def initialize: (?limit: Integer, ?period: Numeric, ?clock: ^() -> Float, ?sleeper: ^(Float) -> void) -> void
+
+    def inspect: () -> String
+
+    private
+
+    def take: () -> Float
+    def refill: (Float now) -> void
+  end
+end

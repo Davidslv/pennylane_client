@@ -1,0 +1,18 @@
+module PennylaneClient
+  # What RateLimit needs from a registry.
+  interface _LimiterRegistry
+    def fetch: (String key) -> _Limiter
+  end
+
+  class LimiterRegistry
+    include _LimiterRegistry
+
+    DEFAULT: LimiterRegistry
+
+    def self.default: () -> LimiterRegistry
+
+    def initialize: () ?{ (String key) -> _Limiter } -> void
+
+    def inspect: () -> String
+  end
+end

@@ -24,6 +24,10 @@ client = PennylaneClient.new(token: ENV.fetch("PENNYLANE_TOKEN"))
 client.call(:getMe)
 ```
 
+`token:` also takes anything that responds to `#call` and returns the current token, e.g. `token: -> { TokenStore.current }`. It is asked once per call. The client never refreshes a token itself.
+
+Clients are cheap to build. They share one connection pool and, per token, one rate-limit budget.
+
 `call` takes any Pennylane operationId from [the checklist](api/CHECKLIST.md) and its parameters as keywords. Path parameters fill the URL; the rest is the JSON body when the operation takes one, and the query string otherwise:
 
 ```ruby
@@ -55,6 +59,8 @@ Every error is a `PennylaneClient::Error` with `#status`, `#code`, `#details` an
 | `ConnectionError`, `TimeoutError` | no response arrived |
 
 An unknown operationId raises `PennylaneClient::UnknownOperationError`, an `ArgumentError`.
+
+Before raising, the client retries what is safe to repeat: a 429 for any request, after Pennylane's `retry-after`; a 5xx or no response for a GET only. A POST, PUT or DELETE that fails with a 5xx or a timeout is not sent again, because Pennylane may already have applied it. See [the how-to](how-to.md#retries-and-the-rate-limit).
 
 ## What comes back
 

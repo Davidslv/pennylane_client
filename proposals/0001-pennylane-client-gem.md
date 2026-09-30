@@ -213,6 +213,8 @@ The council (five independent agents: maintainer economics, caller ergonomics, S
 
 A Redis-backed cross-process limiter would break zero-deps. Callers can inject their own through the limiter interface.
 
+Amendment (#7, 2026-09-30): the pipeline is built as `Auth → Retry → RateLimit`, not `Auth → RateLimit → Retry` as drawn above. With Retry outside RateLimit, every attempt takes its own call from the bucket and every response, 429s included, corrects it. [docs/architecture/design-diagram.md](../docs/architecture/design-diagram.md) shows the built order.
+
 ### Testing
 
 | Word | Meaning | Runs |
@@ -332,6 +334,7 @@ The contract test (table against snapshot) is a sanity check only, because the t
 
 - **Live validation.** David has no Pennylane account. Signup needs a French SIRET, and a sandbox needs a paid Essential plan behind it. Every `live` row starts as `unverified: no sandbox access` until a contributor with an account runs `rake smoke`. Owner: David, if a contributor or partner route appears.
 - **429 and non-GET requests.** D5 assumes a 429 means the request was not run. Confirm on a sandbox.
+- **`ratelimit-reset` rounding.** The header is whole seconds. If Pennylane rounds down, the local bucket refills up to a second early and a busy token may see a 429 per window, which Retry absorbs. Confirm on a sandbox; if it rounds down, wait until the reset plus one second.
 - **Webhook live check.** `Webhook.verify!` is tested against vectors built from the documented scheme. A real signed delivery needs sandbox access.
 - **OAuth helper.** Deferred to a later minor. Blocked on partner access and on settling the token URL.
 - **Firm API.** A separate proposal if David gets a firm account.

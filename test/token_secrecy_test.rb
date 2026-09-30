@@ -11,11 +11,14 @@ class TokenSecrecyTest < Minitest::Test
   API = "https://app.pennylane.com/api/external/v2"
   TOKEN = "pl-secret-token-7f3a9c"
 
+  # max_retry_wait: 0 keeps backoff retries, and their real sleeps, out of
+  # the suite; a 429 with retry-after 0 still retries.
   def setup
     @log = StringIO.new
     @events = []
     @client = PennylaneClient.new(token: TOKEN, logger: Logger.new(@log, level: :debug),
-                                  on_request: @events.method(:<<))
+                                  on_request: @events.method(:<<), limiters: PennylaneClient::LimiterRegistry.new,
+                                  max_retry_wait: 0.0)
   end
 
   def test_not_in_inspect
@@ -25,15 +28,12 @@ class TokenSecrecyTest < Minitest::Test
   end
 
   def test_not_in_log_output_or_events
-    stub_request(:get, "#{API}/me").to_return(status: 200, body: "{}")
-    stub_request(:get, "#{API}/journals/1").to_return(status: 404, body: "{}")
-    stub_request(:get, "#{API}/journals/2").to_timeout
-
+    stub_answers
     @client.call(:getMe)
     assert_raises(PennylaneClient::NotFoundError) { @client.call(:getJournal, id: 1) }
     assert_raises(PennylaneClient::TimeoutError) { @client.call(:getJournal, id: 2) }
 
-    assert_equal 3, @events.size
+    assert_equal(%i[request request request retry request], @events.map { _1[:type] })
     refute_includes @log.string, TOKEN
     refute_includes @events.inspect, TOKEN
   end
@@ -55,6 +55,13 @@ class TokenSecrecyTest < Minitest::Test
   end
 
   private
+
+  # A success, a failure status, and a retried call that never gets an answer.
+  def stub_answers
+    stub_request(:get, "#{API}/me").to_return(status: 200, body: "{}")
+    stub_request(:get, "#{API}/journals/1").to_return(status: 404, body: "{}")
+    stub_request(:get, "#{API}/journals/2").to_return(status: 429, headers: { "Retry-After" => "0" }).then.to_timeout
+  end
 
   def refute_token_in(error)
     refute_includes error.message, TOKEN

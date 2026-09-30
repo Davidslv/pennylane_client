@@ -1,26 +1,38 @@
 # frozen_string_literal: true
 
 module PennylaneClient
-  # The entry point. Wiring only: it builds the Executor and hands calls to it.
+  # The entry point. Wiring only: it composes the middleware around the
+  # Transport and hands calls to the Executor.
   #
   #   client = PennylaneClient.new(token: ENV.fetch("PENNYLANE_TOKEN"))
   #   client.call(:getCustomerInvoice, id: 42)
   #
-  # `logger` and `on_request` default to PennylaneClient.configuration.
-  # `transport` and `base_url` are there for tests and fakes.
+  # `token` is a String, or anything responding to `#call` that returns the
+  # current token (Middleware::Auth). `logger` and `on_request` default to
+  # PennylaneClient.configuration. `limiters` defaults to the process-wide
+  # LimiterRegistry, so every Client on one token shares one budget.
+  # `max_retry_wait` caps the seconds one call spends waiting between
+  # retries (Middleware::Retry). `transport` and `base_url` are there for
+  # tests and fakes.
+  #
+  # Each call runs through the middleware, outermost first:
+  #
+  #   Auth -> Retry -> RateLimit -> Instrument -> Transport
   class Client
     DEFAULT_BASE_URL = "https://app.pennylane.com"
+    RETRY_POLICIES = { nil => :default, always: :always }.freeze
 
     def initialize(token:, base_url: DEFAULT_BASE_URL, transport: NetHttpTransport.default,
                    logger: PennylaneClient.configuration.logger,
-                   on_request: PennylaneClient.configuration.on_request)
-      unless token.is_a?(String) && token.match?(/\A[[:graph:]]+\z/)
-        raise ArgumentError, "token must be a non-empty String with no spaces or line breaks"
-      end
-
+                   on_request: PennylaneClient.configuration.on_request,
+                   limiters: LimiterRegistry.default, max_retry_wait: 30.0)
       @base_url = base_url
-      @executor = Executor.new(registry: Registry.default, transport:, token:, base_url:,
-                               instrumentation: Instrumentation.new(logger:, on_request:))
+      instrumentation = Instrumentation.new(logger:, on_request:)
+      pipeline = Middleware::Instrument.new(transport, instrumentation)
+      pipeline = Middleware::RateLimit.new(pipeline, limiters, instrumentation)
+      pipeline = Middleware::Retry.new(pipeline, instrumentation, max_wait: max_retry_wait)
+      pipeline = Middleware::Auth.new(pipeline, token)
+      @executor = Executor.new(registry: Registry.default, transport: pipeline, base_url:)
     end
 
     # Runs any Registered operation by its Pennylane operationId.
@@ -30,8 +42,15 @@ module PennylaneClient
     # body positionally when it is not an object, e.g. an array:
     #
     #   client.call(:putCustomerCategories, [{ id: 1, weight: "1" }], customer_id: 9)
+    #
+    # `retry: :always` lets a POST, PUT or DELETE be retried after a 5xx or
+    # no response, for a call the caller knows is safe to repeat. It is not
+    # sent to Pennylane.
     def call(operation_id, body = nil, **params)
-      @executor.call(operation_id, params, body)
+      retry_policy = RETRY_POLICIES.fetch(params.delete(:retry)) do |given|
+        raise ArgumentError, "retry must be :always, got #{given.inspect}"
+      end
+      @executor.call(operation_id, params, body, retry_policy:)
     end
 
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"

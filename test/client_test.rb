@@ -7,7 +7,9 @@ require "test_helper"
 class ClientTest < Minitest::Test
   API = "https://app.pennylane.com/api/external/v2"
 
-  def client = @client ||= PennylaneClient.new(token: "tok")
+  # A fresh LimiterRegistry per test, so the suite never waits on the
+  # process-wide bucket.
+  def client = @client ||= PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new)
 
   def test_new_returns_a_client
     assert_instance_of PennylaneClient::Client, client
@@ -17,6 +19,12 @@ class ClientTest < Minitest::Test
   def test_refuses_a_missing_token
     assert_raises(ArgumentError) { PennylaneClient.new(token: "") }
     assert_raises(ArgumentError) { PennylaneClient.new(token: nil) }
+  end
+
+  def test_takes_a_token_provider
+    stub_request(:get, "#{API}/me").with(headers: { "Authorization" => "Bearer fresh" }).to_return(status: 200)
+
+    assert PennylaneClient.new(token: -> { "fresh" }, limiters: PennylaneClient::LimiterRegistry.new).call(:getMe)
   end
 
   def test_get
@@ -65,6 +73,59 @@ class ClientTest < Minitest::Test
 
   def test_an_unknown_operation_raises
     assert_raises(PennylaneClient::UnknownOperationError) { client.call(:getNothing) }
+  end
+
+  def test_retries_a_post_when_rate_limited
+    stub_request(:post, "#{API}/journals").to_return({ status: 429, headers: { "Retry-After" => "0" } },
+                                                     { status: 201, body: '{"id":7}' })
+
+    assert_equal({ id: 7 }, client.call(:postJournals, code: "HA"))
+  end
+
+  def test_raises_rate_limit_error_when_retries_run_out
+    stub_request(:get, "#{API}/me").to_return(status: 429, headers: { "Retry-After" => "0" })
+
+    error = assert_raises(PennylaneClient::RateLimitError) { client.call(:getMe) }
+
+    assert_in_delta 0.0, error.retry_after
+    assert_requested :get, "#{API}/me", times: 3
+  end
+
+  def test_never_retries_a_post_after_a_5xx
+    stub_request(:post, "#{API}/journals").to_return(status: 503)
+
+    assert_raises(PennylaneClient::ServerError) { client.call(:postJournals, code: "HA") }
+    assert_requested :post, "#{API}/journals", times: 1
+  end
+
+  def test_retry_always_is_not_sent_to_pennylane
+    stub_request(:post, "#{API}/journals").with(body: '{"code":"HA"}').to_return(status: 201, body: "{}")
+
+    assert_equal({}, client.call(:postJournals, code: "HA", retry: :always))
+  end
+
+  def test_refuses_an_unknown_retry_policy
+    error = assert_raises(ArgumentError) { client.call(:getMe, retry: true) }
+
+    assert_equal "retry must be :always, got true", error.message
+  end
+
+  def test_rate_limit_headers_reach_the_injected_limiter
+    stub_request(:get, "#{API}/me").to_return(status: 200, headers: { "RateLimit-Remaining" => "7" })
+    limiter = RecordingLimiter.new
+
+    PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new { limiter }).call(:getMe)
+
+    assert_equal [{ remaining: 7, reset_at: nil }], limiter.updates
+  end
+
+  # A limiter that never waits and keeps every header update.
+  class RecordingLimiter
+    attr_reader :updates
+
+    def initialize = @updates = []
+    def acquire = 0.0
+    def update(**headers) = @updates << headers
   end
 
   def test_base_url_and_transport_can_be_injected
