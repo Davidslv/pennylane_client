@@ -55,7 +55,7 @@ module PennylaneClient
 
       def match_transaction: (Integer customer_invoice_id, transaction_id: Integer) -> true
 
-      def unmatch_transaction: (Integer customer_invoice_id, Integer transaction_id) -> true
+      def unmatch_transaction: (Integer customer_invoice_id, transaction_id: Integer) -> true
 
       def update_imported: (Integer id, **untyped attributes) -> item
 
@@ -133,7 +133,7 @@ module PennylaneClient
 
       def match_transaction: (Integer supplier_invoice_id, transaction_id: Integer) -> true
 
-      def unmatch_transaction: (Integer supplier_invoice_id, Integer transaction_id) -> true
+      def unmatch_transaction: (Integer supplier_invoice_id, transaction_id: Integer) -> true
 
       def invoice_lines: (Integer supplier_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
 

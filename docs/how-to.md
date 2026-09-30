@@ -293,7 +293,7 @@ Match a transaction from the invoice's side. Call `match_transaction` once per t
 
 ```ruby
 client.customer_invoices.match_transaction(42, transaction_id: tx[:id])
-client.customer_invoices.unmatch_transaction(42, tx[:id])
+client.customer_invoices.unmatch_transaction(42, transaction_id: tx[:id])
 client.supplier_invoices.match_transaction(51, transaction_id: tx[:id])   # also unmatch_transaction
 ```
 

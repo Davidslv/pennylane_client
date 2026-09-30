@@ -78,7 +78,9 @@ module PennylaneClient
 
       # Unmatches the transaction `transaction_id` from the invoice. Returns
       # true.
-      def unmatch_transaction(supplier_invoice_id, transaction_id)
+      #
+      #   invoices.unmatch_transaction(42, transaction_id: 9)
+      def unmatch_transaction(supplier_invoice_id, transaction_id:)
         call(:deleteSupplierInvoiceMatchedTransactions, supplier_invoice_id:, id: transaction_id)
       end
 
