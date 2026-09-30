@@ -10,12 +10,13 @@ How the gem is put together, and why. Written for someone about to change the co
 |---|---|---|
 | `PennylaneClient` | `lib/pennylane_client.rb` | The namespace. |
 | `PennylaneClient::VERSION` | `lib/pennylane_client/version.rb` | Gem version. |
+| `SnapshotContract` (dev time, not shipped) | `tools/snapshot_contract.rb` | Builds the dated [contract snapshot](api/README.md) in `docs/api/contract/<date>/`. Run by `rake contract:snapshot`. |
 
 ## Planned components
 
 From the design diagram, in the order they are built (Epic #1):
 
-1. **Contract tooling (dev time).** A snapshot of Pennylane's published operations, a generated operation table, and a generated checklist.
+1. **Contract tooling (dev time).** A generated operation table and a generated checklist, both built from the contract snapshot.
 2. **Runtime core.** `Client` (wiring only), `Operation`, `Registry`, `Executor`, the error hierarchy, the request encoder, `Transport`.
 3. **Middleware.** `Auth` (token provider), `RateLimit` (25 requests per 5 seconds per token), `Retry` (429 for any method, 5xx for GET only).
 4. **Pagination and uploads.** Cursor pagination that re-sends filters on every page; multipart uploads.
