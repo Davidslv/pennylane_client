@@ -136,6 +136,38 @@ class ClientTest < Minitest::Test
   end
 end
 
+# Uploads end to end, with WebMock as Pennylane.
+class ClientUploadTest < Minitest::Test
+  API = ClientTest::API
+
+  def client = @client ||= PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new)
+
+  def test_uploads_a_file_with_its_filename
+    stub_request(:post, "#{API}/file_attachments")
+      .with { _1.body.include?(%(name="file"; filename="receipt.pdf")) && _1.body.include?("%PDF-1.7") }
+      .to_return(status: 201, body: '{"id":5}')
+
+    upload = PennylaneClient::Upload.new(StringIO.new("%PDF-1.7"), filename: "receipt.pdf")
+
+    assert_equal({ id: 5 }, client.call(:postFileAttachments, file: upload))
+  end
+
+  # A 429 means Pennylane did not run the upload, so Retry sends it again,
+  # and the file must go again from its first byte.
+  def test_a_retried_upload_sends_the_whole_file_again
+    bodies = []
+    stub_request(:post, "#{API}/file_attachments").with { bodies << _1.body }
+                                                  .to_return({ status: 429, headers: { "Retry-After" => "0" } },
+                                                             { status: 201, body: '{"id":5}' })
+
+    client.call(:postFileAttachments, file: StringIO.new("%PDF-1.7"))
+
+    assert_equal 2, bodies.size
+    assert_equal bodies.first, bodies.last
+    assert_includes bodies.last, "%PDF-1.7"
+  end
+end
+
 # client.paginate and client.pages end to end, with WebMock as Pennylane.
 class ClientPaginationTest < Minitest::Test
   API = ClientTest::API

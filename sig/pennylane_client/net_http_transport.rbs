@@ -14,11 +14,15 @@ module PennylaneClient
 
     def self.default: () -> NetHttpTransport
 
-    def initialize: (?open_timeout: Numeric, ?read_timeout: Numeric, ?write_timeout: Numeric) -> void
+    def initialize: (?open_timeout: Numeric, ?read_timeout: Numeric, ?write_timeout: Numeric,
+                     ?upload_timeout: Numeric) -> void
 
     def close: () -> void
 
     private
+
+    def send_request: (untyped http, Request request, untyped uri) -> untyped
+    def stream?: (untyped body) -> bool
 
     def connections: () -> Hash[String, untyped]
     def connection: (untyped uri) -> untyped

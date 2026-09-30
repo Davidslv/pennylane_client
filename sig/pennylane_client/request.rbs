@@ -3,14 +3,14 @@ module PennylaneClient
     attr_reader verb: Symbol
     attr_reader url: String
     attr_reader headers: Hash[String, String]
-    attr_reader body: String?
+    attr_reader body: (String | Multipart)?
     attr_reader operation_id: Symbol?
     attr_reader retry_policy: :default | :always
 
-    def initialize: (verb: Symbol, url: String, headers: Hash[String, String], body: String?,
+    def initialize: (verb: Symbol, url: String, headers: Hash[String, String], body: (String | Multipart)?,
                      ?operation_id: Symbol?, ?retry_policy: :default | :always) -> void
 
-    def with: (?verb: Symbol, ?url: String, ?headers: Hash[String, String], ?body: String?,
+    def with: (?verb: Symbol, ?url: String, ?headers: Hash[String, String], ?body: (String | Multipart)?,
                ?operation_id: Symbol?, ?retry_policy: :default | :always) -> Request
 
     def inspect: () -> String

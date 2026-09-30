@@ -145,10 +145,14 @@ module PennylaneClient
         @io = io
         @start = io.respond_to?(:pos) ? io.pos : 0
         @size = io.size - @start
+        @buffer = String.new
       end
 
       def filename = @io.respond_to?(:path) && @io.path ? File.basename(@io.path.to_s) : "upload"
-      def read(length) = @io.read(length)
+
+      # Into one reused buffer: a new String per chunk would leave the whole
+      # file behind as garbage faster than GC returns it.
+      def read(length) = @io.read(length, @buffer)
       def rewind = @start.zero? ? @io.rewind : @io.seek(@start)
       def close = nil
     end
@@ -160,13 +164,14 @@ module PennylaneClient
       def initialize(path)
         @path = path
         @size = File.size(path)
+        @buffer = String.new
       end
 
       def filename = @path.basename.to_s
 
       def read(length)
         @io ||= File.new(@path, "rb")
-        @io.read(length)
+        @io.read(length, @buffer)
       end
 
       def rewind = @io&.rewind
