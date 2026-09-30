@@ -60,6 +60,24 @@ class FakePennylaneServerTest < Minitest::Test
     assert_equal [1, 2], [@fake.count("POST 200"), @server.connections_opened]
   end
 
+  # The test above writes right after close_connections returns, so every
+  # client must see the close by then. On macOS a close on 127.0.0.1 reaches
+  # the other end tens of microseconds after close(2) returns, and a write
+  # sent before that fails with EOFError or ECONNRESET (issue #52).
+  def test_close_connections_returns_once_the_client_has_seen_the_close
+    unseen = 20.times.count do
+      socket = TCPSocket.new("127.0.0.1", @server.port)
+      sleep 0.001 until @server.open_connections == 1
+      @server.close_connections
+      socket.wait_readable(0).nil?
+    ensure
+      socket&.close
+      @server.idle?(within: 1)
+    end
+
+    assert_equal 0, unseen, "a client saw the close late in #{unseen} of 20 tries"
+  end
+
   def test_a_reset_is_a_connection_error
     @fake.inject(:reset, times: 1)
 
