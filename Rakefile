@@ -11,7 +11,7 @@ RuboCop::RakeTask.new
 
 desc "Validate the RBS signatures in sig/"
 task :rbs do
-  sh "rbs", "-I", "sig", "validate"
+  sh "rbs", "-r", "date", "-I", "sig", "validate"
 end
 
 namespace :contract do
