@@ -1,0 +1,20 @@
+module PennylaneClient
+  class Paginator
+    @executor: Executor
+    @operation: Operation
+    @params: Hash[Symbol, untyped]
+
+    def initialize: (executor: Executor, operation: Operation, params: Hash[Symbol, untyped]) -> void
+
+    def items: () -> Enumerator::Lazy[Hash[Symbol, untyped], void]
+
+    def pages: () -> Enumerator::Lazy[Hash[Symbol, untyped], void]
+
+    def inspect: () -> String
+
+    private
+
+    def with_limit: (Hash[Symbol, untyped] params) -> Hash[Symbol, untyped]
+    def fetch: (String? cursor) -> Hash[Symbol, untyped]
+  end
+end

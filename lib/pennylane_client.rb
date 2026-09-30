@@ -17,6 +17,7 @@ require_relative "pennylane_client/middleware/rate_limit"
 require_relative "pennylane_client/middleware/retry"
 require_relative "pennylane_client/middleware/auth"
 require_relative "pennylane_client/executor"
+require_relative "pennylane_client/paginator"
 require_relative "pennylane_client/configuration"
 require_relative "pennylane_client/client"
 
