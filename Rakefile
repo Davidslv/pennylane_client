@@ -41,6 +41,12 @@ task :stale do
   ruby "tools/stale.rb"
 end
 
+desc "Verify the gem against your Pennylane sandbox and write a report to docs/api/live/ " \
+     "(needs PENNYLANE_SMOKE_TOKEN; reaches Pennylane; skips without it)"
+task :smoke do
+  ruby "tools/smoke.rb"
+end
+
 desc "Load-test the client against FakePennylane on 127.0.0.1 (about 25 s; never reaches Pennylane)"
 task :load do
   ruby "perf/load_test.rb"
