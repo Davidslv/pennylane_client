@@ -13,7 +13,11 @@ module PennylaneClient
       # Hashes. Follows `next_cursor` as far as you read and sends `filter`
       # and `sort` again on every page.
       #
-      #   invoices.list(filter: [{ field: "status", operator: "eq", value: "draft" }], sort: "-id")
+      # It yields the items only. Pennylane's `include:` (experimental at
+      # Pennylane) adds an `included` section to each page, which this drops;
+      # read it with `client.pages(:getCustomerInvoices, include: ...)`.
+      #
+      #   invoices.list(filter: [{ field: "draft", operator: "eq", value: "true" }], sort: "-id")
       def list(**params) = paginate(:getCustomerInvoices, **params)
 
       # One customer invoice or credit note.

@@ -57,7 +57,7 @@ module PennylaneClient
     # follows `next_cursor` as far as the caller reads and sends `filter`
     # and `sort` again on every page (Paginator):
     #
-    #   client.paginate(:getCustomerInvoices, filter: [{ field: "status", operator: "eq", value: "draft" }])
+    #   client.paginate(:getCustomerInvoices, filter: [{ field: "draft", operator: "eq", value: "true" }])
     #         .each { |invoice| puts invoice[:invoice_number] }
     def paginate(operation_id, **params) = paginator(operation_id, params).items
 

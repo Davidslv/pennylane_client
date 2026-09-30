@@ -4,11 +4,23 @@ Instructions for AI agents (and humans) working in this repository.
 
 ## The gate
 
-`bundle exec rake` must stay green. It runs the Minitest suite, RuboCop, `rbs validate` and `rake stale` (generated files match their generators). The suite stubs all HTTP with WebMock and never reaches Pennylane.
+`bundle exec rake` must stay green. It runs the Minitest suite, RuboCop, `rbs validate` and `rake stale` (generated files match their generators). The suite stubs all HTTP with WebMock and never reaches Pennylane. It also holds the drift checks, each of which fails the gate:
+
+- `test/signatures_test.rb`: `sig/` matches `lib/` (every method has a signature with the same parameters; every instance variable is declared).
+- `test/support/named_trace.rb`: a test with a `# names:` marker sends the Operation it names.
+- `test/public_api_test.rb`: every constant is in the README's Public API list or tagged `@api private`.
+- `test/stability_test.rb`: the README's Experimental list equals the `@note Experimental:` methods.
+- `test/named_write_retry_test.rb`: every named write takes `retry:`; the count of writes is pinned.
+- `test/readme_test.rb`, `test/gemspec_test.rb`: README counts, the dated CHANGELOG entry, zero runtime dependencies.
+- `test/docs_examples_test.rb`: every Ruby example in the README, getting-started and how-to runs against the contract snapshot's answers.
+
+Working rules:
 
 - Test first. Every behaviour change starts with a failing test.
 - New HTTP interactions get WebMock stubs, never live calls.
 - Use Ruby 4.0.7 locally (`.ruby-version`); CI covers 3.3, 3.4 and 4.0.
+- After changing the middleware or the transport, run `rake load` and `rake stress` and update `docs/performance.md`.
+- After a new snapshot, a new or renamed `# names:` marker, or a sandbox report, run `rake contract:sync checklist` and commit the result.
 
 ## Hard rules
 
@@ -26,7 +38,8 @@ Instructions for AI agents (and humans) working in this repository.
 - Branch `<issue-number>-kebab-description`; PR and commit titles `[#<issue-number>] Description`.
 - Domain language is in `CONTEXT.md`. Say Operation, not endpoint. Registered and Named have precise meanings.
 - Design decisions live in `proposals/`. The current plan is proposal 0001 and Epic #1.
-- Public behaviour changes update `README.md` and `docs/` in the same change.
+- Public behaviour changes update `README.md` and `docs/` in the same change, and add a line under `[Unreleased]` in `CHANGELOG.md` (Keep a Changelog 1.1).
+- Adding, renaming and Experimental methods, and resolving a `drift` issue: follow the steps in CONTRIBUTING ("Adding a named method", "Renaming a named method", "Handling a drift issue"). Pennylane renaming an operationId never renames the Ruby method.
 - Named method arguments: creates, imports and updates take `**attributes` and leave required fields to Pennylane's validation; actions take their required fields as keywords; `customers.create(customer_type:)` is the one documented exception, because `customer_type` selects the schema. Ids are positional; a linked record's id is a keyword named after Pennylane's field (`transaction_id:`). Every named write takes `retry: nil` explicitly.
 - A new constant under `PennylaneClient` is either listed in the README's Public API section or tagged `@api private` where it is defined. `test/public_api_test.rb` fails on one that is neither. A method that wraps an operation Pennylane marks Hidden, alpha or beta carries `@note Experimental:` and goes in the README's Stability list (`test/stability_test.rb`).
 
@@ -39,7 +52,7 @@ sig/                           RBS signatures (validated by rake)
 test/                          Minitest + WebMock
 test/support/                  FakePennylane, the Pennylane stand-in
 perf/                          rake load and rake stress, against FakePennylane
-docs/                          getting-started, architecture, how-to
+docs/                          getting-started, how-to, architecture, performance, releasing
 docs/architecture/             design diagram
 docs/api/contract/<date>/      contract snapshot (generated)
 docs/api/CHECKLIST.md          per-operation registered/named/live (generated)

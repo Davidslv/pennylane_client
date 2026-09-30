@@ -29,12 +29,12 @@ The gate tests the fake itself: `test/fake_pennylane_test.rb`, `test/fake_pennyl
 
 ## rake load
 
-Recorded 2026-09-30 on Ruby 4.0.7, arm64-darwin25 (Apple silicon laptop).
+Recorded 2026-09-30 on Ruby 4.0.7, arm64-darwin25 (Apple silicon laptop), on the code after the pre-1.0 review fixes.
 
 | Run | Result |
 |---|---|
-| 8 threads, one token, 20 s, real sockets | 133 calls in 22.7 s. **25 requests in every full 5 s window (100% of the limit).** 0 answered 429, 0 retries, 40 limiter waits, **8 connections for 8 threads**. |
-| Paginate 100k items, in process | 100,000 items in 1,000 pages in 0.2 s. Live objects after a full GC: -1 slots between 20k and 100k items. RSS 46.1 to 52.1 MB. |
+| 8 threads, one token, 20 s, real sockets | 133 calls in 24.9 s. **25 requests in every full 5 s window (100% of the limit).** 0 answered 429, 0 retries, 40 limiter waits, **8 connections for 8 threads**. |
+| Paginate 100k items, in process | 100,000 items in 1,000 pages in 0.1 s. Live objects after a full GC: -1 slots between 20k and 100k items. RSS 47.1 to 49.0 MB. |
 
 The run fails unless every full window carries at least 90% of the limit, the fake answers no 429, the client retries nothing and each thread opens exactly one connection. The pagination run fails if live objects grow by 50,000 slots or more between 20k and 100k items; keeping the items would add several hundred thousand. It uses a limit of 1,000,000 on both sides because it measures memory, not the rate limit.
 
@@ -46,21 +46,21 @@ The first load run opened 40 connections for 8 threads, one per limiter wait. `N
 
 ## rake stress
 
-Recorded 2026-09-30 on Ruby 4.0.7, arm64-darwin25. Eight threads per scenario, each on its own token so the fault is measured rather than the shared budget. The transport's read timeout is 0.5 s. "Attempts" is what the fake received.
+Recorded 2026-09-30 on Ruby 4.0.7, arm64-darwin25, on the code after the pre-1.0 review fixes. Eight threads per scenario, each on its own token so the fault is measured rather than the shared budget. The transport's read timeout is 0.5 s. "Attempts" is what the fake received.
 
 | Scenario | Outcome | Attempts | Retries | Seconds |
 |---|---|---|---|---|
-| 429 storm, `retry-after: 1`, GET + POST + PUT + DELETE | 32 `RateLimitError` | 96 (3 per call) | 64 | 21.1 |
+| 429 storm, `retry-after: 1`, GET + POST + PUT + DELETE | 32 `RateLimitError` | 96 (3 per call) | 64 | 21.5 |
 | 429 storm, `retry-after: 60` | 8 `RateLimitError` | 8 (the wait passes the 30 s cap) | 0 | 0.0 |
-| 5xx burst of 16, GET | 23 ok, 1 `ServerError` | 39 | 15 | 0.6 |
+| 5xx burst of 16, GET | 22 ok, 2 `ServerError` | 38 | 14 | 1.2 |
 | 5xx on every POST, PUT and DELETE | 24 `ServerError` | **24 (one per write)** | 0 | 0.0 |
-| The same with `retry: :always` | 8 `ServerError` | 24 (3 per call) | 16 | 1.1 |
+| The same with `retry: :always` | 8 `ServerError` | 24 (3 per call) | 16 | 1.2 |
 | Slow answers, 0.3 s of a 0.5 s read timeout | 32 ok | 32 | 0 | 1.2 |
 | Hang past the 0.5 s read timeout | 32 `TimeoutError` | 48: 24 GET (3 each), **24 writes (1 each)** | 16 | 4.1 |
-| Connection reset | 32 `ConnectionError` | 48: 24 GET (3 each), **24 writes (1 each)** | 16 | 0.7 |
+| Connection reset | 32 `ConnectionError` | 48: 24 GET (3 each), **24 writes (1 each)** | 16 | 1.5 |
 | Malformed JSON | 32 `PennylaneClient::Error` | 32 | 0 | 0.0 |
-| 4 x 100 MB uploads, each first refused with a 429 | 4 ok | 8 | 4 | 1.6, RSS +7.4 MB |
-| 4 processes x 12 calls on one token | 48 ok | 51 (3 answered 429) | 3 | 1.0 |
+| 4 x 100 MB uploads, each first refused with a 429 | 4 ok | 8 | 4 | 2.2, RSS +6.2 MB |
+| 4 processes x 12 calls on one token | 48 ok | 51 (3 answered 429) | 3 | 3.0 |
 
 The 5xx burst's split between ok and `ServerError` depends on which calls the 16 failures land on; the run checks that every 503 was retried except the last of each failed call.
 
@@ -78,10 +78,10 @@ What the table shows:
 
 `rake "stress[30]"` gives eight threads one client each, on their own tokens, and has them call GET, POST, PUT and DELETE in turn for 30 minutes while the faults take 10 s turns: a 5xx burst, slow answers, resets, malformed JSON, a 429 storm, hangs, then a healthy turn. Memory is sampled every 30 s. The soak fails on an outcome other than success or a documented error class, on more than 3 attempts per call, when fewer than half the calls succeed, or when memory grows by 30 MB or more between the 60 s sample and the end.
 
-Recorded 2026-09-30 on Ruby 4.0.7, arm64-darwin25:
+Recorded 2026-09-30 on Ruby 4.0.7, arm64-darwin25, on the code after the pre-1.0 review fixes. The test suite ran on the same machine for part of the half hour, so the call count is a floor, not a throughput figure:
 
 | Calls | Outcomes | Attempts | Retries | RSS |
 |---|---|---|---|---|
-| 71,831 in 30 min | 71,281 ok, 277 `ServerError`, 130 `Error` (malformed), 87 `ConnectionError`, 56 `TimeoutError` | 72,396 | 565 | 59 MB after the first minute, 53 to 60 MB throughout, 54 MB at the end (-4.5 MB) |
+| 66,770 in 30 min | 66,153 ok, 340 `ServerError`, 130 `Error` (malformed), 79 `ConnectionError`, 68 `TimeoutError` | 67,268 | 498 | 53 MB after the first minute, 53 to 55 MB throughout, 55 MB at the end (+1.8 MB) |
 
 The soak ends with the same leak checks as every scenario, and they passed.
