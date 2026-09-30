@@ -12,8 +12,8 @@ module PennylaneClient
     # Time or an RFC 3339 String and is sent with the first page only;
     # Pennylane answers 400 to `start_date` next to a `cursor`.
     #
-    # To pick up where the last run stopped, keep the last page's
-    # `next_cursor` (from `client.pages`) and pass it as `cursor:` instead.
+    # To pick up where the last run stopped, pass the `processed_at` of the
+    # last change handled as `since:`; the last page's `next_cursor` is null.
     #
     #   client.changelogs.customer_invoices(since: Time.now - 3600).each { |change| sync(change[:id]) }
     class Changelogs < Resource

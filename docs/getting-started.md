@@ -74,6 +74,7 @@ Every error is a `PennylaneClient::Error` with `#status`, `#code`, `#details` an
 | `RateLimitError` | 429; `#retry_after` in seconds |
 | `ServerError` | 5xx |
 | `ConnectionError`, `TimeoutError` | no response arrived |
+| `ExportError` | an export failed or was not ready in time; `#export` is the export as last read |
 
 An unknown operationId raises `PennylaneClient::UnknownOperationError`, an `ArgumentError`.
 

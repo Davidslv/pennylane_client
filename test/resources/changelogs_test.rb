@@ -47,11 +47,11 @@ class ChangelogsTest < Minitest::Test
     assert_equal [1], ids(changelogs.customer_invoices)
   end
 
-  def test_resumes_from_a_saved_cursor
-    stub_request(:get, "#{API}/changelogs/customers").with(query: { cursor: "saved", limit: "1000" })
+  def test_passes_other_params_through
+    stub_request(:get, "#{API}/changelogs/customers").with(query: { limit: "50" })
                                                      .to_return(status: 200, body: page(3))
 
-    assert_equal [3], ids(changelogs.customers(cursor: "saved"))
+    assert_equal [3], ids(changelogs.customers(limit: 50))
   end
 
   # names: getCustomerChanges

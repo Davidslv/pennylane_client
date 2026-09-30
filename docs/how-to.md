@@ -394,6 +394,44 @@ day = client.products.create(label: "Consulting day", price_before_tax: BigDecim
 client.products.list(filter: [{ field: "reference", operator: "eq", value: "CONS-DAY" }]).first
 ```
 
+## Read the changelogs
+
+`client.changelogs` names the ten change feeds: `customer_invoices`, `customers`, `ledger_entries_categories`, `ledger_entry_lines`, `ledger_entry_lines_categories`, `products`, `quotes`, `supplier_invoices`, `suppliers` and `transactions`. Each returns the changes lazily, oldest `processed_at` first. A change carries the record's `id` and its `operation` (`"insert"`, `"update"` or `"delete"`), not the record itself:
+
+```ruby
+client.changelogs.customer_invoices(since: Time.now - 3600).each do |change|
+  next if change[:operation] == "delete"
+
+  sync(client.customer_invoices.find(change[:id]))
+end
+```
+
+Pennylane keeps four weeks of changes. A `since:` older than that raises `ValidationError` (422). Without `since:` the feed starts at the oldest change kept. `since:` is sent with the first page only, because Pennylane answers 400 to `start_date` next to a `cursor`.
+
+To resume where the last run stopped, keep the `processed_at` of the last change you handled and pass it as `since:` next time. The last page's `next_cursor` is null, so it cannot carry you forward. The contract does not say whether `start_date` includes a change at that exact time, so handle a repeat of the last change:
+
+```ruby
+last_seen = nil
+client.changelogs.customer_invoices(since: saved_processed_at).each do |change|
+  sync(change[:id])
+  last_seen = change[:processed_at]
+end
+save(last_seen) if last_seen
+```
+
+## Run an export
+
+`client.exports` names the FEC, General Ledger and Analytical General Ledger exports. Pennylane builds an export in the background; `generate_*` asks for one and reads it until it is ready:
+
+```ruby
+export = client.exports.generate_fec(period_start: Date.new(2026, 1, 1), period_end: Date.new(2026, 6, 30))
+export[:file_url]   # expires 30 minutes after it is issued
+```
+
+It reads the export every 5 s for up to 300 s. Change both with `interval:` and `timeout:`. It raises `ExportError` when the export ends in `error` or is still pending at the timeout; `error.export[:id]` lets you check on it later with `find_fec`. `generate_analytical_general_ledger` also takes `mode:` (`"in_line"`, the default, or `"in_column"`).
+
+To poll on your own schedule, call the two halves yourself: `create_fec(period_start:, period_end:)` returns the pending export and `find_fec(id)` reads it. The same pairs exist for `general_ledger` and `analytical_general_ledger`.
+
 ## Handle a validation error
 
 ```ruby

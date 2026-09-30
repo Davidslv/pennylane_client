@@ -16,14 +16,14 @@ How the gem is put together, and why. Written for someone about to change the co
 | `PennylaneClient::Resources::Resource` and one subclass per resource group | `lib/pennylane_client/resources/` | Named operations. Each public method is a hand-written one-liner over `Client#call` or `#paginate`, e.g. `def finalize(id) = call(:finalizeCustomerInvoice, id:)`. The base class holds the Client and nothing else. `client.customer_invoices` returns one instance per Client. Built so far: `CustomerInvoices`, `Customers`, `SupplierInvoices`, `Suppliers`, `SepaMandates`, `GocardlessMandates`, `ProAccountMandates`, `BankAccounts`, `BankEstablishments`, `Transactions`, `Quotes`, `CommercialDocuments`, `CustomerInvoiceTemplates`, `Numberings`, `Journals`, `FiscalYears`, `FileAttachments`, `LedgerAccounts`, `LedgerEntries`, `LedgerEntryLines`, `TrialBalance`. |
 | `PennylaneClient::Registry` | `lib/pennylane_client/registry.rb` | Frozen lookup from operationId to Operation. An unknown id raises `UnknownOperationError`. |
 | `PennylaneClient::Executor` | `lib/pennylane_client/executor.rb` | Operation + params to Request; Response to a return value or an Error. |
-| `PennylaneClient::Paginator` | `lib/pennylane_client/paginator.rb` | Walks a cursor-paginated list for `client.paginate` and `client.pages`: largest page, every param resent on every page, lazy. |
+| `PennylaneClient::Paginator` | `lib/pennylane_client/paginator.rb` | Walks a cursor-paginated list for `client.paginate` and `client.pages`: largest page, every param but `start_date` resent on every page, lazy. |
 | `PennylaneClient::Multipart`, `Upload` | `lib/pennylane_client/multipart.rb` | A multipart/form-data body that streams its files; `Upload` sets a file's filename and content type. |
 | `PennylaneClient::Encoder` | `lib/pennylane_client/encoder.rb` | `BigDecimal` to `to_s("F")`, `Date`/`Time` to ISO 8601, everything else untouched. |
 | `PennylaneClient::Request`, `Response` | `lib/pennylane_client/request.rb`, `response.rb` | Plain values passed to and from a Transport. `Request#inspect` filters the Authorization header. |
 | `PennylaneClient::Middleware::Auth`, `Retry`, `RateLimit`, `Instrument` | `lib/pennylane_client/middleware/` | One policy each, every one `call(request) -> Response` around the next. |
 | `PennylaneClient::Limiter`, `LimiterRegistry` | `lib/pennylane_client/limiter.rb`, `limiter_registry.rb` | The per-token bucket, 25 per 5 s, and the process-wide lookup that shares one per token. |
 | `PennylaneClient::NetHttpTransport` | `lib/pennylane_client/net_http_transport.rb` | The default Transport, on `Net::HTTP`. |
-| `PennylaneClient::Error` and subclasses | `lib/pennylane_client/errors.rb` | One class per documented status, plus `ConnectionError` and `TimeoutError`. |
+| `PennylaneClient::Error` and subclasses | `lib/pennylane_client/errors.rb` | One class per documented status, plus `ConnectionError`, `TimeoutError` and `ExportError`. |
 | `PennylaneClient::Instrumentation`, `Configuration` | `lib/pennylane_client/instrumentation.rb`, `configuration.rb` | One log line and one `on_request` event per attempt, retry and rate-limit wait. `PennylaneClient.configure` sets the defaults. |
 | `SnapshotContract` (dev time, not shipped) | `tools/snapshot_contract.rb` | Builds the dated [contract snapshot](api/README.md) in `docs/api/contract/<date>/`. Run by `rake contract:snapshot`. |
 | `OperationTable` (dev time, not shipped) | `tools/operation_table.rb` | Generates `operations.rb` from the latest snapshot. Run by `rake contract:sync`. |
@@ -71,7 +71,7 @@ A Transport is anything with `call(request) -> Response` that raises `Connection
 `client.paginate(:getCustomerInvoices, filter: [...])` builds a **Paginator** around the Executor. Each page is an ordinary call through the whole pipeline, so each page takes its own call from the rate limit and GETs retry as usual.
 
 - It asks for the Operation's largest page (`max_limit`, 100 or 1000, read from the contract by the generator) unless the caller passed a smaller `limit`. A larger one raises `ArgumentError` before anything is sent.
-- The cursor does not remember `filter` or `sort` (`guides/cursor-pagination.md`), so every param goes again on every page, next to `cursor`.
+- The cursor does not remember `filter` or `sort` (`guides/cursor-pagination.md`), so every param goes again on every page, next to `cursor`. The exception is `start_date`: every changelog operation answers 400 to `start_date` next to `cursor`, so it goes with the first request only.
 - It stops when `has_more` is false or `next_cursor` is null.
 - It returns an `Enumerator::Lazy`: reading the first ten items sends one request. Enumerating it again starts again from the first page. `client.pages` gives the page Hashes instead of the items.
 - `getPaRegistrations` answers with `items`, `has_more` and `next_cursor` but takes no cursor, so an Operation that is not paginated is read as one page. A response without `items` raises `Error`; an Operation that is not a GET raises `ArgumentError`.
