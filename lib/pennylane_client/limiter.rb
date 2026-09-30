@@ -8,8 +8,10 @@ module PennylaneClient
   # the bucket follows the same shape and `update` can correct it.
   #
   # The clock is wall-clock seconds because `ratelimit-reset` is. A clock
-  # jump costs at most one window: a reset already past, or more than one
-  # window away (plus a second, as the header is whole seconds), is ignored.
+  # jump or skew costs at most one window: a reset already past, or more
+  # than one window away (plus a second, as the header is whole seconds),
+  # is ignored, and the bucket keeps its own window end. The remaining
+  # count does not depend on the clock, so it is applied either way.
   #
   # Thread-safe. The lock is held only to take a call or read a header,
   # never while sleeping.
@@ -38,17 +40,15 @@ module PennylaneClient
     end
 
     # Corrects the bucket from a response's rate-limit headers. Pennylane's
-    # window end wins. The count only ever goes down: another process may be
-    # spending the same token, and requests still in flight are not in
-    # Pennylane's count yet.
+    # window end wins when it is plausible. The count only ever goes down:
+    # another process may be spending the same token, and requests still in
+    # flight are not in Pennylane's count yet.
     def update(remaining:, reset_at: nil)
       @lock.synchronize do
         now = @clock.call
-        next if reset_at && (reset_at <= now || reset_at > now + @period + 1)
-
         refill(now)
         @remaining = [@remaining, remaining].min
-        @reset_at = reset_at if reset_at
+        @reset_at = reset_at if reset_at && plausible?(reset_at, now)
       end
     end
 
@@ -65,6 +65,10 @@ module PennylaneClient
       @remaining -= 1
       0.0
     end
+
+    # A reset already past, or further than one window away, means the
+    # clocks disagree.
+    def plausible?(reset_at, now) = reset_at > now && reset_at <= now + @period + 1
 
     def refill(now)
       return if @reset_at && now < @reset_at

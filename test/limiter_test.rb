@@ -58,12 +58,29 @@ class LimiterTest < Minitest::Test
     assert_in_delta 5.5, @limiter.acquire
   end
 
-  def test_ignores_a_reset_already_past_or_too_far_away
+  # A reset in the past or beyond one window means the clocks disagree. The
+  # reset is not trusted, but the count is: it waits out the local window.
+  def test_a_skewed_reset_is_ignored_but_the_remaining_count_still_drains_the_bucket
     @limiter.acquire
-    @limiter.update(remaining: 0, reset_at: @time.now - 1)
-    @limiter.update(remaining: 0, reset_at: @time.now + 3600)
+    @limiter.update(remaining: 0, reset_at: @time.now + 60)
 
-    assert_in_delta 0.0, @limiter.acquire
+    assert_in_delta 5.0, @limiter.acquire
+  end
+
+  def test_a_reset_already_past_still_drains_the_bucket_until_the_local_window_ends
+    @limiter.acquire
+    @time.sleeper.call(1)
+    @limiter.update(remaining: 0, reset_at: @time.now - 3)
+
+    assert_in_delta 4.0, @limiter.acquire
+  end
+
+  def test_a_skewed_reset_never_moves_the_local_window
+    @limiter.acquire
+    @limiter.update(remaining: 1, reset_at: @time.now + 3600)
+    @limiter.update(remaining: 1, reset_at: @time.now - 1)
+
+    assert_equal [0.0, 5.0], Array.new(2) { @limiter.acquire }
   end
 
   def test_limit_and_period_are_configurable

@@ -15,6 +15,7 @@ module PennylaneClient
     private
 
     def take: () -> Float
+    def plausible?: (Float reset_at, Float now) -> bool
     def refill: (Float now) -> void
   end
 end
