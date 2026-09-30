@@ -38,9 +38,13 @@ module PennylaneClient
       def import(retry: nil, **attributes) = call(:importCustomerInvoices, retry:, **attributes)
 
       # Imports an invoice from an e-invoice file: a Factur-X PDF, or a UBL or
-      # CII XML invoice (alpha at Pennylane). `file` is a File, IO, Pathname
-      # or PennylaneClient::Upload and streams from disk. Hash and Array
-      # fields (`invoice_options:`, `installments:`) go as JSON parts.
+      # CII XML invoice. `file` is a File, IO, Pathname or
+      # PennylaneClient::Upload and streams from disk. Hash and Array fields
+      # (`invoice_options:`, `installments:`) go as JSON parts.
+      #
+      # @note Experimental: the UBL and CII XML input only, which Pennylane
+      #   calls alpha. It may change in a minor release (README, Stability).
+      #   A Factur-X PDF is stable.
       def import_e_invoice(file, retry: nil, **fields)
         call(:createCustomerInvoiceEInvoiceImport, file:, retry:, **fields)
       end
@@ -52,8 +56,10 @@ module PennylaneClient
       def mark_as_paid(id, retry: nil) = call(:markAsPaidCustomerInvoice, id:, retry:)
 
       # Marks one installment as paid; the invoice is paid once all of them
-      # are. Pennylane tags this operation Hidden and calls it alpha, so it
-      # may change. Returns true.
+      # are. Returns true.
+      #
+      # @note Experimental: Pennylane tags this operation Hidden and calls it
+      #   alpha. This method may change in a minor release (README, Stability).
       def mark_installment_as_paid(customer_invoice_id, id, retry: nil)
         call(:markAsPaidCustomerInvoiceInstallment, customer_invoice_id:, id:, retry:)
       end

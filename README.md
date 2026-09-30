@@ -57,6 +57,19 @@ event[:event]  # "customer_invoice.e_invoicing_status_updated"
 
 Pennylane delivers at least once and in no particular order. De-duplicate on the delivery `id` and make your handler idempotent; storing seen ids is up to you. See [how-to](docs/how-to.md#verify-an-inbound-webhook).
 
+## Stability
+
+From 1.0.0 the gem follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html), with one exception: Experimental APIs may change in a minor release. An Experimental method wraps an operation, or an input, that Pennylane itself marks Hidden, alpha or beta, so the gem cannot promise more than Pennylane does. Each one carries `@note Experimental` in its documentation. Pin a minor version (`"~> 1.2.0"`) if you depend on one.
+
+Experimental:
+
+<!-- experimental: checked against the code by test/stability_test.rb -->
+- `client.customers.create`: `postCustomer`, which Pennylane tags Hidden. `create_company` and `create_individual` are stable.
+- `client.customer_invoices.mark_installment_as_paid`: Hidden and alpha at Pennylane.
+- `client.webhook_subscriptions.list`, `client.webhook_subscriptions.find`, `client.webhook_subscriptions.create`, `client.webhook_subscriptions.update` and `client.webhook_subscriptions.delete`: webhooks are beta at Pennylane. `PennylaneClient::Webhook.verify!` is stable.
+- `client.customer_invoices.import_e_invoice` and `client.supplier_invoices.import_e_invoice` with a UBL or CII XML file, which Pennylane calls alpha. A Factur-X PDF is stable.
+<!-- /experimental -->
+
 ## Requirements
 
 Ruby 3.3 or newer. No runtime dependencies.

@@ -8,7 +8,7 @@ module PennylaneClient
     # individual a `first_name` and `last_name`. `list` and `find` see both.
     # Creating and updating one go through its own kind, with
     # `create_company` or `create_individual`. `create` makes either kind
-    # from `customer_type:`; Pennylane tags it Hidden.
+    # from `customer_type:`; Pennylane tags it Hidden, so it is Experimental.
     #
     # Attributes go to Pennylane as given, keyword for keyword, through the
     # Encoder. Responses are deep-frozen Hashes; an action Pennylane answers
@@ -25,11 +25,13 @@ module PennylaneClient
       def find(id) = call(:getCustomer, id:)
 
       # Creates a customer of either kind, `"company"` or `"individual"`,
-      # with that kind's attributes. Pennylane tags this operation Hidden, so
-      # it may change; `create_company` and `create_individual` are the
-      # documented way.
+      # with that kind's attributes. `create_company` and
+      # `create_individual` are the documented way.
       #
       #   customers.create(customer_type: "company", name: "Acme", billing_address: { ... })
+      #
+      # @note Experimental: Pennylane tags postCustomer Hidden. This method
+      #   may change in a minor release (README, Stability).
       def create(customer_type:, retry: nil, **attributes) = call(:postCustomer, customer_type:, retry:, **attributes)
 
       # Creates a company customer. Pennylane requires `name:` and
