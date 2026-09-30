@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Once released, every Company API v2 operation will be callable through `client.call`, and coverage will be tracked operation by operation in `docs/api/CHECKLIST.md`. For a missing Ruby name, say which operationId.
+        Every Company API v2 operation is callable through `client.call`, and coverage is tracked operation by operation in `docs/api/CHECKLIST.md`. For a missing Ruby name, say which operationId.
   - type: textarea
     id: problem
     attributes:

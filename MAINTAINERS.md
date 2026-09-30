@@ -8,7 +8,8 @@
 
 David is the sole maintainer and is responsible for all areas of the project:
 code, reviews, releases, documentation, security, and issue triage. See
-[GOVERNANCE.md](GOVERNANCE.md) for how decisions are made.
+[GOVERNANCE.md](GOVERNANCE.md) for how decisions are made, and
+[docs/releasing.md](docs/releasing.md) for how a release is cut.
 
 ## Becoming a maintainer
 

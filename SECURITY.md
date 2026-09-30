@@ -2,7 +2,7 @@
 
 ## Threat model
 
-pennylane_client is a client library for the Pennylane Company API v2. **Status: nothing below is built yet.** These are the security properties the gem is designed to have (proposal 0001); each is enforced by tests as it lands:
+pennylane_client is a client library for the Pennylane Company API v2. These are the security properties the gem is designed to have (proposal 0001); each is enforced by tests:
 
 - **Tokens.** The gem sends your API token only as an `Authorization: Bearer` header to `https://app.pennylane.com`, over TLS. It never writes the token to logs, `inspect` output, exception messages or the `on_request` instrumentation event. Rate-limiter state is keyed by a SHA-256 digest of the token, never the token itself.
 - **No unsafe retries.** Pennylane does not enforce idempotency on create operations. The gem never retries a POST, PUT or DELETE after a server error or a network timeout, because it cannot know whether the first attempt ran. It retries those only after a 429, or when the caller opts in.
@@ -15,7 +15,7 @@ Outside the gem's control: how you store tokens and webhook secrets, what you do
 
 | Version | Supported |
 | ------- | --------- |
-| latest 0.x (once released) | Yes |
+| latest 0.x | Yes |
 | older 0.x | No |
 
 ## Reporting a vulnerability
