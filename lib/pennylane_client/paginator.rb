@@ -27,6 +27,7 @@ module PennylaneClient
     FIRST_PAGE_ONLY = %i[start_date].freeze
 
     def initialize(executor:, operation:, params:)
+      params = params.transform_keys(&:to_sym) # String keys follow the same rules
       raise ArgumentError, "#{operation.id.inspect} does not return a list" unless operation.verb == :get
       raise ArgumentError, "pass start_date or cursor, not both" if params[:start_date] && params[:cursor]
 
