@@ -175,7 +175,7 @@ customers.update_individual(ada[:id], emails: ["ada@example.org"])
 customers.find_company(acme[:id])     # also find_individual; find(id) works for either
 ```
 
-`create` is `postCustomer`, which makes either kind from `customer_type:`. Pennylane tags it Hidden and leaves it out of its reference, so it may change. Prefer `create_company` and `create_individual`:
+`create` is `postCustomer`, which makes either kind from `customer_type:`. Pennylane tags it Hidden, so it may change. Prefer `create_company` and `create_individual`:
 
 ```ruby
 customers.create(customer_type: "company", name: "Acme", billing_address: address)

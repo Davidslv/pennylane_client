@@ -7,9 +7,8 @@ module PennylaneClient
     # Pennylane keeps the two kinds apart: a company has a `name`, an
     # individual a `first_name` and `last_name`. `list` and `find` see both.
     # Creating and updating one go through its own kind, with
-    # `create_company` or `create_individual`. `create` is the one Pennylane
-    # leaves undocumented (tagged Hidden): it makes either kind from
-    # `customer_type:`.
+    # `create_company` or `create_individual`. `create` makes either kind
+    # from `customer_type:`; Pennylane tags it Hidden.
     #
     # Attributes go to Pennylane as given, keyword for keyword, through the
     # Encoder. Responses are deep-frozen Hashes; an action Pennylane answers
