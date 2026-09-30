@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 169 of 177 live |
+| Named | 172 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -266,13 +266,13 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `getProduct` | GET | `/products/{id}` | yes | yes | unverified: no sandbox access | `test/resources/products_test.rb#test_find` |
 | `putProduct` | PUT | `/products/{id}` | yes | yes | unverified: no sandbox access | `test/resources/products_test.rb#test_update` |
 
-## Purchase Requests (0 of 3 named)
+## Purchase Requests (3 of 3 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getPurchaseRequests` | GET | `/purchase_requests` | yes | no | unverified: no sandbox access |  |
-| `createPurchaseRequestImport` | POST | `/purchase_requests/imports` | yes | no | unverified: no sandbox access |  |
-| `getPurchaseRequest` | GET | `/purchase_requests/{id}` | yes | no | unverified: no sandbox access |  |
+| `getPurchaseRequests` | GET | `/purchase_requests` | yes | yes | unverified: no sandbox access | `test/resources/purchase_requests_test.rb#test_list_walks_every_page_resending_the_filter` |
+| `createPurchaseRequestImport` | POST | `/purchase_requests/imports` | yes | yes | unverified: no sandbox access | `test/resources/purchase_requests_test.rb#test_import_sends_json_with_the_file_attachment_id_and_encoded_amounts` |
+| `getPurchaseRequest` | GET | `/purchase_requests/{id}` | yes | yes | unverified: no sandbox access | `test/resources/purchase_requests_test.rb#test_find` |
 
 ## Quotes (11 of 11 named)
 

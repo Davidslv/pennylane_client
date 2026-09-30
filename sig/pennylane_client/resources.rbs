@@ -438,5 +438,13 @@ module PennylaneClient
     class PaRegistrations < Resource
       def list: () -> Array[item]
     end
+
+    class PurchaseRequests < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def import: (**untyped attributes) -> item
+    end
   end
 end

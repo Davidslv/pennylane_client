@@ -162,6 +162,9 @@ module PennylaneClient
     # The named PA Registrations operation (Resources::PaRegistrations).
     def pa_registrations = @pa_registrations ||= Resources::PaRegistrations.new(self)
 
+    # The named Purchase Requests operations (Resources::PurchaseRequests).
+    def purchase_requests = @purchase_requests ||= Resources::PurchaseRequests.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

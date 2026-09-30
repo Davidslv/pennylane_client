@@ -77,6 +77,8 @@ module PennylaneClient
 
     def pa_registrations: () -> Resources::PaRegistrations
 
+    def purchase_requests: () -> Resources::PurchaseRequests
+
     def inspect: () -> String
 
     private
@@ -140,6 +142,8 @@ module PennylaneClient
     @company: Resources::Company?
 
     @pa_registrations: Resources::PaRegistrations?
+
+    @purchase_requests: Resources::PurchaseRequests?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end
