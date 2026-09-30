@@ -6,7 +6,7 @@ The terms that mean something specific when building and maintaining this gem. W
 
 One HTTP method on one path in the Pennylane API, e.g. `GET /api/external/v2/customer_invoices`.
 
-- The unit of the checklist and of "complete". The Company API v2 had 178 Operations on 2026-09-29.
+- The unit of the checklist and of "complete". The Company API v2 had 178 Operations in the contract snapshot of 2026-09-30.
 - Distinct from Endpoint: people say "endpoint" loosely for a path, and one path can carry several Operations (a list GET and a create POST). Count and track Operations, never "endpoints".
 - Each Operation has a stable `operationId` from Pennylane's spec (e.g. `getCustomerInvoices`). That is its identity in the checklist.
 
