@@ -3,6 +3,7 @@
 require "test_helper"
 require "support/fake_pennylane/server"
 require "stringio"
+require "timeout"
 
 # FakePennylane on a real socket, driven by the real NetHttpTransport.
 # WebMock is off for these tests; nothing leaves 127.0.0.1.
@@ -12,7 +13,8 @@ class FakePennylaneServerTest < Minitest::Test
     @fake = FakePennylane.new
     @server = FakePennylane::Server.new(@fake).start
     @transport = PennylaneClient::NetHttpTransport.new(read_timeout: 0.2)
-    @threads = Thread.list.size
+    start_ruby_timeout_worker
+    @threads = Thread.list
   end
 
   def teardown
@@ -76,16 +78,26 @@ class FakePennylaneServerTest < Minitest::Test
     @transport.close
 
     assert @server.idle?(within: 2), "the server still holds #{@server.open_connections} connection(s)"
-    assert_equal(@threads, settle { Thread.list.size })
+    leaked = settle { Thread.list - @threads }
+
+    assert_empty leaked, "threads left running: #{leaked.map { _1.name || _1.inspect }.join(", ")}"
   end
 
   private
 
-  # The value once it stops changing, or after a second.
+  # On Ruby 3.3 and 3.4, Net::HTTP opens connections inside Timeout.timeout,
+  # and the timeout gem starts one worker thread the first time that runs and
+  # keeps it for the life of the process. Start it before taking the baseline,
+  # or whichever test connects first sees one extra thread (issue #45).
+  def start_ruby_timeout_worker
+    Timeout.timeout(1) { nil }
+  end
+
+  # The value once it is empty, or after a second.
   def settle
     deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 1
     value = yield
-    until value == @threads || Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+    until value.empty? || Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
       sleep 0.01
       value = yield
     end
