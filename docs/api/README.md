@@ -27,3 +27,16 @@ bundle exec rake contract:snapshot
 ```
 
 This reaches `pennylane.readme.io` (the docs site, not the API). It is not part of `bundle exec rake`, and the tests for the tool run offline against the fixtures in `test/fixtures/contract/`. A new snapshot lands only in a pull request together with the code that matches it.
+
+## What is generated from it
+
+Two files are generated from the latest dated snapshot. Never edit either by hand.
+
+```sh
+bundle exec rake contract:sync checklist
+```
+
+- `lib/pennylane_client/operations.rb` (`rake contract:sync`): the operation table, one `PennylaneClient::Operation` per operationId, sorted, one per line. A row holds the verb, path, whether it takes a `cursor` (paginated), the request body kind (`:json`, `:multipart` or `nil`), the one documented 2xx code, and the deprecated flag. The generator refuses an operation with an unknown content type or without exactly one 2xx response.
+- [`CHECKLIST.md`](CHECKLIST.md) (`rake checklist`): one row per operation, grouped by Pennylane's tag, with `registered` (in the table), `named` (a behaviour test under `test/resources/` carries `# names: <operationId>`), `live` and the test that proves it.
+
+`rake stale` is part of `bundle exec rake`. It regenerates both in memory and fails if the committed files differ. CI also regenerates them on disk and runs `git diff --exit-code`.
