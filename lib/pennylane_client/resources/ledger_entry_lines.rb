@@ -28,15 +28,15 @@ module PennylaneClient
       # "partial". Returns every line of the new lettering.
       #
       #   ledger_entry_lines.letter([{ id: 91 }, { id: 95 }], unbalanced_lettering_strategy: "none")
-      def letter(ledger_entry_lines, unbalanced_lettering_strategy:)
-        call(:postLedgerEntryLinesLetter, ledger_entry_lines:, unbalanced_lettering_strategy:)
+      def letter(ledger_entry_lines, unbalanced_lettering_strategy:, retry: nil)
+        call(:postLedgerEntryLinesLetter, ledger_entry_lines:, unbalanced_lettering_strategy:, retry:)
       end
 
       # Unletters the lines, an Array of `{ id: }`. Pennylane requires the
       # same `unbalanced_lettering_strategy:` as `letter`. Sent as a DELETE
       # with a JSON body. Returns true.
-      def unletter(ledger_entry_lines, unbalanced_lettering_strategy:)
-        call(:deleteLedgerEntryLinesUnletter, ledger_entry_lines:, unbalanced_lettering_strategy:)
+      def unletter(ledger_entry_lines, unbalanced_lettering_strategy:, retry: nil)
+        call(:deleteLedgerEntryLinesUnletter, ledger_entry_lines:, unbalanced_lettering_strategy:, retry:)
       end
 
       # The lines lettered to this one, as an Enumerator::Lazy of Hashes.
@@ -56,8 +56,8 @@ module PennylaneClient
       # empty Array removes them all. Returns `{ ledger_entry_line: {...} }`.
       #
       #   ledger_entry_lines.categorize(91, [{ id: 59, weight: "0.5" }, { id: 33, weight: "0.5" }])
-      def categorize(ledger_entry_line_id, categories)
-        call(:putLedgerEntryLinesCategories, categories, ledger_entry_line_id:)
+      def categorize(ledger_entry_line_id, categories, retry: nil)
+        call(:putLedgerEntryLinesCategories, categories, ledger_entry_line_id:, retry:)
       end
     end
   end

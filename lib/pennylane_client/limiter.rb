@@ -15,6 +15,8 @@ module PennylaneClient
   #
   # Thread-safe. The lock is held only to take a call or read a header,
   # never while sleeping.
+  #
+  # @api private
   class Limiter
     def initialize(limit: 25, period: 5.0, clock: -> { Time.now.to_f }, sleeper: ->(seconds) { sleep(seconds) })
       @limit = limit

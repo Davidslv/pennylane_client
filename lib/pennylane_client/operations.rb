@@ -6,6 +6,8 @@
 
 module PennylaneClient
   # Every Operation in the contract snapshot, sorted by operationId.
+  #
+  # @api private
   OPERATIONS = [
     Operation.new(id: :ValidateAccountingSupplierInvoice, verb: :put, path: "/api/external/v2/supplier_invoices/{id}/validate_accounting", paginated: false, max_limit: nil, body: nil, success: 200, deprecated: false),
     Operation.new(id: :"company-fiscal-years", verb: :get, path: "/api/external/v2/fiscal_years", paginated: true, max_limit: 100, body: nil, success: 200, deprecated: false),

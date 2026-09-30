@@ -20,19 +20,21 @@ module PennylaneClient
       # required. Returns true.
       #
       #   gocardless_mandates.send_request(customer_id: 7, email: { recipients: ["billing@acme.example"] })
-      def send_request(customer_id:, email:)
-        call(:postGocardlessMandateMailRequests, customer_id:, email:)
+      def send_request(customer_id:, email:, retry: nil)
+        call(:postGocardlessMandateMailRequests, customer_id:, email:, retry:)
       end
 
       # Associates the mandate with a customer. Returns true.
-      def associate(gocardless_mandate_id, customer_id:)
-        call(:postGocardlessMandateAssociations, gocardless_mandate_id:, customer_id:)
+      def associate(gocardless_mandate_id, customer_id:, retry: nil)
+        call(:postGocardlessMandateAssociations, gocardless_mandate_id:, customer_id:, retry:)
       end
 
       # Cancels the mandate. Only a `pending_submission`, `submitted` or
       # `active` mandate can be cancelled. Pennylane rejects any other with a
       # 400 or 422, both ValidationError. Returns true.
-      def cancel(gocardless_mandate_id) = call(:postGocardlessMandateCancellations, gocardless_mandate_id:)
+      def cancel(gocardless_mandate_id, retry: nil)
+        call(:postGocardlessMandateCancellations, gocardless_mandate_id:, retry:)
+      end
     end
   end
 end

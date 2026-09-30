@@ -23,13 +23,13 @@ module PennylaneClient
       # `date:`, `deadline:` and `invoice_lines:`. Its number comes from the
       # numbering for that type (`client.numberings`); without one, Pennylane
       # rejects the document.
-      def create(**attributes) = call(:postCommercialDocuments, **attributes)
+      def create(retry: nil, **attributes) = call(:postCommercialDocuments, retry:, **attributes)
 
       # Updates a commercial document. Only the attributes you pass change;
       # the type and number never do. `invoice_lines:` and
       # `invoice_line_sections:` are `{ create: [...], update: [...],
       # delete: [...] }`, not plain Arrays.
-      def update(id, **attributes) = call_on(:updateCommercialDocument, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:updateCommercialDocument, { id: }, retry:, **attributes)
 
       # The lists below hang off one document. Each returns every item as an
       # Enumerator::Lazy of Hashes, like `list`, and takes a smaller
@@ -53,8 +53,8 @@ module PennylaneClient
 
       # Attaches `file` (a PDF or image: File, IO, Pathname or
       # PennylaneClient::Upload) as an appendix. It streams from disk.
-      def upload_appendix(commercial_document_id, file)
-        call(:postCommercialDocumentAppendices, commercial_document_id:, file:)
+      def upload_appendix(commercial_document_id, file, retry: nil)
+        call(:postCommercialDocumentAppendices, commercial_document_id:, file:, retry:)
       end
     end
   end

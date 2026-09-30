@@ -24,6 +24,8 @@ module PennylaneClient
   # No Operation in the contract snapshot takes both a body and a query.
   #
   # The transport is usually the middleware pipeline Client composes.
+  #
+  # @api private
   class Executor
     PATH_PARAMETER = /\{(\w+)\}/
     DOT_SEGMENTS = %w[. ..].freeze

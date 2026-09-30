@@ -5,7 +5,8 @@ module PennylaneClient
     # Webhook subscriptions: `client.webhook_subscriptions`. Pennylane POSTs
     # each subscribed event to `callback_url`, signed with the
     # subscription's secret. Webhooks are in beta at Pennylane; it suggests
-    # the changelogs (`client.changelogs`) as the fallback.
+    # the changelogs (`client.changelogs`) as the fallback. Every method here
+    # is Experimental: it may change in a minor release.
     #
     # The events are `"customer_invoice.e_invoicing_status_updated"`,
     # `"dms_file.created"` and `"supplier_invoice.e_invoicing_received"`.
@@ -13,11 +14,17 @@ module PennylaneClient
     class WebhookSubscriptions < Resource
       # Every webhook subscription of the token, as an Enumerator::Lazy of
       # Hashes. Follows `next_cursor` as far as you read. No secrets.
+      #
+      # @note Experimental: Pennylane calls webhooks beta. This method may
+      #   change in a minor release (README, Stability).
       def list(**params) = paginate(:getWebhookSubscriptions, **params)
 
       # One webhook subscription, without its secret. `enabled`,
       # `disabled_reason` and `consecutive_failures` say whether Pennylane
       # still delivers to it.
+      #
+      # @note Experimental: Pennylane calls webhooks beta. This method may
+      #   change in a minor release (README, Stability).
       def find(id) = call(:getWebhookSubscription, id:)
 
       # Creates a webhook subscription. Pennylane requires `callback_url:`
@@ -27,14 +34,23 @@ module PennylaneClient
       #
       #   hook = webhook_subscriptions.create(callback_url: "https://example.com/hooks", events: ["dms_file.created"])
       #   store(hook[:secret])
-      def create(**attributes) = call(:postWebhookSubscriptions, **attributes)
+      #
+      # @note Experimental: Pennylane calls webhooks beta. This method may
+      #   change in a minor release (README, Stability).
+      def create(retry: nil, **attributes) = call(:postWebhookSubscriptions, retry:, **attributes)
 
       # Updates a webhook subscription: `callback_url:`, `events:` or
       # `enabled:`. It takes no secret; a new subscription gets a new one.
-      def update(id, **attributes) = call_on(:putWebhookSubscription, { id: }, **attributes)
+      #
+      # @note Experimental: Pennylane calls webhooks beta. This method may
+      #   change in a minor release (README, Stability).
+      def update(id, retry: nil, **attributes) = call_on(:putWebhookSubscription, { id: }, retry:, **attributes)
 
       # Deletes a webhook subscription.
-      def delete(id) = call(:deleteWebhookSubscription, id:)
+      #
+      # @note Experimental: Pennylane calls webhooks beta. This method may
+      #   change in a minor release (README, Stability).
+      def delete(id, retry: nil) = call(:deleteWebhookSubscription, id:, retry:)
     end
   end
 end

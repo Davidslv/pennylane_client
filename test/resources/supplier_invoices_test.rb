@@ -179,7 +179,13 @@ class SupplierInvoiceActionsTest < Minitest::Test
   def test_unmatch_transaction_returns_true_on_no_content
     stub_request(:delete, "#{API}/supplier_invoices/42/matched_transactions/9").with(body: nil).to_return(status: 204)
 
-    assert_same true, invoices.unmatch_transaction(42, 9)
+    assert_same true, invoices.unmatch_transaction(42, transaction_id: 9)
+  end
+
+  # The same shape as match_transaction: the transaction is a keyword. A
+  # positional id raises instead of reaching Pennylane.
+  def test_unmatch_transaction_takes_the_transaction_as_a_keyword
+    assert_raises(ArgumentError) { invoices.unmatch_transaction(42, 9) }
   end
 
   # names: putSupplierInvoiceCategories

@@ -100,6 +100,8 @@ module OperationTable
 
       module PennylaneClient
         # Every Operation in the contract snapshot, sorted by operationId.
+        #
+        # @api private
         OPERATIONS = [
       #{lines.join(",\n")}
         ].freeze

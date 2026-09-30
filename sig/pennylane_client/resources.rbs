@@ -1,6 +1,8 @@
 module PennylaneClient
   module Resources
     type item = Hash[Symbol, untyped]
+    # What a named write takes as `retry:` (Client#call).
+    type retry_policy = :always | nil
     # What Multipart streams as a file part.
     type file = File | IO | StringIO | Pathname | Upload
 
@@ -29,35 +31,35 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
-      def delete: (Integer id) -> true
+      def delete: (Integer id, ?retry: retry_policy) -> true
 
-      def create_from_quote: (**untyped attributes) -> item
+      def create_from_quote: (?retry: retry_policy, **untyped attributes) -> item
 
-      def import: (**untyped attributes) -> item
+      def import: (?retry: retry_policy, **untyped attributes) -> item
 
-      def import_e_invoice: (file file, **untyped fields) -> item
+      def import_e_invoice: (file file, ?retry: retry_policy, **untyped fields) -> item
 
-      def finalize: (Integer id) -> item
+      def finalize: (Integer id, ?retry: retry_policy) -> item
 
-      def mark_as_paid: (Integer id) -> true
+      def mark_as_paid: (Integer id, ?retry: retry_policy) -> true
 
-      def mark_installment_as_paid: (Integer customer_invoice_id, Integer id) -> true
+      def mark_installment_as_paid: (Integer customer_invoice_id, Integer id, ?retry: retry_policy) -> true
 
-      def send_by_email: (Integer id, **untyped fields) -> true
+      def send_by_email: (Integer id, ?retry: retry_policy, **untyped fields) -> true
 
-      def send_to_pa: (Integer id) -> true
+      def send_to_pa: (Integer id, ?retry: retry_policy) -> true
 
-      def link_credit_note: (Integer id, credit_note_id: Integer) -> item
+      def link_credit_note: (Integer id, credit_note_id: Integer, ?retry: retry_policy) -> item
 
-      def match_transaction: (Integer customer_invoice_id, transaction_id: Integer) -> true
+      def match_transaction: (Integer customer_invoice_id, transaction_id: Integer, ?retry: retry_policy) -> true
 
-      def unmatch_transaction: (Integer customer_invoice_id, Integer transaction_id) -> true
+      def unmatch_transaction: (Integer customer_invoice_id, transaction_id: Integer, ?retry: retry_policy) -> true
 
-      def update_imported: (Integer id, **untyped attributes) -> item
+      def update_imported: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
       def invoice_lines: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
 
@@ -71,11 +73,11 @@ module PennylaneClient
 
       def appendices: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def upload_appendix: (Integer customer_invoice_id, file file) -> item
+      def upload_appendix: (Integer customer_invoice_id, file file, ?retry: retry_policy) -> item
 
       def categories: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def categorize: (Integer customer_invoice_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
+      def categorize: (Integer customer_invoice_id, Array[{ id: Integer, weight: untyped }] categories, ?retry: retry_policy) -> Array[item]
     end
 
     class Customers < Resource
@@ -83,33 +85,33 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (customer_type: "company" | "individual", **untyped attributes) -> item
+      def create: (customer_type: "company" | "individual", ?retry: retry_policy, **untyped attributes) -> item
 
-      def create_company: (**untyped attributes) -> item
+      def create_company: (?retry: retry_policy, **untyped attributes) -> item
 
       def find_company: (Integer id) -> item
 
-      def update_company: (Integer id, **untyped attributes) -> item
+      def update_company: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
-      def create_individual: (**untyped attributes) -> item
+      def create_individual: (?retry: retry_policy, **untyped attributes) -> item
 
       def find_individual: (Integer id) -> item
 
-      def update_individual: (Integer id, **untyped attributes) -> item
+      def update_individual: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
       def contacts: (Integer customer_id, **untyped params) -> Enumerator::Lazy[item, void]
 
       def find_contact: (Integer customer_id, Integer id) -> item
 
-      def create_contact: (Integer customer_id, **untyped attributes) -> item
+      def create_contact: (Integer customer_id, ?retry: retry_policy, **untyped attributes) -> item
 
-      def update_contact: (Integer customer_id, Integer id, **untyped attributes) -> item
+      def update_contact: (Integer customer_id, Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
-      def delete_contact: (Integer customer_id, Integer id) -> true
+      def delete_contact: (Integer customer_id, Integer id, ?retry: retry_policy) -> true
 
       def categories: (Integer customer_id, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def categorize: (Integer customer_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
+      def categorize: (Integer customer_id, Array[{ id: Integer, weight: untyped }] categories, ?retry: retry_policy) -> Array[item]
     end
 
     class SupplierInvoices < Resource
@@ -117,23 +119,23 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def import: (**untyped attributes) -> item
+      def import: (?retry: retry_policy, **untyped attributes) -> item
 
-      def import_e_invoice: (file file, **untyped fields) -> item
+      def import_e_invoice: (file file, ?retry: retry_policy, **untyped fields) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
-      def validate_accounting: (Integer id) -> item
+      def validate_accounting: (Integer id, ?retry: retry_policy) -> item
 
-      def update_payment_status: (Integer supplier_invoice_id, payment_status: "paid" | "to_be_paid") -> true
+      def update_payment_status: (Integer supplier_invoice_id, payment_status: "paid" | "to_be_paid", ?retry: retry_policy) -> true
 
-      def update_e_invoice_status: (Integer supplier_invoice_id, status: "disputed" | "refused" | "approved", **untyped fields) -> item
+      def update_e_invoice_status: (Integer supplier_invoice_id, status: "disputed" | "refused" | "approved", ?retry: retry_policy, **untyped fields) -> item
 
-      def link_purchase_request: (Integer supplier_invoice_id, purchase_request_id: Integer) -> true
+      def link_purchase_request: (Integer supplier_invoice_id, purchase_request_id: Integer, ?retry: retry_policy) -> true
 
-      def match_transaction: (Integer supplier_invoice_id, transaction_id: Integer) -> true
+      def match_transaction: (Integer supplier_invoice_id, transaction_id: Integer, ?retry: retry_policy) -> true
 
-      def unmatch_transaction: (Integer supplier_invoice_id, Integer transaction_id) -> true
+      def unmatch_transaction: (Integer supplier_invoice_id, transaction_id: Integer, ?retry: retry_policy) -> true
 
       def invoice_lines: (Integer supplier_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
 
@@ -143,7 +145,7 @@ module PennylaneClient
 
       def categories: (Integer supplier_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def categorize: (Integer supplier_invoice_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
+      def categorize: (Integer supplier_invoice_id, Array[{ id: Integer, weight: untyped }] categories, ?retry: retry_policy) -> Array[item]
     end
 
     class Suppliers < Resource
@@ -151,13 +153,13 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
       def categories: (Integer supplier_id, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def categorize: (Integer supplier_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
+      def categorize: (Integer supplier_id, Array[{ id: Integer, weight: untyped }] categories, ?retry: retry_policy) -> Array[item]
     end
 
     class SepaMandates < Resource
@@ -165,11 +167,11 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
-      def delete: (Integer id) -> true
+      def delete: (Integer id, ?retry: retry_policy) -> true
     end
 
     class GocardlessMandates < Resource
@@ -177,21 +179,21 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def send_request: (customer_id: Integer, email: { recipients: Array[String], ?subject: String?, ?body: String? }) -> true
+      def send_request: (customer_id: Integer, email: { recipients: Array[String], ?subject: String?, ?body: String? }, ?retry: retry_policy) -> true
 
-      def associate: (Integer gocardless_mandate_id, customer_id: Integer) -> true
+      def associate: (Integer gocardless_mandate_id, customer_id: Integer, ?retry: retry_policy) -> true
 
-      def cancel: (Integer gocardless_mandate_id) -> true
+      def cancel: (Integer gocardless_mandate_id, ?retry: retry_policy) -> true
     end
 
     class ProAccountMandates < Resource
       def list: (**untyped params) -> Enumerator::Lazy[item, void]
 
-      def send_request: (customer_id: Integer) -> true
+      def send_request: (customer_id: Integer, ?retry: retry_policy) -> true
 
       def migration_candidates: (**untyped params) -> Enumerator::Lazy[item, void]
 
-      def migrate: (mandate_type: "SepaMandate" | "Mandate", mandate_id: Integer, **untyped fields) -> item
+      def migrate: (mandate_type: "SepaMandate" | "Mandate", mandate_id: Integer, ?retry: retry_policy, **untyped fields) -> item
     end
 
     class BankAccounts < Resource
@@ -199,7 +201,7 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
     end
 
     class BankEstablishments < Resource
@@ -211,13 +213,13 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
       def categories: (Integer transaction_id, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def categorize: (Integer transaction_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
+      def categorize: (Integer transaction_id, Array[{ id: Integer, weight: untyped }] categories, ?retry: retry_policy) -> Array[item]
 
       def matched_invoices: (Integer transaction_id, **untyped params) -> Enumerator::Lazy[item, void]
     end
@@ -227,13 +229,13 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
-      def send_by_email: (Integer id, **untyped fields) -> true
+      def send_by_email: (Integer id, ?retry: retry_policy, **untyped fields) -> true
 
-      def update_status: (Integer id, status: "pending" | "accepted" | "denied" | "invoiced" | "expired") -> item
+      def update_status: (Integer id, status: "pending" | "accepted" | "denied" | "invoiced" | "expired", ?retry: retry_policy) -> item
 
       def invoice_lines: (Integer quote_id, **untyped params) -> Enumerator::Lazy[item, void]
 
@@ -241,7 +243,7 @@ module PennylaneClient
 
       def appendices: (Integer quote_id, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def upload_appendix: (Integer quote_id, file file) -> item
+      def upload_appendix: (Integer quote_id, file file, ?retry: retry_policy) -> item
     end
 
     class CommercialDocuments < Resource
@@ -249,9 +251,9 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
       def invoice_lines: (Integer commercial_document_id, **untyped params) -> Enumerator::Lazy[item, void]
 
@@ -259,7 +261,7 @@ module PennylaneClient
 
       def appendices: (Integer commercial_document_id, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def upload_appendix: (Integer commercial_document_id, file file) -> item
+      def upload_appendix: (Integer commercial_document_id, file file, ?retry: retry_policy) -> item
     end
 
     class CustomerInvoiceTemplates < Resource
@@ -275,7 +277,7 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
     end
 
     class FiscalYears < Resource
@@ -283,7 +285,7 @@ module PennylaneClient
     end
 
     class FileAttachments < Resource
-      def upload: (file file, **untyped fields) -> item
+      def upload: (file file, ?retry: retry_policy, **untyped fields) -> item
     end
 
     class LedgerAccounts < Resource
@@ -291,9 +293,9 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
     end
 
     class LedgerEntries < Resource
@@ -301,9 +303,9 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
       def lines: (Integer ledger_entry_id, **untyped params) -> Enumerator::Lazy[item, void]
     end
@@ -316,16 +318,18 @@ module PennylaneClient
       def find: (Integer id) -> item
 
       def letter: (Array[{ id: Integer }] ledger_entry_lines,
-                   unbalanced_lettering_strategy: unbalanced_lettering_strategy) -> Array[item]
+                   unbalanced_lettering_strategy: unbalanced_lettering_strategy,
+                   ?retry: retry_policy) -> Array[item]
 
       def unletter: (Array[{ id: Integer }] ledger_entry_lines,
-                     unbalanced_lettering_strategy: unbalanced_lettering_strategy) -> true
+                     unbalanced_lettering_strategy: unbalanced_lettering_strategy,
+                     ?retry: retry_policy) -> true
 
       def lettered_lines: (Integer ledger_entry_line_id, **untyped params) -> Enumerator::Lazy[item, void]
 
       def categories: (Integer ledger_entry_line_id, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def categorize: (Integer ledger_entry_line_id, Array[{ id: Integer, weight: untyped }] categories) -> item
+      def categorize: (Integer ledger_entry_line_id, Array[{ id: Integer, weight: untyped }] categories, ?retry: retry_policy) -> item
     end
 
     class TrialBalance < Resource
@@ -337,9 +341,9 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
     end
 
     class CategoryGroups < Resource
@@ -347,9 +351,9 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
       def categories: (Integer category_group_id, **untyped params) -> Enumerator::Lazy[item, void]
     end
@@ -359,9 +363,9 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
     end
 
     class Changelogs < Resource
@@ -384,6 +388,10 @@ module PennylaneClient
       def suppliers: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
 
       def transactions: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+
+      private
+
+      def feed: (Symbol operation_id, Time | String | nil since, Hash[Symbol, untyped] params) -> Enumerator::Lazy[item, void]
     end
 
     class Exports < Resource
@@ -392,28 +400,28 @@ module PennylaneClient
 
       def initialize: (Client client, ?clock: ^() -> Float, ?sleeper: ^(Numeric) -> untyped) -> void
 
-      def create_fec: (**untyped attributes) -> item
+      def create_fec: (?retry: retry_policy, **untyped attributes) -> item
 
       def find_fec: (Integer id) -> item
 
-      def generate_fec: (?timeout: Numeric, ?interval: Numeric, **untyped attributes) -> item
+      def generate_fec: (?timeout: Numeric, ?interval: Numeric, ?retry: retry_policy, **untyped attributes) -> item
 
-      def create_general_ledger: (**untyped attributes) -> item
+      def create_general_ledger: (?retry: retry_policy, **untyped attributes) -> item
 
       def find_general_ledger: (Integer id) -> item
 
-      def generate_general_ledger: (?timeout: Numeric, ?interval: Numeric, **untyped attributes) -> item
+      def generate_general_ledger: (?timeout: Numeric, ?interval: Numeric, ?retry: retry_policy, **untyped attributes) -> item
 
-      def create_analytical_general_ledger: (**untyped attributes) -> item
+      def create_analytical_general_ledger: (?retry: retry_policy, **untyped attributes) -> item
 
       def find_analytical_general_ledger: (Integer id) -> item
 
-      def generate_analytical_general_ledger: (?timeout: Numeric, ?interval: Numeric, **untyped attributes) -> item
+      def generate_analytical_general_ledger: (?timeout: Numeric, ?interval: Numeric, ?retry: retry_policy, **untyped attributes) -> item
 
       private
 
       def generate: (Symbol create_id, Symbol find_id, Hash[Symbol, untyped] attributes, timeout: Numeric,
-                     interval: Numeric) -> item
+                     interval: Numeric, retry: retry_policy) -> item
 
       def ready?: (item export) -> bool
     end
@@ -423,9 +431,9 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
       def invoice_lines: (Integer billing_subscription_id, **untyped params) -> Enumerator::Lazy[item, void]
 
@@ -441,7 +449,7 @@ module PennylaneClient
     end
 
     class PaRegistrations < Resource
-      def list: () -> Array[item]
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
     end
 
     class PurchaseRequests < Resource
@@ -449,7 +457,7 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def import: (**untyped attributes) -> item
+      def import: (?retry: retry_policy, **untyped attributes) -> item
     end
 
     class WebhookSubscriptions < Resource
@@ -457,11 +465,11 @@ module PennylaneClient
 
       def find: (Integer id) -> item
 
-      def create: (**untyped attributes) -> item
+      def create: (?retry: retry_policy, **untyped attributes) -> item
 
-      def update: (Integer id, **untyped attributes) -> item
+      def update: (Integer id, ?retry: retry_policy, **untyped attributes) -> item
 
-      def delete: (Integer id) -> true
+      def delete: (Integer id, ?retry: retry_policy) -> true
     end
   end
 end

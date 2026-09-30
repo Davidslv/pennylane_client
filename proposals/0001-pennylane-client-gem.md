@@ -330,6 +330,36 @@ The contract test (table against snapshot) is a sanity check only, because the t
 
 **Date:** 2026-09-30
 
+#### D9: An Experimental tier outside the SemVer promise
+
+**Decision:** Named methods that wrap an operation or input Pennylane marks Hidden, alpha or beta are Experimental: they may change in a minor release. Today that is `customers.create` (`postCustomer`, Hidden), `customer_invoices.mark_installment_as_paid` (Hidden and alpha), every `webhook_subscriptions` method (beta) and the UBL and CII XML input of both `import_e_invoice` methods (alpha). Each carries `@note Experimental:` in YARD and appears in the README under Stability; a test keeps the two lists equal.
+
+**Alternatives considered:** Removing the two Hidden operations from the named layer and leaving them to `client.call`, with webhooks named but flagged beta; naming everything under the ordinary SemVer promise.
+
+**Why this one:** The gem cannot promise more than Pennylane does. Pennylane already publishes a Hidden `putCustomer` that is not in the snapshot, so a generic create and update pair is likely to change shape; under plain SemVer, following it would need a major release. Dropping the Hidden operations from the named layer would break the "every live operation is Named" goal for 1.0 and give callers a worse API for no gain in safety. The cost is a second promise to explain, and a caller who ignores the list can still be surprised by a minor release. Leaving the tier out until after 1.0 would itself be a breaking change, so it is decided now.
+
+**Date:** 2026-09-30
+
+#### D10: A declared public surface; everything else is `@api private`
+
+**Decision:** The README's Public API section lists exactly what SemVer covers: `PennylaneClient.new` and `configure` with `Configuration`, `Client` (`call`, `paginate`, `pages` and the resource accessors), every named method, the error classes, `Webhook.verify!`, `Upload`, `LimiterRegistry` and the limiter interface, the transport interface with `Request` and `Response`, `NetHttpTransport` and its constructor options, and `VERSION`. Every other class and module is tagged `@api private` in YARD. Only the `Multipart` part classes are `private_constant`. A test fails when a new top-level constant is in neither list.
+
+**Alternatives considered:** Leaving every constant public and undocumented; also making `Middleware::*`, `Paginator`, `Executor`, `Registry` and `Encoder` `private_constant`.
+
+**Why this one:** Ruby makes every constant reachable, so without a list any change to `Executor` or `OPERATIONS` could be argued to be breaking after 1.0. Writing the surface down scopes the promise at no runtime cost, which is how dry-schema, dry-types and factory_bot mark theirs. `Request` and `Response` stay public because a custom transport depends on them. `private_constant` on the pipeline classes would stop tests, fakes and debugging sessions from naming them, for little gain; the part classes of a multipart body have no use outside it, so they alone are hidden. The trade-off: `@api private` is a convention, and a caller who ignores it gets no warning.
+
+**Date:** 2026-09-30
+
+#### D11: Every named write takes `retry:`
+
+**Decision:** Every named method whose operation is not a GET declares `retry: nil` and passes it to `client.call`. `:always` opts the write in to retries after a 5xx or no response, as D5 allows; anything else raises `ArgumentError`. RBS types it as `:always | nil`. Named reads take no `retry:`.
+
+**Alternatives considered:** Named methods never take `retry:`, and a caller who needs it uses `client.call(:operationId, ..., retry: :always)`; leaving it as it was, where 54 methods took it through `**attributes` by accident and 32 rejected it.
+
+**Why this one:** D5 promises a per-call opt-in, and the writes that most need it (`categorize`, `update_payment_status`, `update_status`) were among the 32 that could not take it. Sending callers to `client.call` would make them spell the operationId the named layer exists to hide. As an explicit keyword it can never reach a request body, even if Pennylane one day adds a field called `retry`. Stripe's Ruby library gives every service method, actions included, the same trailing request options. Removing it after 1.0 would break callers of the 54 that already accepted it, so it is decided now.
+
+**Date:** 2026-09-30
+
 ## Open Questions
 
 - **Live validation.** David has no Pennylane account. Signup needs a French SIRET, and a sandbox needs a paid Essential plan behind it. Every `live` row starts as `unverified: no sandbox access` until a contributor with an account runs `rake smoke`. Owner: David, if a contributor or partner route appears.

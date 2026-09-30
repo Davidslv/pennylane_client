@@ -62,6 +62,13 @@ invoices.finalize(invoice[:id])
 invoices.send_by_email(invoice[:id])
 ```
 
+Arguments follow one rule:
+
+- Creates, imports and updates take `**attributes` (`create`, `create_company`, `create_from_quote`, `import`, `update`, `update_imported` and the like). The client checks none of them; Pennylane validates the required fields and a missing one raises `ValidationError`.
+- Actions take their required fields as keywords, so a missing one raises `ArgumentError` before anything is sent: `match_transaction(42, transaction_id: 9)`, `update_payment_status(43, payment_status: "paid")`, `link_credit_note(42, credit_note_id: 43)`, `letter(lines, unbalanced_lettering_strategy: "none")`. The status changes (`update_status`, `update_payment_status`, `update_e_invoice_status`) are actions.
+- The one exception is `customers.create(customer_type:, **attributes)`: `customer_type:` picks which kind of customer, and so which fields, Pennylane expects.
+- Every write also takes `retry:` ([retries](how-to.md#retries-and-the-rate-limit)).
+
 Attributes go to Pennylane as you pass them. A method takes its ids positionally, so a keyword naming one raises `ArgumentError` rather than change which record is written: `products.update(1, id: 2)` raises, and so does `products.update(1, **fetched_product)`. Lists return every item lazily, as `client.paginate` does. The full list of methods is in `lib/pennylane_client/resources/` and `sig/pennylane_client/resources.rbs`; the how-to covers the ones you would not guess, for [customer invoices](how-to.md#work-with-customer-invoices), [customers](how-to.md#work-with-customers), [supplier invoices and suppliers](how-to.md#work-with-supplier-invoices-and-suppliers), [mandates](how-to.md#work-with-mandates), [transactions and bank accounts](how-to.md#work-with-transactions-and-bank-accounts), [quotes and commercial documents](how-to.md#work-with-quotes-and-commercial-documents), and [the ledger](how-to.md#work-with-the-ledger).
 
 ## When it fails

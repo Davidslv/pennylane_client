@@ -40,6 +40,8 @@ module PennylaneClient
   # The size is known up front, so the request carries a Content-Length and
   # no chunked encoding. `rewind` puts every file back where it started, so
   # Retry can send the body again after a 429.
+  #
+  # @api private
   class Multipart
     CONTENT_TYPES = {
       ".pdf" => "application/pdf", ".png" => "image/png", ".jpg" => "image/jpeg", ".jpeg" => "image/jpeg",
@@ -123,6 +125,8 @@ module PennylaneClient
     def text(string) = TextSource.new(string)
 
     # A part held in memory: a part's headers, a text field, the boundaries.
+    #
+    # @api private
     class TextSource
       def initialize(string)
         @io = StringIO.new(string.b)
@@ -137,6 +141,8 @@ module PennylaneClient
     # A file part: exactly `size` bytes, the count measured when the form was
     # built and sent as Content-Length. A file that grows is cut there; one
     # that shrinks raises, rather than leaving the server waiting.
+    #
+    # @api private
     class FileSource
       attr_reader :size
 
@@ -166,6 +172,8 @@ module PennylaneClient
 
     # A file the caller opened, read from the position the caller left it
     # at. It is never closed here.
+    #
+    # @api private
     class IOSource < FileSource
       def initialize(io)
         unless io.respond_to?(:read) && io.respond_to?(:size)
@@ -190,6 +198,8 @@ module PennylaneClient
     # raises Errno::ENOENT (from File.size), and a path that exists but is
     # not a readable file (a directory, no read permission) raises
     # ArgumentError.
+    #
+    # @api private
     class PathSource < FileSource
       def initialize(path)
         size = File.size(path)
@@ -208,5 +218,7 @@ module PennylaneClient
         @io = nil
       end
     end
+
+    private_constant :TextSource, :FileSource, :IOSource, :PathSource
   end
 end

@@ -27,51 +27,55 @@ module PennylaneClient
 
       # Asks for a FEC export. Pennylane requires `period_start:` and
       # `period_end:`.
-      def create_fec(**attributes) = call(:exportFec, **attributes)
+      def create_fec(retry: nil, **attributes) = call(:exportFec, retry:, **attributes)
 
       # One FEC export.
       def find_fec(id) = call(:getFecExport, id:)
 
       # Creates a FEC export and waits until it is ready.
-      def generate_fec(timeout: 300, interval: 5, **attributes)
-        generate(:exportFec, :getFecExport, attributes, timeout:, interval:)
+      def generate_fec(timeout: 300, interval: 5, retry: nil, **attributes)
+        generate(:exportFec, :getFecExport, attributes, timeout:, interval:, retry:)
       end
 
       # Asks for a General Ledger export, an xlsx file. Pennylane requires
       # `period_start:` and `period_end:`.
-      def create_general_ledger(**attributes) = call(:exportGeneralLedger, **attributes)
+      def create_general_ledger(retry: nil, **attributes) = call(:exportGeneralLedger, retry:, **attributes)
 
       # One General Ledger export.
       def find_general_ledger(id) = call(:getGeneralLedgerExport, id:)
 
       # Creates a General Ledger export and waits until it is ready.
-      def generate_general_ledger(timeout: 300, interval: 5, **attributes)
-        generate(:exportGeneralLedger, :getGeneralLedgerExport, attributes, timeout:, interval:)
+      def generate_general_ledger(timeout: 300, interval: 5, retry: nil, **attributes)
+        generate(:exportGeneralLedger, :getGeneralLedgerExport, attributes, timeout:, interval:, retry:)
       end
 
       # Asks for an Analytical General Ledger export, an xlsx file.
       # Pennylane requires `period_start:` and `period_end:`; `mode:` is
       # "in_line" (the default) or "in_column".
-      def create_analytical_general_ledger(**attributes) = call(:exportAnalyticalGeneralLedger, **attributes)
+      def create_analytical_general_ledger(retry: nil, **attributes)
+        call(:exportAnalyticalGeneralLedger, retry:, **attributes)
+      end
 
       # One Analytical General Ledger export.
       def find_analytical_general_ledger(id) = call(:getAnalyticalGeneralLedgerExport, id:)
 
       # Creates an Analytical General Ledger export and waits until it is
       # ready.
-      def generate_analytical_general_ledger(timeout: 300, interval: 5, **attributes)
-        generate(:exportAnalyticalGeneralLedger, :getAnalyticalGeneralLedgerExport, attributes, timeout:, interval:)
+      def generate_analytical_general_ledger(timeout: 300, interval: 5, retry: nil, **attributes)
+        generate(:exportAnalyticalGeneralLedger, :getAnalyticalGeneralLedgerExport, attributes,
+                 timeout:, interval:, retry:)
       end
 
       private
 
       # Reads the export straight after creating it: only a read carries
-      # `file_url`. Then once per `interval` while it is pending.
-      def generate(create_id, find_id, attributes, timeout:, interval:)
+      # `file_url`. Then once per `interval` while it is pending. `retry`
+      # applies to the create; the reads are GETs, retried already.
+      def generate(create_id, find_id, attributes, timeout:, interval:, retry:)
         raise ArgumentError, "interval must be positive, got #{interval.inspect}" unless interval.positive?
 
         deadline = @clock.call + timeout
-        id = call(create_id, **attributes).fetch(:id)
+        id = call(create_id, retry:, **attributes).fetch(:id)
         loop do
           export = call(find_id, id:)
           return export if ready?(export)

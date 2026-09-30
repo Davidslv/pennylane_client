@@ -19,6 +19,8 @@ module PennylaneClient
     #
     # Each retry emits a `type: :retry` event. Retry sits outside RateLimit,
     # so every attempt takes its own call from the bucket.
+    #
+    # @api private
     class Retry
       RETRY_STATUSES = [500, 502, 503, 504].freeze
       NO_RESPONSE = [ConnectionError, TimeoutError].freeze

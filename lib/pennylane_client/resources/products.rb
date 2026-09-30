@@ -23,10 +23,10 @@ module PennylaneClient
       # and `vat_rate:` (a code such as "FR_200" for 20% French VAT).
       #
       #   products.create(label: "Consulting day", price_before_tax: BigDecimal("650"), vat_rate: "FR_200")
-      def create(**attributes) = call(:postProducts, **attributes)
+      def create(retry: nil, **attributes) = call(:postProducts, retry:, **attributes)
 
       # Updates a product. Only the attributes you pass change.
-      def update(id, **attributes) = call_on(:putProduct, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:putProduct, { id: }, retry:, **attributes)
     end
   end
 end

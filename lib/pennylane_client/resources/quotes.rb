@@ -20,22 +20,22 @@ module PennylaneClient
       # Creates a quote. Pennylane requires `customer_id:`, `date:`,
       # `deadline:` and `invoice_lines:`. Its number comes from the company's
       # `estimate` numbering (`client.numberings`).
-      def create(**attributes) = call(:postQuotes, **attributes)
+      def create(retry: nil, **attributes) = call(:postQuotes, retry:, **attributes)
 
       # Updates a quote. Only the attributes you pass change. `invoice_lines:`
       # is `{ create: [...], update: [...], delete: [...] }`, not a plain Array.
-      def update(id, **attributes) = call_on(:updateQuote, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:updateQuote, { id: }, retry:, **attributes)
 
       # Emails the quote. With no `recipients:`, Pennylane uses the
       # customer's addresses. Raises ConflictError while the PDF is still
       # being generated; try again in a few minutes. Returns true.
-      def send_by_email(id, **fields) = call_on(:sendByEmailQuote, { id: }, **fields)
+      def send_by_email(id, retry: nil, **fields) = call_on(:sendByEmailQuote, { id: }, retry:, **fields)
 
       # Sets the quote's status: "pending", "accepted", "denied", "invoiced"
       # or "expired".
       #
       #   quotes.update_status(9, status: "accepted")
-      def update_status(id, status:) = call(:updateStatusQuote, id:, status:)
+      def update_status(id, status:, retry: nil) = call(:updateStatusQuote, id:, status:, retry:)
 
       # The lists below hang off one quote. Each returns every item as an
       # Enumerator::Lazy of Hashes, like `list`, and takes a smaller
@@ -54,7 +54,7 @@ module PennylaneClient
 
       # Attaches `file` (a PDF or image: File, IO, Pathname or
       # PennylaneClient::Upload) as an appendix. It streams from disk.
-      def upload_appendix(quote_id, file) = call(:postQuoteAppendices, quote_id:, file:)
+      def upload_appendix(quote_id, file, retry: nil) = call(:postQuoteAppendices, quote_id:, file:, retry:)
     end
   end
 end

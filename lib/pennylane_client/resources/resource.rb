@@ -4,10 +4,17 @@ module PennylaneClient
   # Named operations, one class per resource group. Each public method is a
   # hand-written one-liner over the Client, so the Ruby name is a promise
   # that survives Pennylane renaming an operationId (proposal 0001, D3).
+  #
+  # Every named write (every method whose Operation is not a GET) takes
+  # `retry:`, as Client#call does: nil by default, `:always` to let Retry
+  # send it again after a 5xx or no response. It is a keyword of its own,
+  # so it never reaches the request body.
   module Resources
     # Holds the Client and gives subclasses `call` and `paginate`, and
     # `call_on` and `paginate_on` for a method that takes the Operation's
     # path parameters positionally. No state of its own.
+    #
+    # @api private
     class Resource
       def initialize(client)
         @client = client

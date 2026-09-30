@@ -17,6 +17,7 @@ module PennylaneClient
     private
 
     def with_limit: (Hash[Symbol, untyped] params) -> Hash[Symbol, untyped]
+    def more?: (Hash[Symbol, untyped] page) -> bool
     def next_cursor: (Hash[Symbol, untyped] page, String? cursor) -> String
     def fetch: (Hash[Symbol, untyped] params) -> Hash[Symbol, untyped]
   end

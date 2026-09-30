@@ -25,7 +25,7 @@ module PennylaneClient
       # `reason:`, `purchase_order_number:`, `currency_amount_before_tax:`,
       # `currency_amount:`, `currency_tax:`, `delivery_address:` and at
       # least one of `purchase_request_lines:`.
-      def import(**attributes) = call(:createPurchaseRequestImport, **attributes)
+      def import(retry: nil, **attributes) = call(:createPurchaseRequestImport, retry:, **attributes)
     end
   end
 end

@@ -9,6 +9,8 @@ module PennylaneClient
     #
     # A token with whitespace or a line break is refused without echoing it,
     # because Net::HTTP would otherwise raise an error quoting the header.
+    #
+    # @api private
     class Auth
       FORMAT = /\A[[:graph:]]+\z/
 

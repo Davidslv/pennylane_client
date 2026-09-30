@@ -15,42 +15,53 @@ module PennylaneClient
     # To pick up where the last run stopped, pass the `processed_at` of the
     # last change handled as `since:`; the last page's `next_cursor` is null.
     #
+    # `since:` is the only spelling. Pennylane's name for it, `start_date:`,
+    # raises ArgumentError, so there is one way to say it.
+    #
     #   client.changelogs.customer_invoices(since: Time.now - 3600).each { |change| sync(change[:id]) }
     class Changelogs < Resource
       # Customer invoice changes.
-      def customer_invoices(since: nil, **params) = paginate(:getCustomerInvoicesChanges, start_date: since, **params)
+      def customer_invoices(since: nil, **params) = feed(:getCustomerInvoicesChanges, since, params)
 
       # Customer changes.
-      def customers(since: nil, **params) = paginate(:getCustomerChanges, start_date: since, **params)
+      def customers(since: nil, **params) = feed(:getCustomerChanges, since, params)
 
       # Changes to the categories of ledger entries.
       def ledger_entries_categories(since: nil, **params)
-        paginate(:getLedgerEntriesCategoryChanges, start_date: since, **params)
+        feed(:getLedgerEntriesCategoryChanges, since, params)
       end
 
       # Ledger entry line changes.
-      def ledger_entry_lines(since: nil, **params) = paginate(:getLedgerEntryLineChanges, start_date: since, **params)
+      def ledger_entry_lines(since: nil, **params) = feed(:getLedgerEntryLineChanges, since, params)
 
       # Changes to the categories of ledger entry lines.
       def ledger_entry_lines_categories(since: nil, **params)
-        paginate(:getLedgerEntryLinesCategoryChanges, start_date: since, **params)
+        feed(:getLedgerEntryLinesCategoryChanges, since, params)
       end
 
       # Product changes.
-      def products(since: nil, **params) = paginate(:getProductChanges, start_date: since, **params)
+      def products(since: nil, **params) = feed(:getProductChanges, since, params)
 
       # Quote changes. Pennylane tags this one Quotes; it is a changelog feed
       # like the rest.
-      def quotes(since: nil, **params) = paginate(:getQuoteChanges, start_date: since, **params)
+      def quotes(since: nil, **params) = feed(:getQuoteChanges, since, params)
 
       # Supplier invoice changes.
-      def supplier_invoices(since: nil, **params) = paginate(:getSupplierInvoicesChanges, start_date: since, **params)
+      def supplier_invoices(since: nil, **params) = feed(:getSupplierInvoicesChanges, since, params)
 
       # Supplier changes.
-      def suppliers(since: nil, **params) = paginate(:getSupplierChanges, start_date: since, **params)
+      def suppliers(since: nil, **params) = feed(:getSupplierChanges, since, params)
 
       # Transaction changes.
-      def transactions(since: nil, **params) = paginate(:getTransactionChanges, start_date: since, **params)
+      def transactions(since: nil, **params) = feed(:getTransactionChanges, since, params)
+
+      private
+
+      def feed(operation_id, since, params)
+        raise ArgumentError, "changelogs take since:, not start_date:" if params.key?(:start_date)
+
+        paginate(operation_id, start_date: since, **params)
+      end
     end
   end
 end
