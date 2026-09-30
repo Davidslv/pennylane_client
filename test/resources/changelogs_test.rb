@@ -155,3 +155,41 @@ class ChangelogsTest < Minitest::Test
     assert_equal [7], ids(changelogs.transactions(since: SINCE))
   end
 end
+
+# What `since:` takes. Pennylane's start_date is a date-time (RFC 3339).
+class ChangelogsSinceTest < Minitest::Test
+  API = ChangelogsTest::API
+
+  def changelogs = PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new).changelogs
+  def page(id) = JSON.generate({ items: [{ id:, operation: "update" }], has_more: false, next_cursor: nil })
+  def ids(changes) = changes.map { _1[:id] }.to_a
+
+  def test_takes_a_date_time_string
+    since = { start_date: "2026-09-29T10:00:00Z", limit: "1000" }
+    stub_request(:get, "#{API}/changelogs/customers").with(query: since).to_return(status: 200, body: page(4))
+
+    assert_equal [4], ids(changelogs.customers(since: "2026-09-29T10:00:00Z"))
+  end
+
+  def test_takes_a_date_time
+    since = { start_date: "2026-09-29T10:00:00+00:00", limit: "1000" }
+    stub_request(:get, "#{API}/changelogs/suppliers").with(query: since).to_return(status: 200, body: page(5))
+
+    assert_equal [5], ids(changelogs.suppliers(since: DateTime.new(2026, 9, 29, 10, 0, 0)))
+  end
+
+  # A Date was sent as "2026-09-29", which the contract does not say
+  # Pennylane accepts, and anything else went as its to_s.
+  def test_every_feed_refuses_a_since_that_is_not_a_time_or_a_string
+    stub = stub_request(:get, %r{/changelogs/}).to_return(status: 200, body: page(7))
+    ChangelogsTest::FEEDS.each do |feed|
+      [Date.new(2026, 9, 29), 1_782_864_000].each do |since|
+        error = assert_raises(ArgumentError, "#{feed}(since: #{since.inspect})") do
+          changelogs.public_send(feed, since:).first
+        end
+        assert_includes error.message, "Time or an RFC 3339 String"
+      end
+    end
+    assert_not_requested stub
+  end
+end

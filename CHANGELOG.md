@@ -42,7 +42,7 @@ Every live operation has a hand-written Ruby name. Lists return an `Enumerator::
 - `client.quotes`, `client.commercial_documents`, `client.customer_invoice_templates` and `client.numberings`: all 20 operations.
 - `client.journals`, `client.ledger_accounts`, `client.ledger_entries`, `client.ledger_entry_lines`, `client.fiscal_years`, `client.trial_balance` and `client.file_attachments`: all 22 live ledger operations, lettering included. The deprecated `postLedgerAttachments` has no named method; `file_attachments.upload` replaces it.
 - `client.categories`, `client.category_groups` and `client.products`: all 13 operations.
-- `client.changelogs`: one feed per record type, all 10. Each takes `since:` (a Time or an RFC 3339 String) and raises `ArgumentError` on `start_date:`.
+- `client.changelogs`: one feed per record type, all 10. Each takes `since:`, a Time, a DateTime or an RFC 3339 String; anything else, a Date included, raises `ArgumentError`, and so does `start_date:`.
 - `client.exports`: the FEC, General Ledger and Analytical General Ledger. `generate_*` creates the export and polls it until ready, raising `ExportError` when it fails or times out.
 - `client.billing_subscriptions`, `client.purchase_requests`, `client.webhook_subscriptions`, `client.users.me`, `client.company.features` and `client.pa_registrations.list`. `pa_registrations.list` returns an `Enumerator::Lazy` like every other list, and raises `Error` if Pennylane ever answers `has_more: true` there, since that operation takes no cursor.
 - A keyword that names a positional path parameter raises `ArgumentError`, so `update(1, id: 2)` cannot write record 2.

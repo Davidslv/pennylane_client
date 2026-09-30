@@ -481,7 +481,11 @@ client.changelogs.customer_invoices(since: Time.now - 3600).each do |change|
 end
 ```
 
-Pennylane keeps four weeks of changes. A `since:` older than that raises `ValidationError` (422). Without `since:` the feed starts at the oldest change kept. `since:` takes a `Time` or an RFC 3339 String. It is sent with the first page only, because Pennylane answers 400 to `start_date` next to a `cursor`. Pennylane's own name, `start_date`, raises `ArgumentError`, as a Symbol or a String key.
+Pass `since:` as a `Time` or an RFC 3339 String such as `"2026-09-29T10:00:00Z"`. A `DateTime` works too. A `Time` is sent with its own UTC offset (`"2026-09-29T11:00:00+01:00"`), which is also RFC 3339. Anything else raises `ArgumentError`, a `Date` included: Pennylane's `start_date` is a date-time, and its reference does not say it takes a bare date. For the changes since the start of a day, pass `Date.new(2026, 9, 29).to_time`.
+
+Without `since:` the feed starts at the oldest change Pennylane keeps. Pennylane keeps four weeks of changes, and a `since:` older than that raises `ValidationError` (422).
+
+`since:` is the only spelling. Pennylane calls the parameter `start_date`, and `start_date:` raises `ArgumentError`. The client sends `start_date` with the first page only, because Pennylane answers 400 to `start_date` next to a `cursor`.
 
 To resume where the last run stopped, keep the `processed_at` of the last change you handled and pass it as `since:` next time. The last page's `next_cursor` is null, so it cannot carry you forward. Pass `processed_at` back as the String, or as a `Time` parsed from it; either keeps its microseconds. The contract does not say whether `since:` includes a change at that exact time, so handle a repeat of the last change:
 
