@@ -141,6 +141,10 @@ module PennylaneClient
     # The named Products operations (Resources::Products).
     def products = @products ||= Resources::Products.new(self)
 
+    # The named Changelogs operations, one change feed per record type
+    # (Resources::Changelogs).
+    def changelogs = @changelogs ||= Resources::Changelogs.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

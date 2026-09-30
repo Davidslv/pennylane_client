@@ -358,5 +358,27 @@ module PennylaneClient
 
       def update: (Integer id, **untyped attributes) -> item
     end
+
+    class Changelogs < Resource
+      def customer_invoices: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def customers: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def ledger_entries_categories: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def ledger_entry_lines: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def ledger_entry_lines_categories: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def products: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def quotes: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def supplier_invoices: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def suppliers: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def transactions: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+    end
   end
 end

@@ -65,6 +65,8 @@ module PennylaneClient
 
     def products: () -> Resources::Products
 
+    def changelogs: () -> Resources::Changelogs
+
     def inspect: () -> String
 
     private
@@ -116,6 +118,8 @@ module PennylaneClient
     @category_groups: Resources::CategoryGroups?
 
     @products: Resources::Products?
+
+    @changelogs: Resources::Changelogs?
 
     def paginator: (Symbol | String operation_id, Hash[Symbol, untyped] params) -> Paginator
   end

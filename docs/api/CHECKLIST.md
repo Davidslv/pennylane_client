@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 144 of 177 live |
+| Named | 154 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -64,19 +64,19 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `getCategoryGroup` | GET | `/category_groups/{id}` | yes | yes | unverified: no sandbox access | `test/resources/categories_test.rb#test_groups_find` |
 | `putCategoryGroup` | PUT | `/category_groups/{id}` | yes | yes | unverified: no sandbox access | `test/resources/categories_test.rb#test_groups_update` |
 
-## Changelogs (0 of 9 named)
+## Changelogs (9 of 9 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getCustomerInvoicesChanges` | GET | `/changelogs/customer_invoices` | yes | no | unverified: no sandbox access |  |
-| `getCustomerChanges` | GET | `/changelogs/customers` | yes | no | unverified: no sandbox access |  |
-| `getLedgerEntriesCategoryChanges` | GET | `/changelogs/ledger_entries_categories` | yes | no | unverified: no sandbox access |  |
-| `getLedgerEntryLineChanges` | GET | `/changelogs/ledger_entry_lines` | yes | no | unverified: no sandbox access |  |
-| `getLedgerEntryLinesCategoryChanges` | GET | `/changelogs/ledger_entry_lines_categories` | yes | no | unverified: no sandbox access |  |
-| `getProductChanges` | GET | `/changelogs/products` | yes | no | unverified: no sandbox access |  |
-| `getSupplierInvoicesChanges` | GET | `/changelogs/supplier_invoices` | yes | no | unverified: no sandbox access |  |
-| `getSupplierChanges` | GET | `/changelogs/suppliers` | yes | no | unverified: no sandbox access |  |
-| `getTransactionChanges` | GET | `/changelogs/transactions` | yes | no | unverified: no sandbox access |  |
+| `getCustomerInvoicesChanges` | GET | `/changelogs/customer_invoices` | yes | yes | unverified: no sandbox access | `test/resources/changelogs_test.rb#test_customer_invoices_walks_on_by_cursor_without_start_date` |
+| `getCustomerChanges` | GET | `/changelogs/customers` | yes | yes | unverified: no sandbox access | `test/resources/changelogs_test.rb#test_customers` |
+| `getLedgerEntriesCategoryChanges` | GET | `/changelogs/ledger_entries_categories` | yes | yes | unverified: no sandbox access | `test/resources/changelogs_test.rb#test_ledger_entries_categories` |
+| `getLedgerEntryLineChanges` | GET | `/changelogs/ledger_entry_lines` | yes | yes | unverified: no sandbox access | `test/resources/changelogs_test.rb#test_ledger_entry_lines` |
+| `getLedgerEntryLinesCategoryChanges` | GET | `/changelogs/ledger_entry_lines_categories` | yes | yes | unverified: no sandbox access | `test/resources/changelogs_test.rb#test_ledger_entry_lines_categories` |
+| `getProductChanges` | GET | `/changelogs/products` | yes | yes | unverified: no sandbox access | `test/resources/changelogs_test.rb#test_products` |
+| `getSupplierInvoicesChanges` | GET | `/changelogs/supplier_invoices` | yes | yes | unverified: no sandbox access | `test/resources/changelogs_test.rb#test_supplier_invoices` |
+| `getSupplierChanges` | GET | `/changelogs/suppliers` | yes | yes | unverified: no sandbox access | `test/resources/changelogs_test.rb#test_suppliers` |
+| `getTransactionChanges` | GET | `/changelogs/transactions` | yes | yes | unverified: no sandbox access | `test/resources/changelogs_test.rb#test_transactions` |
 
 ## Commercial Documents (8 of 8 named)
 
@@ -274,11 +274,11 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `createPurchaseRequestImport` | POST | `/purchase_requests/imports` | yes | no | unverified: no sandbox access |  |
 | `getPurchaseRequest` | GET | `/purchase_requests/{id}` | yes | no | unverified: no sandbox access |  |
 
-## Quotes (10 of 11 named)
+## Quotes (11 of 11 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getQuoteChanges` | GET | `/changelogs/quotes` | yes | no | unverified: no sandbox access |  |
+| `getQuoteChanges` | GET | `/changelogs/quotes` | yes | yes | unverified: no sandbox access | `test/resources/changelogs_test.rb#test_quotes` |
 | `listQuotes` | GET | `/quotes` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_list_walks_every_page_resending_the_filter` |
 | `postQuotes` | POST | `/quotes` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_create_encodes_the_dates_and_amounts` |
 | `getQuote` | GET | `/quotes/{id}` | yes | yes | unverified: no sandbox access | `test/resources/quotes_test.rb#test_find` |
