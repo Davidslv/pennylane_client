@@ -1,0 +1,37 @@
+name: Stress
+
+# On demand: rake stress against a misbehaving FakePennylane on 127.0.0.1,
+# never Pennylane. About 40 s, plus the soak when soak_minutes is above 0
+# (30 for the full soak). See docs/performance.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      soak_minutes:
+        description: "Soak length in minutes (0 for none, at least 2 otherwise)"
+        type: number
+        default: 0
+
+permissions:
+  contents: read
+
+jobs:
+  stress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler: latest
+      - name: Install dependencies
+        run: bundle install
+      # The input goes through the environment, never into the script.
+      - name: Run rake stress
+        run: bundle exec rake stress
+        env:
+          SOAK_MINUTES: ${{ inputs.soak_minutes }}

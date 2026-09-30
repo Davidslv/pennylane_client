@@ -42,6 +42,27 @@ jobs:
       - name: Run the gate (tests, RuboCop, RBS, stale generated files)
         run: bundle exec rake
 
+  # Against FakePennylane on 127.0.0.1, never Pennylane. About 25 s, on one
+  # Ruby: it measures the client, not the interpreter. rake stress runs on
+  # demand in stress.yml.
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    name: Load test
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler: latest
+      - name: Install dependencies
+        run: bundle install
+      - name: Run rake load
+        run: bundle exec rake load
+
   audit:
     runs-on: ubuntu-latest
     timeout-minutes: 10

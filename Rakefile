@@ -41,4 +41,16 @@ task :stale do
   ruby "tools/stale.rb"
 end
 
+desc "Load-test the client against FakePennylane on 127.0.0.1 (about 25 s; never reaches Pennylane)"
+task :load do
+  ruby "perf/load_test.rb"
+end
+
+desc "Stress-test the client against a misbehaving FakePennylane on 127.0.0.1 (about 40 s); " \
+     "rake stress[30] adds a 30-minute soak"
+task :stress, [:soak_minutes] do |_task, args|
+  ENV["SOAK_MINUTES"] = args[:soak_minutes] if args[:soak_minutes]
+  ruby "perf/stress_test.rb"
+end
+
 task default: %i[test rubocop rbs stale]

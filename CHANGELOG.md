@@ -26,5 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Weekly contract drift workflow and `rake contract:drift`: any difference between Pennylane's docs and the committed snapshot opens or updates one issue labelled `drift`.
 - Cursor pagination: `client.paginate(:operationId, **params)` returns every item as an `Enumerator::Lazy`, following `next_cursor` and resending `filter` and `sort` on every page, at the operation's largest page size. `client.pages` gives the pages. `Operation#max_limit` records the largest page size.
 - Multipart uploads for the 7 upload operations: pass a `File`, IO, `Pathname` or `PennylaneClient::Upload`. Files stream from disk; uploads get 300 s timeouts (`upload_timeout:`).
+- `FakePennylane`, a test-support stand-in that enforces Pennylane's rate limit and headers and misbehaves on demand, in process or on a local socket. `rake load` and `rake stress` run the client against it; results in `docs/performance.md`. CI runs `rake load` on every pull request and `rake stress` on demand.
+- `NetHttpTransport` keeps an idle connection for 10 s (`keep_alive_timeout:`) instead of `Net::HTTP`'s 2 s, so a rate-limit wait no longer costs a new connection.
 
 [Unreleased]: https://github.com/Davidslv/pennylane_client/commits/main

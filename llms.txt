@@ -11,6 +11,7 @@ Planned usage: `require "pennylane_client"`, then `PennylaneClient.new(token: ..
 - [Architecture](docs/architecture.md): Components, request path, design rationale, where the design strains
 - [Design diagram](docs/architecture/design-diagram.md): The whole gem on one page
 - [How-to recipes](docs/how-to.md): Task-oriented recipes
+- [Performance](docs/performance.md): Load and stress results against FakePennylane, and how to reproduce them
 - [Contract snapshot](docs/api/README.md): The dated, generated copy of the Pennylane API the gem is measured against
 - [Checklist](docs/api/CHECKLIST.md): Every operation with its registered, named and live status (generated)
 - [Domain language](CONTEXT.md): Operation, Registered and Named operation, Contract snapshot, Clean room, Drift

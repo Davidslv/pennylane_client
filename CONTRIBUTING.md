@@ -24,6 +24,8 @@ The repository does not commit a `Gemfile.lock`, as recommended for gems.
 
 `bundle exec rake contract:snapshot` takes a new [contract snapshot](docs/api/README.md) from Pennylane's docs site. `bundle exec rake contract:drift` prints how the docs differ from the latest snapshot; a weekly workflow runs the same check and opens a `drift` issue. Neither is part of the gate, and they are the only tasks that reach the network.
 
+`bundle exec rake load` (about 25 s) and `bundle exec rake stress` (about 40 s; `rake "stress[30]"` adds a 30-minute soak) run the client against `FakePennylane` on 127.0.0.1 and fail on a 429 under steady load, an unbounded retry, a write sent twice, a wrong error class, a deadlock or a leaked thread or socket. CI runs `rake load` on every pull request; the Stress workflow runs `rake stress` on demand. Run them after changing the middleware or the transport. Results and how to read them are in [docs/performance.md](docs/performance.md).
+
 `bundle exec rake contract:sync checklist` regenerates the operation table and the checklist. Run it after a new snapshot and after adding a behaviour test that names an operation. Commit what it writes; never edit either file by hand.
 
 ### Naming an operation
