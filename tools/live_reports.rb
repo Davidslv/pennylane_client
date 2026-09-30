@@ -21,7 +21,8 @@ module Checklist
   #
   # Reports are read oldest first, so for each operation the latest report
   # that ran it decides: "pass" verifies it, anything else leaves it
-  # unverified. A check keeps its latest result other than "not run".
+  # unverified. A check keeps its latest result that ran: anything but
+  # "not run" or "not run: <why>".
   module LiveReports
     DIR = "docs/api/live"
     GLOB = "#{DIR}/*.json".freeze
@@ -66,7 +67,7 @@ module Checklist
         result == PASS ? live.verified[id] = stamp : live.verified.delete(id)
       end
       report.fetch("checks", {}).each do |check, result|
-        live.checks[check] = [result, *stamp] unless result == NOT_RUN
+        live.checks[check] = [result, *stamp] unless result.start_with?(NOT_RUN)
       end
     end
     private_class_method :read, :validate, :apply

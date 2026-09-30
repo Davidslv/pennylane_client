@@ -157,10 +157,12 @@ class ChecklistLiveReportsTest < Minitest::Test
   end
 
   def test_checks_keep_the_latest_result_that_actually_ran
-    live = scan(report("2026-10-01", "octocat", {}, checks: { "webhook_signature" => "pass" }),
-                report("2026-10-05", "hubot", {}, checks: { "webhook_signature" => "not run" }))
+    live = scan(report("2026-10-01", "octocat", {}, checks: { "webhook_signature" => "pass", "probe" => "pass" }),
+                report("2026-10-05", "hubot", {}, checks: { "webhook_signature" => "not run",
+                                                            "probe" => "not run: no customer in the sandbox" }))
 
-    assert_equal({ "webhook_signature" => %w[pass 2026-10-01 octocat] }, live.checks)
+    assert_equal({ "webhook_signature" => %w[pass 2026-10-01 octocat], "probe" => %w[pass 2026-10-01 octocat] },
+                 live.checks)
   end
 
   def test_refuses_an_operation_id_the_snapshot_does_not_have

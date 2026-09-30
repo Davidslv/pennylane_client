@@ -260,6 +260,125 @@ class SmokeWritesTest < Minitest::Test
   end
 end
 
+class SmokeWebhookCheckTest < Minitest::Test
+  BODY = %({"id":"evt_1","event":"dms_file.created"})
+
+  def check(secret: "whsec", signed_with: "whsec")
+    Dir.mktmpdir do |dir|
+      body = File.join(dir, "delivery.json")
+      File.binwrite(body, BODY)
+      signature = "t=1700000000,v1=#{OpenSSL::HMAC.hexdigest("SHA256", signed_with, "1700000000.#{BODY}")}"
+      Smoke::Checks.webhook_signature({ "PENNYLANE_SMOKE_WEBHOOK_BODY" => body,
+                                        "PENNYLANE_SMOKE_WEBHOOK_SIGNATURE" => signature,
+                                        "PENNYLANE_SMOKE_WEBHOOK_SECRET" => secret })
+    end
+  end
+
+  def test_not_run_without_a_captured_delivery
+    assert_equal "not run", Smoke::Checks.webhook_signature({})
+  end
+
+  def test_a_captured_delivery_that_verifies_passes_whatever_its_age
+    assert_equal "pass", check
+  end
+
+  def test_a_delivery_that_does_not_verify_fails_without_quoting_the_secret
+    result = check(signed_with: "other")
+
+    assert_equal "fail: signature does not match", result
+  end
+
+  def test_an_unreadable_body_file_is_not_run
+    env = { "PENNYLANE_SMOKE_WEBHOOK_BODY" => "/nonexistent/delivery.json",
+            "PENNYLANE_SMOKE_WEBHOOK_SIGNATURE" => "t=1,v1=#{"a" * 64}", "PENNYLANE_SMOKE_WEBHOOK_SECRET" => "s" }
+
+    assert_equal "not run: cannot read PENNYLANE_SMOKE_WEBHOOK_BODY", Smoke::Checks.webhook_signature(env)
+  end
+end
+
+class SmokeRateLimitProbeTest < Minitest::Test
+  include SmokeFixtures
+
+  def limited = PennylaneClient::RateLimitError.new(nil, status: 429, headers: { "retry-after" => "2" })
+
+  # getMe answers `burst` times, then answers 429.
+  def burst_then_limited(burst)
+    count = 0
+    ->(_) { (count += 1) > burst ? limited : {} }
+  end
+
+  def probe(probe_answers, reader_answers, customer_id: 7)
+    probe = FakeClient.new(probe_answers)
+    reader = FakeClient.new(reader_answers)
+    sleeps = []
+    result = Smoke::RateLimitProbe.new(client: probe, reader: reader, customer_id: customer_id,
+                                       sleeper: ->(seconds) { sleeps << seconds }).run
+    [result, probe, reader, sleeps]
+  end
+
+  def test_passes_when_the_rate_limited_write_left_no_contact_behind
+    result, probe, reader, sleeps = probe({ getMe: burst_then_limited(3), postCustomerContact: limited },
+                                          { getCustomerContacts: { items: [{ id: 1, email: "jane@example.com" }] } })
+
+    assert_equal "pass", result
+    assert_equal 4, probe.ids.count(:getMe)
+    assert_equal [3.0], sleeps
+    assert_equal [:getCustomerContacts], reader.ids
+  end
+
+  def test_fails_and_cleans_up_when_the_rate_limited_write_was_executed
+    probe = FakeClient.new({ getMe: burst_then_limited(0), postCustomerContact: limited })
+    leaked = ->(_) { { items: [{ id: 55, email: probe.calls.last.last[:email] }] } }
+    reader = FakeClient.new({ getCustomerContacts: leaked, deleteCustomerContact: true })
+
+    result = Smoke::RateLimitProbe.new(client: probe, reader: reader, customer_id: 7, sleeper: ->(_) {}).run
+
+    assert_equal "fail: the rate-limited write was executed", result
+    assert_includes reader.calls, [:deleteCustomerContact, nil, { customer_id: 7, id: 55 }]
+  end
+
+  def test_the_probe_contact_has_its_own_unique_address
+    probe_client = probe({ getMe: burst_then_limited(0), postCustomerContact: limited },
+                         { getCustomerContacts: { items: [] } })[1]
+
+    assert_match(/\Asmoke-429\+\h+@example\.com\z/, probe_client.calls.last.last[:email])
+  end
+
+  def test_not_run_when_the_burst_never_hits_the_limit
+    result, probe, = probe({ getMe: {} }, {})
+
+    assert_equal "not run: no 429 within #{Smoke::RateLimitProbe::BURST} requests", result
+    refute_includes probe.ids, :postCustomerContact
+  end
+
+  def test_not_run_and_cleaned_up_when_the_write_was_not_rate_limited
+    result, _, reader, = probe({ getMe: burst_then_limited(0), postCustomerContact: { id: 60 } },
+                               { deleteCustomerContact: true })
+
+    assert_equal "not run: the write was not rate-limited", result
+    assert_equal [[:deleteCustomerContact, nil, { customer_id: 7, id: 60 }]], reader.calls
+  end
+
+  def test_the_probe_client_neither_waits_on_its_own_limit_nor_retries_when_rate_limited
+    stub = stub_request(:get, "https://app.pennylane.com/api/external/v2/me")
+           .to_return({ status: 200, body: "{}" }.freeze).times(Smoke::RateLimitProbe::BURST)
+           .then.to_return(status: 429, headers: { "retry-after" => "2" }, body: "")
+    client = Smoke.probe_client("probe-token")
+
+    Smoke::RateLimitProbe::BURST.times { client.call(:getMe) }
+
+    assert_raises(PennylaneClient::RateLimitError) { client.call(:getMe) }
+    assert_requested stub, times: Smoke::RateLimitProbe::BURST + 1
+  end
+
+  def test_not_run_without_a_customer
+    result, probe, = probe({}, {}, customer_id: nil)
+
+    assert_equal "not run: no customer in the sandbox", result
+    assert_empty probe.calls
+  end
+end
+
 class SmokeReportTest < Minitest::Test
   include SmokeFixtures
 
@@ -326,6 +445,17 @@ class SmokeReportTest < Minitest::Test
       report = JSON.parse(File.read(File.join(root, "docs/api/live/2026-10-01-octocat.json")))
 
       assert_equal "pass", report["operations"]["deleteCustomerContact"]
+    end
+  end
+
+  def test_main_records_the_checks_and_probes_only_when_asked_on_a_sandbox
+    with_root do |root|
+      main(root, read_answers)
+      report = JSON.parse(File.read(File.join(root, "docs/api/live/2026-10-01-octocat.json")))
+
+      assert_equal({ "rate_limited_write_not_executed" => "not run: set PENNYLANE_SMOKE_SANDBOX=yes and " \
+                                                          "PENNYLANE_SMOKE_PROBE_429=yes to probe",
+                     "webhook_signature" => "not run" }, report["checks"])
     end
   end
 
