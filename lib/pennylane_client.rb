@@ -28,6 +28,9 @@ require_relative "pennylane_client/resources/suppliers"
 require_relative "pennylane_client/resources/sepa_mandates"
 require_relative "pennylane_client/resources/gocardless_mandates"
 require_relative "pennylane_client/resources/pro_account_mandates"
+require_relative "pennylane_client/resources/bank_accounts"
+require_relative "pennylane_client/resources/bank_establishments"
+require_relative "pennylane_client/resources/transactions"
 require_relative "pennylane_client/client"
 
 # Unofficial Ruby client for the Pennylane Company API v2.

@@ -72,6 +72,21 @@ module PennylaneClient
       #   invoices.link_credit_note(42, credit_note_id: 43)
       def link_credit_note(id, credit_note_id:) = call(:linkCreditNote, id:, credit_note_id:)
 
+      # Matches one bank transaction to the invoice. Not for drafts. Call it
+      # once per transaction; a transaction can match several invoices.
+      # Returns true.
+      #
+      #   invoices.match_transaction(42, transaction_id: 9)
+      def match_transaction(customer_invoice_id, transaction_id:)
+        call(:postCustomerInvoiceMatchedTransactions, customer_invoice_id:, transaction_id:)
+      end
+
+      # Unmatches the transaction `transaction_id` from the invoice. Not for
+      # drafts. Returns true.
+      def unmatch_transaction(customer_invoice_id, transaction_id)
+        call(:deleteCustomerInvoiceMatchedTransactions, customer_invoice_id:, id: transaction_id)
+      end
+
       # Updates an imported invoice or credit note (not a draft).
       def update_imported(id, **attributes) = call(:updateImportedCustomerInvoice, id:, **attributes)
 

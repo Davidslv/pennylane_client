@@ -87,6 +87,15 @@ module PennylaneClient
     # The named Pro Account mandate operations (Resources::ProAccountMandates).
     def pro_account_mandates = @pro_account_mandates ||= Resources::ProAccountMandates.new(self)
 
+    # The named Bank accounts operations (Resources::BankAccounts).
+    def bank_accounts = @bank_accounts ||= Resources::BankAccounts.new(self)
+
+    # The named Bank Establishments operations (Resources::BankEstablishments).
+    def bank_establishments = @bank_establishments ||= Resources::BankEstablishments.new(self)
+
+    # The named Transactions operations (Resources::Transactions).
+    def transactions = @transactions ||= Resources::Transactions.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private

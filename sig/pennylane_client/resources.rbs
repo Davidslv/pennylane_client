@@ -48,6 +48,10 @@ module PennylaneClient
 
       def link_credit_note: (Integer id, credit_note_id: Integer) -> item
 
+      def match_transaction: (Integer customer_invoice_id, transaction_id: Integer) -> result
+
+      def unmatch_transaction: (Integer customer_invoice_id, Integer transaction_id) -> result
+
       def update_imported: (Integer id, **untyped attributes) -> item
 
       def invoice_lines: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
@@ -122,6 +126,10 @@ module PennylaneClient
 
       def link_purchase_request: (Integer supplier_invoice_id, purchase_request_id: Integer) -> result
 
+      def match_transaction: (Integer supplier_invoice_id, transaction_id: Integer) -> result
+
+      def unmatch_transaction: (Integer supplier_invoice_id, Integer transaction_id) -> result
+
       def invoice_lines: (Integer supplier_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
 
       def payments: (Integer supplier_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
@@ -179,6 +187,34 @@ module PennylaneClient
       def migration_candidates: (**untyped params) -> Enumerator::Lazy[item, void]
 
       def migrate: (mandate_type: "SepaMandate" | "Mandate", mandate_id: Integer, **untyped fields) -> item
+    end
+
+    class BankAccounts < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+    end
+
+    class BankEstablishments < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+    end
+
+    class Transactions < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+
+      def categories: (Integer transaction_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def categorize: (Integer transaction_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
+
+      def matched_invoices: (Integer transaction_id, **untyped params) -> Enumerator::Lazy[item, void]
     end
   end
 end

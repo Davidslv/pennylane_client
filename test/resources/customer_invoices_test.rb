@@ -82,7 +82,8 @@ class CustomerInvoicesTest < Minitest::Test
   end
 end
 
-# What happens to an invoice after it exists: finalize, pay, send, link.
+# What happens to an invoice after it exists: finalize, pay, send, link,
+# match.
 class CustomerInvoiceActionsTest < Minitest::Test
   include CustomerInvoicesTestHelper
 
@@ -146,6 +147,22 @@ class CustomerInvoiceActionsTest < Minitest::Test
       .to_return(status: 200, body: '{"id":42}')
 
     assert_equal({ id: 42 }, invoices.link_credit_note(42, credit_note_id: 43))
+  end
+
+  # names: postCustomerInvoiceMatchedTransactions
+  def test_match_transaction_returns_true_on_no_content
+    stub_request(:post, "#{API}/customer_invoices/42/matched_transactions")
+      .with(body: '{"transaction_id":9}')
+      .to_return(status: 204)
+
+    assert_same true, invoices.match_transaction(42, transaction_id: 9)
+  end
+
+  # names: deleteCustomerInvoiceMatchedTransactions
+  def test_unmatch_transaction_returns_true_on_no_content
+    stub_request(:delete, "#{API}/customer_invoices/42/matched_transactions/9").with(body: nil).to_return(status: 204)
+
+    assert_same true, invoices.unmatch_transaction(42, 9)
   end
 
   # names: updateImportedCustomerInvoice

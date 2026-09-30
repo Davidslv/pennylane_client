@@ -270,6 +270,37 @@ pro.migrate(mandate_type: "SepaMandate", mandate_id: 3)[:mandate_migration]   # 
 pro.send_request(customer_id: 7)
 ```
 
+## Work with transactions and bank accounts
+
+`client.transactions`, `client.bank_accounts` and `client.bank_establishments` name every Transactions and bank operation. A transaction lives in a bank account; `create` needs `bank_account_id:`, `label:`, `date:` and `amount:`:
+
+```ruby
+account = client.bank_accounts.create(name: "Main account", iban: "FR7630006000011234567890189")
+tx = client.transactions.create(bank_account_id: account[:id], label: "Card payment", date: Date.today, amount: "-12.50")
+```
+
+Bank accounts have `list`, `find` and `create`, and no update or delete. `account_type: "current"` is deprecated; use `"checking"`. A bank account's optional `bank_establishment_id:` is an id from `client.bank_establishments.list`.
+
+`update` sets the transaction's third party and nothing else. Pass `customer_id:` or `supplier_id:`, not both. Both are nullable in the contract, so `nil` sends `null` (not yet checked against the sandbox):
+
+```ruby
+client.transactions.update(tx[:id], supplier_id: 12)
+```
+
+Match a transaction from the invoice's side. Call `match_transaction` once per transaction; one transaction can match several invoices. Customer invoices must not be drafts. Both calls return true:
+
+```ruby
+client.customer_invoices.match_transaction(42, transaction_id: tx[:id])
+client.customer_invoices.unmatch_transaction(42, tx[:id])
+client.supplier_invoices.match_transaction(51, transaction_id: tx[:id])   # also unmatch_transaction
+```
+
+`matched_invoices(tx[:id])` lists what a transaction is matched to; the invoice resources' `matched_transactions` go the other way. `categories` and `matched_invoices` take no `sort:`. `categorize` replaces the categories with a bare array; categories from different groups can be mixed, and each group's weights add up to 1:
+
+```ruby
+client.transactions.categorize(tx[:id], [{ id: 59, weight: "0.5" }, { id: 33, weight: "0.5" }, { id: 65, weight: "1" }])
+```
+
 ## Handle a validation error
 
 ```ruby
