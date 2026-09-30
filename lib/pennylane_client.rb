@@ -9,6 +9,8 @@ require_relative "pennylane_client/encoder"
 require_relative "pennylane_client/registry"
 require_relative "pennylane_client/request"
 require_relative "pennylane_client/net_http_transport"
+require_relative "pennylane_client/instrumentation"
+require_relative "pennylane_client/executor"
 
 # Unofficial Ruby client for the Pennylane Company API v2.
 # Not affiliated with Pennylane.

@@ -1,0 +1,13 @@
+module PennylaneClient
+  class Instrumentation
+    type event = Hash[Symbol, untyped]
+
+    def initialize: (?logger: untyped, ?on_request: (^(event) -> void)?) -> void
+
+    def record: (event event) -> void
+
+    private
+
+    def log: (event event) -> void
+  end
+end
