@@ -10,6 +10,10 @@ require "stringio"
 class TokenSecrecyTest < Minitest::Test
   API = "https://app.pennylane.com/api/external/v2"
   TOKEN = "pl-secret-token-7f3a9c"
+  # Every Client method that returns a Resource.
+  RESOURCES = %i[customer_invoices customers supplier_invoices suppliers sepa_mandates gocardless_mandates
+                 pro_account_mandates bank_accounts bank_establishments transactions quotes commercial_documents
+                 customer_invoice_templates numberings].freeze
 
   # max_retry_wait: 0 keeps backoff retries, and their real sleeps, out of
   # the suite; a 429 with retry-after 0 still retries.
@@ -28,9 +32,7 @@ class TokenSecrecyTest < Minitest::Test
   end
 
   def test_not_in_a_resource_inspect
-    [@client.customer_invoices, @client.customers, @client.supplier_invoices, @client.suppliers,
-     @client.sepa_mandates, @client.gocardless_mandates, @client.pro_account_mandates,
-     @client.bank_accounts, @client.bank_establishments, @client.transactions].each do |resource|
+    RESOURCES.map { @client.public_send(_1) }.each do |resource|
       refute_includes resource.inspect, TOKEN
       refute_includes PP.pp(resource, +""), TOKEN
     end

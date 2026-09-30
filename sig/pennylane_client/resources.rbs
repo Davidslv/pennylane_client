@@ -216,5 +216,53 @@ module PennylaneClient
 
       def matched_invoices: (Integer transaction_id, **untyped params) -> Enumerator::Lazy[item, void]
     end
+
+    class Quotes < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+
+      def send_by_email: (Integer id, **untyped fields) -> result
+
+      def update_status: (Integer id, status: "pending" | "accepted" | "denied" | "invoiced" | "expired") -> item
+
+      def invoice_lines: (Integer quote_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def invoice_line_sections: (Integer quote_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def appendices: (Integer quote_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def upload_appendix: (Integer quote_id, file file) -> item
+    end
+
+    class CommercialDocuments < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+
+      def find: (Integer id) -> item
+
+      def create: (**untyped attributes) -> item
+
+      def update: (Integer id, **untyped attributes) -> item
+
+      def invoice_lines: (Integer commercial_document_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def invoice_line_sections: (Integer commercial_document_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def appendices: (Integer commercial_document_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def upload_appendix: (Integer commercial_document_id, file file) -> item
+    end
+
+    class CustomerInvoiceTemplates < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+    end
+
+    class Numberings < Resource
+      def list: (**untyped params) -> Enumerator::Lazy[item, void]
+    end
   end
 end

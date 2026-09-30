@@ -96,6 +96,20 @@ module PennylaneClient
     # The named Transactions operations (Resources::Transactions).
     def transactions = @transactions ||= Resources::Transactions.new(self)
 
+    # The named Quotes operations (Resources::Quotes).
+    def quotes = @quotes ||= Resources::Quotes.new(self)
+
+    # The named Commercial Documents operations: proformas, shipping orders
+    # and purchasing orders (Resources::CommercialDocuments).
+    def commercial_documents = @commercial_documents ||= Resources::CommercialDocuments.new(self)
+
+    # The named Customer Invoice Templates operation
+    # (Resources::CustomerInvoiceTemplates).
+    def customer_invoice_templates = @customer_invoice_templates ||= Resources::CustomerInvoiceTemplates.new(self)
+
+    # The named Numberings operation (Resources::Numberings).
+    def numberings = @numberings ||= Resources::Numberings.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private
