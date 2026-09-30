@@ -426,5 +426,17 @@ module PennylaneClient
 
       def invoice_line_sections: (Integer billing_subscription_id, **untyped params) -> Enumerator::Lazy[item, void]
     end
+
+    class Users < Resource
+      def me: () -> item
+    end
+
+    class Company < Resource
+      def features: () -> item
+    end
+
+    class PaRegistrations < Resource
+      def list: () -> Array[item]
+    end
   end
 end

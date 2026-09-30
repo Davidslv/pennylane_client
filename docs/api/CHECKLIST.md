@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 166 of 177 live |
+| Named | 169 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -91,11 +91,11 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `getCommercialDocument` | GET | `/commercial_documents/{id}` | yes | yes | unverified: no sandbox access | `test/resources/commercial_documents_test.rb#test_find` |
 | `updateCommercialDocument` | PUT | `/commercial_documents/{id}` | yes | yes | unverified: no sandbox access | `test/resources/commercial_documents_test.rb#test_update_sends_only_the_given_attributes` |
 
-## Company (0 of 1 named)
+## Company (1 of 1 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getCompanyFeatures` | GET | `/company/features` | yes | no | unverified: no sandbox access |  |
+| `getCompanyFeatures` | GET | `/company/features` | yes | yes | unverified: no sandbox access | `test/resources/account_test.rb#test_features` |
 
 ## Customer Invoice Templates (1 of 1 named)
 
@@ -251,11 +251,11 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `getNumberings` | GET | `/numberings` | yes | yes | unverified: no sandbox access | `test/resources/numberings_and_templates_test.rb#test_numberings_walks_every_page` |
 
-## PA Registrations (0 of 1 named)
+## PA Registrations (1 of 1 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getPaRegistrations` | GET | `/pa_registrations` | yes | no | unverified: no sandbox access |  |
+| `getPaRegistrations` | GET | `/pa_registrations` | yes | yes | unverified: no sandbox access | `test/resources/account_test.rb#test_pa_registrations_returns_the_items` |
 
 ## Products (4 of 4 named)
 
@@ -342,11 +342,11 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `getTrialBalance` | GET | `/trial_balance` | yes | yes | unverified: no sandbox access | `test/resources/trial_balance_test.rb#test_list_encodes_the_period_and_walks_every_page` |
 
-## Users (0 of 1 named)
+## Users (1 of 1 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getMe` | GET | `/me` | yes | no | unverified: no sandbox access |  |
+| `getMe` | GET | `/me` | yes | yes | unverified: no sandbox access | `test/resources/account_test.rb#test_me` |
 
 ## Webhooks (0 of 5 named)
 

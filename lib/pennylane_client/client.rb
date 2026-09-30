@@ -153,6 +153,15 @@ module PennylaneClient
     # (Resources::BillingSubscriptions).
     def billing_subscriptions = @billing_subscriptions ||= Resources::BillingSubscriptions.new(self)
 
+    # The named Users operation: the token's user (Resources::Users).
+    def users = @users ||= Resources::Users.new(self)
+
+    # The named Company operation: gated features (Resources::Company).
+    def company = @company ||= Resources::Company.new(self)
+
+    # The named PA Registrations operation (Resources::PaRegistrations).
+    def pa_registrations = @pa_registrations ||= Resources::PaRegistrations.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private
