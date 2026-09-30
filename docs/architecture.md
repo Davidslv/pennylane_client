@@ -6,7 +6,7 @@ The design is in [proposal 0001](../proposals/0001-pennylane-client-gem.md), dec
 
 ## Components
 
-One class, one job. Every component in `lib/` is built.
+One class, one job. Every component below is in `lib/`.
 
 | Component | File | Its one responsibility |
 |---|---|---|
@@ -90,7 +90,7 @@ A named method that takes path parameters positionally goes through `Resource#ca
 What happens to the params left after the path depends on the Operation's body kind:
 
 - **JSON body.** Every other param is the body, run through the Encoder and `JSON.generate`. This covers `DELETE` with a body (`deleteLedgerEntryLinesUnletter`). Six Operations (`putCustomerCategories` and its siblings) take a JSON array, which keywords cannot build, so the caller passes the body positionally: `client.call(:putCustomerCategories, [...], customer_id: 9)`. Keywords then fill only the path; any left over raise `ArgumentError`. A Hash body that names a path parameter raises `ArgumentError` too. A `body:` keyword is an ordinary param, sent as a field named `body`.
-- **Multipart body** (the 7 upload Operations). Every other param is a form field of a `Multipart`. A File, IO, Pathname or `Upload` is a file part, streamed from disk; a Hash or Array is an `application/json` part; nil is left out; anything else is text. The size is known up front, so the request carries a `Content-Length`. A missing Pathname raises `Errno::ENOENT`, and a directory or unreadable file raises `ArgumentError`, both before anything is sent. Files the Executor opened from a Pathname are closed when the call is over.
+- **Multipart body** (the 7 upload Operations). Every other param is a form field of a `Multipart`. A File, IO, Pathname or `Upload` is a file part, streamed rather than read into memory (an IO from its position when the call starts); a Hash or Array is an `application/json` part; nil is left out; anything else is text. The size is known up front, so the request carries a `Content-Length`. A missing Pathname raises `Errno::ENOENT`, and a directory or unreadable file raises `ArgumentError`, both before anything is sent. Files the Executor opened from a Pathname are closed when the call is over.
 - **No body.** Every other param goes into the query. nil values are left out. Hash and Array values are sent as JSON strings, because Pennylane's `filter` is a JSON array in a query string. Passing a positional body raises `ArgumentError`.
 
 No Operation in the 2026-09-30 snapshot takes both a body and a query.
@@ -147,17 +147,18 @@ A Transport is anything with `call(request) -> Response` that raises `Connection
 
 `NetHttpTransport` is the default. Every Client shares `NetHttpTransport.default`, so building a Client per request or per token opens no new sockets. The token travels in each request, not in the connection.
 
-- **One connection per host per fiber.** Connections live in `Thread.current[...]`, which is fiber-local, so threads and fibers never share a socket and a call on an open connection takes no lock.
+- **One connection per host per fiber.** Connections live in `Thread.current[...]`, which is fiber-local, so threads and fibers never share a socket and a call on an open connection takes no lock. Each fiber's connections are tagged with the pid that opened them, so a forked child never uses its parent's; see the lifecycle below.
 - **Timeouts.** Open 5 s, read 30 s, write 30 s. An upload gets 300 s to read and write (`upload_timeout:`), and the connection goes back to 30 s afterwards.
 - **Keep-alive.** An idle connection is kept for 10 s (`keep_alive_timeout:`), not `Net::HTTP`'s 2 s, because a rate-limit wait lasts up to 5 s and would otherwise cost a new connection and TLS handshake after every wait ([performance](performance.md)). `Net::HTTP` still replaces a connection the server has closed.
 - **No retries.** `max_retries = 0`. `Net::HTTP` otherwise resends an idempotent verb once on a dropped connection, and PUT and DELETE have side effects at Pennylane (D5).
-- **Bodies.** A `Multipart` body is rewound, so a retry after a 429 sends the file from its first byte, and handed to `Net::HTTP` as `body_stream`. Response bodies are tagged UTF-8; the bytes are checked later, by the Executor and `Error`.
+- **Bodies.** A `Multipart` body is rewound before each attempt, so a retry after a 429 sends the same bytes as the first attempt, and handed to `Net::HTTP` as `body_stream`. Response bodies are tagged UTF-8; the bytes are checked later, by the Executor and `Error`.
 
 ### Connection lifecycle
 
 - **A call that does not complete drops its connection.** `NetHttpTransport#call` closes the connection in an `ensure` unless a response was read. That covers `ConnectionError` and `TimeoutError`, and also any exception the transport does not rescue: `Timeout.timeout`, rack-timeout, `Interrupt`. Without it, a request sent and its answer unread would leave that answer on the socket, to be read as the next call's response, and the next call could be for another token.
 - **Finished fibers' connections are reaped.** `ConnectionOwners` maps each fiber, held weakly in an `ObjectSpace::WeakMap`, to its connections. Whenever any thread or fiber opens a new connection, the connections of every fiber that is no longer alive are closed. A finished fiber never runs again, so no call is using them. A thread per job therefore does not leave one socket per finished job. The owners' lock is taken only when a fiber first connects and when a connection is opened.
-- **`close`** closes the current thread's (fiber's) connections.
+- **A forked child leaves its parent's connections alone.** After a fork, the child's copy of `Thread.current[...]` still holds the connections the forking thread had open, and the parent's other threads look finished. The transport sees the pid tag differ and starts the child with no connections, and `ConnectionOwners` starts empty in the child, so the reaper does not close the parent's either. Closing them would call `Net::HTTP#finish` on the parent's sockets and, over TLS, end the parent's sessions. The child forgets them without closing them and opens its own. The Limiters are copied at the fork too, so each process has its own budget.
+- **`close`** closes the current thread's (fiber's) connections. In a forked child that is only the connections the child opened.
 
 ## Pagination
 
@@ -187,7 +188,7 @@ Only `Middleware::Auth` holds the token, and only `Request#headers` carries it, 
 
 ## Exports and webhooks
 
-- **Exports.** `exports.generate_*` creates the export, reads it straight away, then every `interval` seconds (5) until its `status` is `ready`, and returns it. It raises `ExportError` when the status is `error` or the export is not ready within `timeout` (300 s); the error's `#export` has the id to read later. `retry:` applies to the create only; the reads are GETs.
+- **Exports.** `exports.generate_*` creates the export, reads it straight away, then every `interval` seconds (5) until its `status` is `ready`, and returns it. It raises `ExportError` when the status is `error`, or when the export is pending and the next read would fall after `timeout` (300 s), so it never sleeps past the deadline and can give up up to one `interval` early; the error's `#export` has the id to read later. `retry:` applies to the create only; the reads are GETs.
 - **Webhooks.** `Webhook.verify!(raw_body, signature_header, secret:)` parses `X-Pennylane-Signature: t=<unix seconds>,v1=<hex>`, computes HMAC-SHA256 of `"{t}.{raw_body}"`, and compares each 64-character `v1` with `OpenSSL.fixed_length_secure_compare`. It rejects a timestamp more than `tolerance` (300 s) from now, either way, and a body that is not a JSON object. Everything it rejects raises `SignatureError`; a blank secret raises `ArgumentError`. The header is read as bytes, so no header can raise anything else.
 
 ## Public API, Experimental tier and the private boundary
@@ -225,6 +226,7 @@ Known limits, stated plainly:
 - **One Operation shape is assumed.** The Executor puts leftover params in the body when there is one and in the query when there is not. No Operation in the snapshot takes both. If a future snapshot adds one, its query params would go in the body; neither the generator nor the Executor checks for it.
 - **Named lists return items only.** `list` walks `items` and drops any other top-level key on the page, such as the `included` section `getCustomerInvoices` returns with `include:` (experimental at Pennylane). `client.pages` returns the whole page.
 - **A path-less IO uploads as `application/octet-stream`.** A `StringIO` or a Tempfile without an extension has no name to take a content type from. Pennylane lists the content types it allows; wrap the IO in `Upload.new(io, filename:, content_type:)`.
+- **An IO is read from its current position.** `Multipart` records the position of each IO when the call starts and rewinds to it before every attempt, so a retry sends what the first attempt sent. An IO left at its end (a `StringIO` after writing to it) sends an empty file part without an error. Rewinding to byte 0 instead would ignore a position the caller chose, and Ruby reads an IO from where it stands elsewhere too (`IO.copy_stream`, `Net::HTTP` `body_stream`).
 - **D5 rests on an assumption.** A 429 is retried for writes because it should mean the request was not run. That is unconfirmed until a sandbox run (`PENNYLANE_SMOKE_PROBE_429`, proposal 0001 open questions).
 - **No live verification yet.** The maintainer has no Pennylane account, so behaviour is checked against the documentation and `FakePennylane`, not a sandbox. The README states the live-verified count.
 - **Responses are untyped.** Callers convert money and dates themselves (D6).

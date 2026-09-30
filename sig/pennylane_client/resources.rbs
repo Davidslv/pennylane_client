@@ -369,29 +369,31 @@ module PennylaneClient
     end
 
     class Changelogs < Resource
-      def customer_invoices: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+      def customer_invoices: (?since: Time | DateTime | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def customers: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+      def customers: (?since: Time | DateTime | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def ledger_entries_categories: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+      def ledger_entries_categories: (?since: Time | DateTime | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def ledger_entry_lines: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+      def ledger_entry_lines: (?since: Time | DateTime | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def ledger_entry_lines_categories: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+      def ledger_entry_lines_categories: (?since: Time | DateTime | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def products: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+      def products: (?since: Time | DateTime | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def quotes: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+      def quotes: (?since: Time | DateTime | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def supplier_invoices: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+      def supplier_invoices: (?since: Time | DateTime | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def suppliers: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+      def suppliers: (?since: Time | DateTime | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
 
-      def transactions: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
+      def transactions: (?since: Time | DateTime | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
 
       private
 
-      def feed: (Symbol operation_id, Time | String | nil since, Hash[Symbol, untyped] params) -> Enumerator::Lazy[item, void]
+      def feed: (Symbol operation_id, untyped since, Hash[Symbol, untyped] params) -> Enumerator::Lazy[item, void]
+
+      def date_time?: (untyped since) -> bool
     end
 
     class Exports < Resource

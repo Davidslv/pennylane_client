@@ -2,7 +2,7 @@
 
 > Unofficial, zero-dependency Ruby client for the Pennylane Company API v2. Version 0.1.0, pre-1.0. Not affiliated with Pennylane.
 
-Usage: `gem install pennylane_client`, `require "pennylane_client"`, then `PennylaneClient.new(token: ...)`. All 178 operations are reachable through `client.call(:operationId, ...)`, and each of the 177 live ones has a stable Ruby name, such as `client.customer_invoices.finalize(id)`. Lists return an `Enumerator::Lazy`. Stays inside Pennylane's rate limit of 25 requests per 5 s per token and never retries a write after a 5xx or a timeout unless asked (`retry: :always`). Ruby >= 3.3, MIT licensed.
+Usage: `gem install pennylane_client`, `require "pennylane_client"`, then `PennylaneClient.new(token: ...)`. All 178 operations are reachable through `client.call(:operationId, ...)`, and each of the 177 live ones has a stable Ruby name, such as `client.customer_invoices.finalize(id)`. Lists return an `Enumerator::Lazy`. Stays inside Pennylane's rate limit of 25 requests per 5 s per token within one process (share a limiter to cover several) and never retries a write after a 5xx or a timeout unless asked (`retry: :always`). Ruby >= 3.3, MIT licensed.
 
 ## Docs
 

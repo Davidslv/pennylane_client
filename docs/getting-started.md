@@ -35,7 +35,7 @@ me[:scopes]           # => ["customer_invoices", "suppliers"]
 
 `users.me` says which company the token belongs to and what it may do. A token without the scope an operation needs gets a `PermissionError`.
 
-Clients are cheap to build. They share one connection pool and, per token, one rate-limit budget. A client is safe to share between threads.
+Clients are cheap to build. They share the same connections, one per thread or fiber, and, per token, one rate-limit budget per process. A client is safe to share between threads, and a forking server such as Puma in cluster mode needs no setup ([forking web servers](how-to.md#forking-web-servers-and-job-runners)).
 
 ## Two ways to call an operation
 
@@ -83,9 +83,9 @@ acme = client.customers.create_company(
 acme[:id]   # => 42
 ```
 
-## Create and finalize a customer invoice
+## Create and finalise a customer invoice
 
-Create the invoice as a draft, check it, then finalize it. Finalizing gives it a number from the company's invoice numbering and makes it final:
+Create the invoice as a draft, check it, then finalise it. Finalising gives it a number from the company's invoice numbering and makes it final:
 
 <!-- example continued -->
 ```ruby
@@ -105,7 +105,7 @@ invoice[:invoice_number]   # => "F20230001"
 client.customer_invoices.send_by_email(invoice[:id])   # => true
 ```
 
-`Date.today` is sent as `"2026-09-30"`. A `BigDecimal` amount is sent as a plain decimal String. Numbers are not: Pennylane refuses a numeric amount, so pass amounts as Strings or BigDecimals.
+A `Date` is sent as an ISO 8601 date: `Date.new(2026, 9, 30)` as `"2026-09-30"`. A `BigDecimal` is sent as a plain decimal String: `BigDecimal("450")` as `"450.0"`. An Integer or a Float is sent as it is, as a JSON number (`450.0`), and the client does not warn you. Pennylane expects a String: its error guide lists "amounts not sent as strings (e.g., `"120.00"`)" as a cause of a 400. Pass amounts as Strings or BigDecimals.
 
 `send_by_email` raises `ConflictError` while Pennylane is still generating the PDF. Try again a little later.
 
@@ -129,7 +129,7 @@ The how-to has more on [lists](how-to.md#walk-a-list) and [filters](how-to.md#fi
 
 ## Attach a file
 
-Pass a `Pathname`, a `File` or an IO. The file streams from disk:
+Pass a `Pathname`, a `File` or an IO. A file on disk is streamed, not read into memory:
 
 <!-- example continued -->
 ```ruby
@@ -139,7 +139,7 @@ attachment = client.file_attachments.upload(Pathname("receipt.pdf"))
 attachment[:id]   # use it as file_attachment_id: when importing an invoice
 ```
 
-The filename comes from the path and the content type from the extension. See [upload a file](how-to.md#upload-a-file) to set either yourself.
+The filename comes from the path and the content type from the extension. See [upload a file](how-to.md#upload-a-file) to set either yourself, and [upload a file you built in memory](how-to.md#upload-a-file-you-built-in-memory) for a PDF you generate.
 
 ## Handle errors
 
@@ -167,9 +167,9 @@ end
 | `RateLimitError` | 429 | Already retried after `retry-after`; `retry_after` says how long to wait. |
 | `ServerError` | 5xx | Already retried for a GET. A write is not sent twice. |
 | `ConnectionError`, `TimeoutError` | no response arrived | As for `ServerError`. |
-| `ExportError` | an export failed or was not ready in time | `export` has the export's id. |
+| `ExportError` | an export failed or was not ready in time | `e.export[:id]` is the export's id. |
 
-A 2xx body that is not JSON, or not valid UTF-8, raises the base `Error`. An unknown operationId raises `PennylaneClient::UnknownOperationError`, an `ArgumentError`, as does a missing required keyword.
+A 2xx body that is not JSON, or not valid UTF-8, raises the base `Error`. An unknown operationId raises `PennylaneClient::UnknownOperationError`, a subclass of `ArgumentError`. A missing required keyword raises Ruby's own `ArgumentError`.
 
 Before raising, the client retries what is safe to repeat: a 429 for any request, after Pennylane's `retry-after`, and a 5xx or no response for a GET only. A POST, PUT or DELETE that fails with a 5xx or a timeout is not sent again, because Pennylane may already have applied it. [Retry a request](how-to.md#retry-a-request) says how to opt in.
 
@@ -189,6 +189,30 @@ Time.iso8601(invoice[:created_at])            # "2023-08-30T10:08:08.146343Z"
 ```
 
 On Ruby 3.4 and newer `bigdecimal` is a bundled gem, so add `gem "bigdecimal"` to your own Gemfile. The client never requires it.
+
+A customer invoice carries its money in these fields. The descriptions are Pennylane's own, from the `getCustomerInvoice` response in the contract snapshot:
+
+| Field | Pennylane's description |
+|---|---|
+| `amount` | "Invoice amount (total value of the invoice in euros. If the currency is euro, `currency_amount` and `amount` are identical)" |
+| `currency_amount` | "Invoice currency amount (total value of the invoice in the currency of the invoice)" |
+| `currency_amount_before_tax` | "Invoice currency amount before tax (total value before tax of the invoice in the currency of the invoice)" |
+| `tax` | "Invoice taxable amount (in euros). If the currency is euro, `currency_tax` and `tax` are identical." |
+| `currency_tax` | "Invoice taxable amount (in invoice currency)" |
+| `exchange_rate` | "Invoice exchange rate (used to convert the invoice to euros. If the invoice currency is euro it will be 1.0)" |
+| `currency` | No description. A currency code such as `"EUR"`, the default, `"USD"` or `"GBP"`. |
+
+Pennylane calls `tax` and `currency_tax` the "taxable amount", but its examples show the tax itself: `currency_amount_before_tax` "196.32" plus `currency_tax` "34.0" is `currency_amount` "230.32". So `amount` and `currency_amount` include tax.
+
+To total invoices in more than one currency, add up `amount`, which is in euros. Add up `currency_amount` only for invoices in the same `currency`:
+
+<!-- example continued -->
+```ruby
+drafts = [{ field: "draft", operator: "eq", value: "true" }]
+
+total = client.customer_invoices.list(filter: drafts).sum(BigDecimal("0")) { BigDecimal(_1[:amount]) }
+total.to_s("F")   # => "230.32"
+```
 
 A response is frozen, nested Hashes and Arrays included. `invoice.merge(label: "Audit")` gives you a changed copy.
 

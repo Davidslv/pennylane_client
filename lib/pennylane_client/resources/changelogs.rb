@@ -9,8 +9,11 @@ module PennylaneClient
     # `operation`, `processed_at`, `created_at`, `updated_at`). Pennylane
     # keeps four weeks of changes: `since:` older than that is a 422. With no
     # `since:` the feed starts at the oldest change kept. `since:` takes a
-    # Time or an RFC 3339 String and is sent with the first page only;
-    # Pennylane answers 400 to `start_date` next to a `cursor`.
+    # Time (or a DateTime) or an RFC 3339 String and is sent with the first
+    # page only; Pennylane answers 400 to `start_date` next to a `cursor`.
+    # Anything else raises ArgumentError, a Date included: Pennylane's
+    # `start_date` is a date-time, and the contract does not say it takes a
+    # bare date.
     #
     # To pick up where the last run stopped, pass the `processed_at` of the
     # last change handled as `since:`; the last page's `next_cursor` is null.
@@ -63,8 +66,17 @@ module PennylaneClient
         keys = params.keys.map(&:to_s)
         raise ArgumentError, "changelogs take since:, not start_date:" if keys.include?("start_date")
         raise ArgumentError, "changelogs take since: as a keyword, not a String key" if keys.include?("since")
+        raise ArgumentError, "since: takes a Time or an RFC 3339 String, got #{since.class}" unless date_time?(since)
 
         paginate(operation_id, start_date: since, **params)
+      end
+
+      # nil, a Time, a String or a DateTime. A DateTime is a Date that
+      # carries a time; `date` is not required here, so it may not be loaded.
+      def date_time?(since)
+        return true if since.nil? || since.is_a?(::Time) || since.is_a?(::String)
+
+        defined?(::DateTime) ? since.is_a?(::DateTime) : false
       end
     end
   end
