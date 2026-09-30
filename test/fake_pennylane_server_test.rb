@@ -73,6 +73,30 @@ class FakePennylaneServerTest < Minitest::Test
     assert_raises(PennylaneClient::TimeoutError) { client.call(:postJournals, code: "X", label: "Y") }
   end
 
+  # An exception the transport does not rescue (Timeout.timeout,
+  # rack-timeout, Interrupt) can cut a call off after the request was sent.
+  # The half-read connection must not be reused: the late answer would be
+  # read as the next call's response, whoever that call is for.
+  def test_a_call_cut_off_by_timeout_does_not_leak_its_answer_into_the_next
+    @fake.inject(:slow, times: 1, delay: 0.3)
+
+    assert_raises(Timeout::Error) { Timeout.timeout(0.05) { client.call(:getMe) } }
+    sleep 0.4 # the late answer is now waiting on the old socket
+
+    assert_operator client.call(:postFileAttachments, file: StringIO.new("pdf")).fetch(:received), :>, 0
+  end
+
+  def test_a_call_cut_off_by_a_non_standard_error_does_not_leak_its_answer
+    # rack-timeout raises an Exception, not a StandardError.
+    request_timeout = Class.new(Exception) # rubocop:disable Lint/InheritException
+    @fake.inject(:slow, times: 1, delay: 0.3)
+
+    assert_raises(request_timeout) { Timeout.timeout(0.05, request_timeout) { client.call(:getMe) } }
+    sleep 0.4
+
+    assert_operator client.call(:postFileAttachments, file: StringIO.new("pdf")).fetch(:received), :>, 0
+  end
+
   def test_closed_connections_leave_no_threads_behind
     client.call(:getMe)
     @transport.close

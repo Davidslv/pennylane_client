@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A call cut short by an exception the transport does not rescue (`Timeout.timeout`, rack-timeout, `Interrupt`) now drops its connection. Before, the unread answer stayed on the kept-alive socket and was returned to the next call on that thread, which could be for another token.
+
 ## [0.1.0] - 2026-09-30
 
 First release. Every live operation is reachable through `client.call` and has a named method.
