@@ -24,5 +24,6 @@ module PennylaneClient
     def query_value: (untyped value) -> String
     def headers: (?json: bool) -> Hash[String, String]
     def handle: (Response response) -> untyped
+    def unreadable: (Response response, String reason) -> Error
   end
 end

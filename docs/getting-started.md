@@ -80,6 +80,8 @@ Every error is a `PennylaneClient::Error` with `#status`, `#code`, `#details` an
 | `ConnectionError`, `TimeoutError` | no response arrived |
 | `ExportError` | an export failed or was not ready in time; `#export` is the export as last read |
 
+A 2xx body that is not JSON, or not valid UTF-8, raises the base `Error`. An error body in another encoding, such as a proxy's Latin-1 5xx page, still raises the class for its status.
+
 An unknown operationId raises `PennylaneClient::UnknownOperationError`, an `ArgumentError`.
 
 Before raising, the client retries what is safe to repeat: a 429 for any request, after Pennylane's `retry-after`; a 5xx or no response for a GET only. A POST, PUT or DELETE that fails with a 5xx or a timeout is not sent again, because Pennylane may already have applied it. See [the how-to](how-to.md#retries-and-the-rate-limit).

@@ -136,15 +136,24 @@ module PennylaneClient
       headers
     end
 
+    # A 2xx body that is not valid UTF-8 raises Error, as a body that is not
+    # JSON does (JSON is UTF-8, RFC 8259). It is not scrubbed: a record read
+    # with U+FFFD in place of its bytes could be written back that way.
     def handle(response)
       raise Error.from_response(response) unless response.success?
-      return true if response.body.to_s.strip.empty?
 
-      JSON.parse(response.body, symbolize_names: true, freeze: true)
+      body = response.body.to_s
+      raise unreadable(response, "is not valid UTF-8") unless body.valid_encoding?
+      return true if body.strip.empty?
+
+      JSON.parse(body, symbolize_names: true, freeze: true)
     rescue JSON::ParserError
-      raise Error.new("#{response.status}: the response body is not JSON", status: response.status,
-                                                                           body: response.body,
-                                                                           headers: response.headers)
+      raise unreadable(response, "is not JSON")
+    end
+
+    def unreadable(response, reason)
+      Error.new("#{response.status}: the response body #{reason}",
+                status: response.status, body: response.body, headers: response.headers)
     end
   end
 end

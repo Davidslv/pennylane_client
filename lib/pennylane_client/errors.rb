@@ -13,6 +13,9 @@ module PennylaneClient
   #   {"status": 409, "error": "A document with ID ... already exists."}
   #   {"message": "..."}
   #   plain text, or nothing at all
+  #
+  # A body that is not valid UTF-8 is read with the bad bytes replaced, so
+  # the class still follows the status.
   class Error < StandardError
     MESSAGE_LIMIT = 200
 
@@ -36,7 +39,7 @@ module PennylaneClient
       @status = status
       @body = body
       @headers = headers
-      parsed = parse(body)
+      parsed = parse
       @code, text = describe(parsed)
       @details = parsed[:details] if parsed.is_a?(Hash)
       super(message || summary(text))
@@ -44,12 +47,21 @@ module PennylaneClient
 
     private
 
-    def parse(body)
-      return nil if body.nil? || body.strip.empty?
+    def parse
+      text = readable_body
+      return nil if text.strip.empty?
 
-      JSON.parse(body, symbolize_names: true)
+      JSON.parse(text, symbolize_names: true)
     rescue JSON::ParserError
       nil
+    end
+
+    # The body as valid UTF-8. A proxy's Latin-1 error page arrives with
+    # bytes that are not, and String#strip raises on them, which would hide
+    # the status. Bad bytes become U+FFFD; #body keeps them as they came.
+    def readable_body
+      text = body.to_s
+      text.valid_encoding? ? text : text.scrub
     end
 
     # Returns [code, text] for the message.
@@ -66,7 +78,7 @@ module PennylaneClient
     end
 
     def plain_text
-      text = body.to_s.strip
+      text = readable_body.strip
       text.empty? ? nil : text
     end
 
