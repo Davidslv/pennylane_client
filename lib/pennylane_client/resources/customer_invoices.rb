@@ -20,75 +20,87 @@ module PennylaneClient
       def find(id) = call(:getCustomerInvoice, id:)
 
       # Creates a draft or finalized customer invoice or credit note.
-      def create(**attributes) = call(:postCustomerInvoices, **attributes)
+      def create(retry: nil, **attributes) = call(:postCustomerInvoices, retry:, **attributes)
 
       # Updates a customer invoice. Only the attributes you pass change.
-      def update(id, **attributes) = call_on(:updateCustomerInvoice, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:updateCustomerInvoice, { id: }, retry:, **attributes)
 
       # Deletes a draft invoice or draft credit note. Returns true.
-      def delete(id) = call(:deleteCustomerInvoices, id:)
+      def delete(id, retry: nil) = call(:deleteCustomerInvoices, id:, retry:)
 
       # Creates an invoice from a quote, which gives it its customer and
       # lines. Pennylane requires `quote_id:` and `draft:`.
-      def create_from_quote(**attributes) = call(:createCustomerInvoiceFromQuote, **attributes)
+      def create_from_quote(retry: nil, **attributes) = call(:createCustomerInvoiceFromQuote, retry:, **attributes)
 
       # Imports an invoice issued elsewhere, with its PDF already uploaded
       # (`file_attachment_id:`). Pennylane stores the amounts exactly as
       # sent, so they must add up.
-      def import(**attributes) = call(:importCustomerInvoices, **attributes)
+      def import(retry: nil, **attributes) = call(:importCustomerInvoices, retry:, **attributes)
 
       # Imports an invoice from an e-invoice file: a Factur-X PDF, or a UBL or
-      # CII XML invoice (alpha at Pennylane). `file` is a File, IO, Pathname
-      # or PennylaneClient::Upload and streams from disk. Hash and Array
-      # fields (`invoice_options:`, `installments:`) go as JSON parts.
-      def import_e_invoice(file, **fields) = call(:createCustomerInvoiceEInvoiceImport, file:, **fields)
+      # CII XML invoice. `file` is a File, IO, Pathname or
+      # PennylaneClient::Upload and streams from disk. Hash and Array fields
+      # (`invoice_options:`, `installments:`) go as JSON parts.
+      #
+      # @note Experimental: the UBL and CII XML input only, which Pennylane
+      #   calls alpha. It may change in a minor release (README, Stability).
+      #   A Factur-X PDF is stable.
+      def import_e_invoice(file, retry: nil, **fields)
+        call(:createCustomerInvoiceEInvoiceImport, file:, retry:, **fields)
+      end
 
       # Turns a draft into a finalized invoice, which can no longer be edited.
-      def finalize(id) = call(:finalizeCustomerInvoice, id:)
+      def finalize(id, retry: nil) = call(:finalizeCustomerInvoice, id:, retry:)
 
       # Marks an invoice as paid. Pennylane reconciles nothing. Returns true.
-      def mark_as_paid(id) = call(:markAsPaidCustomerInvoice, id:)
+      def mark_as_paid(id, retry: nil) = call(:markAsPaidCustomerInvoice, id:, retry:)
 
       # Marks one installment as paid; the invoice is paid once all of them
-      # are. Pennylane tags this operation Hidden and calls it alpha, so it
-      # may change. Returns true.
-      def mark_installment_as_paid(customer_invoice_id, id)
-        call(:markAsPaidCustomerInvoiceInstallment, customer_invoice_id:, id:)
+      # are. Returns true.
+      #
+      # @note Experimental: Pennylane tags this operation Hidden and calls it
+      #   alpha. This method may change in a minor release (README, Stability).
+      def mark_installment_as_paid(customer_invoice_id, id, retry: nil)
+        call(:markAsPaidCustomerInvoiceInstallment, customer_invoice_id:, id:, retry:)
       end
 
       # Emails a finalized or imported invoice. With no `recipients:`,
       # Pennylane uses the customer's addresses. Raises ConflictError while
       # the PDF is still being generated; try again in a few minutes.
       # Returns true.
-      def send_by_email(id, **fields) = call_on(:sendByEmailCustomerInvoice, { id: }, **fields)
+      def send_by_email(id, retry: nil, **fields) = call_on(:sendByEmailCustomerInvoice, { id: }, retry:, **fields)
 
       # Sends an e-invoice to the Partner Dematerialization Platform (PA).
       # Raises ConflictError while an e-invoice import is still processing;
       # try again in a few seconds. Returns true.
-      def send_to_pa(id) = call(:sendToPaCustomerInvoice, id:)
+      def send_to_pa(id, retry: nil) = call(:sendToPaCustomerInvoice, id:, retry:)
 
       # Links a credit note to the invoice `id`:
       #
       #   invoices.link_credit_note(42, credit_note_id: 43)
-      def link_credit_note(id, credit_note_id:) = call(:linkCreditNote, id:, credit_note_id:)
+      def link_credit_note(id, credit_note_id:, retry: nil) = call(:linkCreditNote, id:, credit_note_id:, retry:)
 
       # Matches one bank transaction to the invoice. Not for drafts. Call it
       # once per transaction; a transaction can match several invoices.
       # Returns true.
       #
       #   invoices.match_transaction(42, transaction_id: 9)
-      def match_transaction(customer_invoice_id, transaction_id:)
-        call(:postCustomerInvoiceMatchedTransactions, customer_invoice_id:, transaction_id:)
+      def match_transaction(customer_invoice_id, transaction_id:, retry: nil)
+        call(:postCustomerInvoiceMatchedTransactions, customer_invoice_id:, transaction_id:, retry:)
       end
 
       # Unmatches the transaction `transaction_id` from the invoice. Not for
       # drafts. Returns true.
-      def unmatch_transaction(customer_invoice_id, transaction_id)
-        call(:deleteCustomerInvoiceMatchedTransactions, customer_invoice_id:, id: transaction_id)
+      #
+      #   invoices.unmatch_transaction(42, transaction_id: 9)
+      def unmatch_transaction(customer_invoice_id, transaction_id:, retry: nil)
+        call(:deleteCustomerInvoiceMatchedTransactions, customer_invoice_id:, id: transaction_id, retry:)
       end
 
       # Updates an imported invoice or credit note (not a draft).
-      def update_imported(id, **attributes) = call_on(:updateImportedCustomerInvoice, { id: }, **attributes)
+      def update_imported(id, retry: nil, **attributes)
+        call_on(:updateImportedCustomerInvoice, { id: }, retry:, **attributes)
+      end
 
       # The lists below hang off one invoice. Each returns every item as an
       # Enumerator::Lazy of Hashes, like `list`, and takes `sort:` or a
@@ -126,8 +138,8 @@ module PennylaneClient
 
       # Attaches `file` (a PDF or image: File, IO, Pathname or
       # PennylaneClient::Upload) as an appendix. It streams from disk.
-      def upload_appendix(customer_invoice_id, file)
-        call(:postCustomerInvoiceAppendices, customer_invoice_id:, file:)
+      def upload_appendix(customer_invoice_id, file, retry: nil)
+        call(:postCustomerInvoiceAppendices, customer_invoice_id:, file:, retry:)
       end
 
       # The analytical categories the invoice is split across. No `sort:`.
@@ -140,8 +152,8 @@ module PennylaneClient
       # to 1. Not for drafts.
       #
       #   invoices.categorize(42, [{ id: 426, weight: "0.6575" }, { id: 427, weight: "0.3425" }])
-      def categorize(customer_invoice_id, categories)
-        call(:putCustomerInvoiceCategories, categories, customer_invoice_id:)
+      def categorize(customer_invoice_id, categories, retry: nil)
+        call(:putCustomerInvoiceCategories, categories, customer_invoice_id:, retry:)
       end
     end
   end

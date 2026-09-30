@@ -38,6 +38,8 @@ client.products.find(3)
 client.call(:getMe)   # any operation, by its Pennylane operationId
 ```
 
+A write is never sent twice after a 5xx or a timeout. When one is safe to repeat, pass `retry: :always` to its named method or to `client.call`; see [retries](docs/how-to.md#retries-and-the-rate-limit).
+
 Operations with a Ruby name are marked `named` in the [checklist](docs/api/CHECKLIST.md). Every other operation is reachable through `client.call` until it gets one.
 
 Responses are frozen Hashes with symbol keys, exactly as Pennylane sends them. Money stays a decimal string (`"230.32"`).
@@ -54,6 +56,36 @@ event[:event]  # "customer_invoice.e_invoicing_status_updated"
 `verify!` checks the HMAC-SHA256 signature in constant time, rejects a timestamp more than 300 seconds from now (`tolerance:`), and returns the deep-frozen event. A bad delivery raises `PennylaneClient::SignatureError`; a blank secret raises `ArgumentError`. Pass the raw body bytes, not re-serialised JSON.
 
 Pennylane delivers at least once and in no particular order. De-duplicate on the delivery `id` and make your handler idempotent; storing seen ids is up to you. See [how-to](docs/how-to.md#verify-an-inbound-webhook).
+
+## Public API
+
+This list is the public API: what [Semantic Versioning](#stability) covers. Everything else under `PennylaneClient` is tagged `@api private` in its documentation and may change in any release.
+
+<!-- public-api: checked against the code by test/public_api_test.rb -->
+- `PennylaneClient.new(token:, ...)`, which returns a `PennylaneClient::Client`, and `PennylaneClient.configure`, which yields the `PennylaneClient::Configuration` (`logger`, `on_request`).
+- `PennylaneClient::Client`: `call`, `paginate`, `pages`, and one accessor per resource group (`customer_invoices`, `customers`, `supplier_invoices` and the rest listed in the status line above).
+- Every public method of the `PennylaneClient::Resources` classes those accessors return: the named methods. The Experimental ones are listed under Stability.
+- The errors: `PennylaneClient::Error` (`status`, `body`, `headers`, `details`) and its subclasses `PennylaneClient::AuthenticationError`, `PennylaneClient::PermissionError`, `PennylaneClient::NotFoundError`, `PennylaneClient::ConflictError`, `PennylaneClient::ValidationError`, `PennylaneClient::RateLimitError`, `PennylaneClient::ServerError`, `PennylaneClient::ConnectionError`, `PennylaneClient::TimeoutError`, `PennylaneClient::ExportError` and `PennylaneClient::SignatureError`; and `PennylaneClient::UnknownOperationError`, an `ArgumentError`.
+- `PennylaneClient::Webhook.verify!`.
+- `PennylaneClient::Upload`, to set a file's name or content type.
+- `PennylaneClient::LimiterRegistry` (`new(idle_after:) { |key| limiter }`, `fetch`, `default`) and the limiter interface: `acquire` waits for a call and returns the seconds waited, `update(remaining:, reset_at:)` takes the rate-limit headers, and `idle?` is optional.
+- The transport interface: anything with `call(request)` that returns a `PennylaneClient::Response` (`status`, `headers` with lower-case names, `body`), raises `ConnectionError` or `TimeoutError` when no answer arrives, and never raises for an HTTP status. It is given a `PennylaneClient::Request` (`verb`, `url`, `headers`, `body`, `operation_id`, `retry_policy`); an upload's `body` responds to `read`, `rewind` and `size`.
+- `PennylaneClient::NetHttpTransport`, the default transport: `new(open_timeout: 5, read_timeout: 30, write_timeout: 30, upload_timeout: 300, keep_alive_timeout: 10)`, `default` and `close`.
+- `PennylaneClient::VERSION`.
+<!-- /public-api -->
+
+## Stability
+
+From 1.0.0 the gem follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html), with one exception: Experimental APIs may change in a minor release. An Experimental method wraps an operation, or an input, that Pennylane itself marks Hidden, alpha or beta, so the gem cannot promise more than Pennylane does. Each one carries `@note Experimental` in its documentation. Pin a minor version (`"~> 1.2.0"`) if you depend on one.
+
+Experimental:
+
+<!-- experimental: checked against the code by test/stability_test.rb -->
+- `client.customers.create`: `postCustomer`, which Pennylane tags Hidden. `create_company` and `create_individual` are stable.
+- `client.customer_invoices.mark_installment_as_paid`: Hidden and alpha at Pennylane.
+- `client.webhook_subscriptions.list`, `client.webhook_subscriptions.find`, `client.webhook_subscriptions.create`, `client.webhook_subscriptions.update` and `client.webhook_subscriptions.delete`: webhooks are beta at Pennylane. `PennylaneClient::Webhook.verify!` is stable.
+- `client.customer_invoices.import_e_invoice` and `client.supplier_invoices.import_e_invoice` with a UBL or CII XML file, which Pennylane calls alpha. A Factur-X PDF is stable.
+<!-- /experimental -->
 
 ## Requirements
 

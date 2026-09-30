@@ -3,6 +3,39 @@
 require "prism"
 require "rbs"
 
+# The classes and modules lib/ defines, read with Prism. `constants` leaves
+# out a private_constant, so Signatures finds those through here.
+module LibNamespaces
+  LIB = File.expand_path("../../lib", __dir__)
+
+  module_function
+
+  # The names of the classes and modules lib/ defines directly inside
+  # `mod`, as Symbols.
+  def children(mod)
+    prefix = "#{mod.name}::"
+    all.filter_map do |name|
+      child = name.delete_prefix(prefix)
+      child.to_sym if name.start_with?(prefix) && !child.include?("::") && mod.const_defined?(child, false)
+    end
+  end
+
+  # "PennylaneClient::Multipart::TextSource" for each class or module.
+  def all
+    @all ||= Dir.glob("**/*.rb", base: LIB).flat_map do |file|
+      [].tap { collect(Prism.parse_file(File.join(LIB, file)).value, [], _1) }
+    end.uniq
+  end
+
+  def collect(node, namespace, found)
+    if node.is_a?(Prism::ClassNode) || node.is_a?(Prism::ModuleNode)
+      namespace += [node.constant_path.slice]
+      found << namespace.join("::")
+    end
+    node.compact_child_nodes.each { collect(_1, namespace, found) }
+  end
+end
+
 # Reads sig/ with the rbs library and lib/ by reflection and with Prism, so
 # SignaturesTest can compare them. `rbs validate` only checks that the
 # signatures are well formed, not that they match the code.
@@ -35,15 +68,18 @@ module Signatures
     singleton ? builder.build_singleton(type_name(name)) : builder.build_instance(type_name(name))
   end
 
-  # Every class and module under PennylaneClient.
+  # Every class and module under PennylaneClient, private constants
+  # included.
   def namespaces(mod = PennylaneClient, seen = [])
     return seen if seen.include?(mod)
 
     seen << mod
-    children = mod.constants(false).map { mod.const_get(_1) }.grep(Module)
+    children = (mod.constants(false) | private_children(mod)).map { mod.const_get(_1) }.grep(Module)
     children.select { _1.name&.start_with?("PennylaneClient") }.each { namespaces(_1, seen) }
     seen
   end
+
+  def private_children(mod) = LibNamespaces.children(mod)
 
   # Every method lib/ defines, public or not, instance or singleton.
   def methods_in_lib

@@ -19,13 +19,13 @@ module PennylaneClient
 
       # Creates a SEPA mandate for a customer. Pennylane requires
       # `customer_id:`, `iban:`, `bic:`, `identifier:` and `signed_at:`.
-      def create(**attributes) = call(:postSepaMandates, **attributes)
+      def create(retry: nil, **attributes) = call(:postSepaMandates, retry:, **attributes)
 
       # Updates a SEPA mandate. Only the attributes you pass change.
-      def update(id, **attributes) = call_on(:putSepaMandate, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:putSepaMandate, { id: }, retry:, **attributes)
 
       # Deletes a SEPA mandate. Returns true.
-      def delete(id) = call(:deleteSepaMandate, id:)
+      def delete(id, retry: nil) = call(:deleteSepaMandate, id:, retry:)
     end
   end
 end

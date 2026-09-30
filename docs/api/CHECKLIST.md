@@ -256,7 +256,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `getPaRegistrations` | GET | `/pa_registrations` | yes | yes | unverified: no sandbox access | `test/resources/account_test.rb#test_pa_registrations_returns_the_items` |
+| `getPaRegistrations` | GET | `/pa_registrations` | yes | yes | unverified: no sandbox access | `test/resources/account_test.rb#test_pa_registrations_list_is_lazy_like_every_other_list` |
 
 ## Products (4 of 4 named)
 

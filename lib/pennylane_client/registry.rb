@@ -5,6 +5,8 @@ module PennylaneClient
   class UnknownOperationError < ArgumentError; end
 
   # A frozen lookup from operationId to Operation.
+  #
+  # @api private
   class Registry
     def self.default
       DEFAULT

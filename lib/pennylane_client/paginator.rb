@@ -16,9 +16,13 @@ module PennylaneClient
   #
   # `getPaRegistrations` answers in the same shape but takes no cursor, so
   # an Operation that is not paginated is read as one page, sent as given.
+  # If that page says `has_more: true`, the rest cannot be asked for, so the
+  # walk raises Error rather than return part of the list.
   #
   # Both `items` and `pages` start again from the first page each time they
   # are enumerated.
+  #
+  # @api private
   class Paginator
     FIRST_PAGE_ONLY = %i[start_date].freeze
 
@@ -42,7 +46,7 @@ module PennylaneClient
         loop do
           page = fetch(params)
           yielder << page
-          break unless @operation.paginated && page[:has_more] && page[:next_cursor]
+          break unless more?(page)
 
           params = @params.except(*FIRST_PAGE_ONLY).merge(cursor: next_cursor(page, params[:cursor]))
         end
@@ -61,6 +65,15 @@ module PennylaneClient
       end
 
       params.merge(limit:)
+    end
+
+    # True when there is a next page to ask for. An Operation that takes no
+    # cursor cannot ask for one, so `has_more: true` from it raises.
+    def more?(page)
+      return false unless page[:has_more]
+      raise Error, "#{@operation.id} answered has_more: true, but takes no cursor" unless @operation.paginated
+
+      !page[:next_cursor].nil?
     end
 
     # The same cursor twice would ask for the same page forever.

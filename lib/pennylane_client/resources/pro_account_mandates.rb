@@ -20,7 +20,7 @@ module PennylaneClient
 
       # Sends a customer a request for a Pro Account SEPA Direct Debit
       # mandate. Returns true.
-      def send_request(customer_id:) = call(:postProAccountMandateMailRequests, customer_id:)
+      def send_request(customer_id:, retry: nil) = call(:postProAccountMandateMailRequests, customer_id:, retry:)
 
       # The mandates that can be migrated to the Pro Account, as an
       # Enumerator::Lazy of Hashes.
@@ -32,8 +32,8 @@ module PennylaneClient
       # in `mandate_migration:`.
       #
       #   pro_account_mandates.migrate(mandate_type: "SepaMandate", mandate_id: 3)[:mandate_migration]
-      def migrate(mandate_type:, mandate_id:, **fields)
-        call(:postProAccountMandateMigrations, mandate_type:, mandate_id:, **fields)
+      def migrate(mandate_type:, mandate_id:, retry: nil, **fields)
+        call(:postProAccountMandateMigrations, mandate_type:, mandate_id:, retry:, **fields)
       end
     end
   end

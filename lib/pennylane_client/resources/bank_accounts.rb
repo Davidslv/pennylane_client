@@ -19,7 +19,7 @@ module PennylaneClient
       # optional. `account_type: "current"` is deprecated; use `"checking"`.
       #
       #   bank_accounts.create(name: "Main account", iban: "FR7630006000011234567890189")
-      def create(**attributes) = call(:postBankAccount, **attributes)
+      def create(retry: nil, **attributes) = call(:postBankAccount, retry:, **attributes)
     end
   end
 end

@@ -6,6 +6,8 @@ module PennylaneClient
   # weakly: a fiber collected by GC takes its entry with it. The lock is
   # taken when a fiber first connects and when a new connection is opened,
   # never for a call on an open connection.
+  #
+  # @api private
   class ConnectionOwners
     def initialize
       @owners = ObjectSpace::WeakMap.new

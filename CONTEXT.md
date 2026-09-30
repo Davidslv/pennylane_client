@@ -24,6 +24,16 @@ A Registered operation that also has a stable, hand-chosen Ruby method (e.g. `cu
 - The Ruby name is a promise to callers. It survives Pennylane renaming the operationId.
 - "Done" in the checklist means Named. The gem reaches 1.0 when every live Operation is Named.
 - Distinct from Registered: an Operation can be Registered for months before it is Named.
+- An Experimental method is Named too, but its promise is shorter; see Experimental.
+
+## Experimental
+
+A Named method that sits outside the SemVer promise, because Pennylane marks the Operation or input it wraps Hidden, alpha or beta.
+
+- It may change or go away in a minor release. Every other public method changes only in a major one.
+- Marked `@note Experimental` in the code and listed in the README under Stability; a test keeps the two in step.
+- Today: `customers.create`, `customer_invoices.mark_installment_as_paid`, every `webhook_subscriptions` method, and the UBL and CII XML input of both `import_e_invoice` methods.
+- Distinct from Named: Named says the Operation has a hand-chosen Ruby name and a behaviour test. Experimental says how long that name is promised. An Experimental method is still Named.
 
 ## Resource group
 

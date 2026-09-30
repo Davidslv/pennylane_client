@@ -7,10 +7,14 @@ module PennylaneClient
   # around the next, so each policy has one class. Client composes them:
   #
   #   Auth -> Retry -> RateLimit -> Instrument -> Transport
+  #
+  # @api private
   module Middleware
     # Records every attempt that reaches the Transport, answered or not, as
     # one `type: :request` event. It sits next to the Transport, so a retried
     # call records each attempt and `duration` never includes a wait.
+    #
+    # @api private
     class Instrument
       def initialize(app, instrumentation)
         @app = app

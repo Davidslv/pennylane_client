@@ -12,5 +12,7 @@ module PennylaneClient
   # - body: :json, :multipart, or nil when it takes no request body
   # - success: the documented 2xx status code
   # - deprecated: true when Pennylane marks the operation deprecated
+  #
+  # @api private
   Operation = Data.define(:id, :verb, :path, :paginated, :max_limit, :body, :success, :deprecated)
 end

@@ -20,11 +20,11 @@ module PennylaneClient
       # "profit_and_loss", "treasury" or "building".
       #
       #   category_groups.create(label: "Teams", kind: "profit_and_loss")
-      def create(**attributes) = call(:postCategoryGroups, **attributes)
+      def create(retry: nil, **attributes) = call(:postCategoryGroups, retry:, **attributes)
 
       # Updates a category group. Pennylane requires `label:` here too, even
       # when you change only `kind:`.
-      def update(id, **attributes) = call_on(:putCategoryGroup, { id: }, **attributes)
+      def update(id, retry: nil, **attributes) = call_on(:putCategoryGroup, { id: }, retry:, **attributes)
 
       # The group's categories, as an Enumerator::Lazy of Hashes. Pennylane
       # documents no filter or sort here.

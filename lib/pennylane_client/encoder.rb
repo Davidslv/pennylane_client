@@ -16,6 +16,8 @@ module PennylaneClient
   #
   # Nothing here is required: `bigdecimal` is a bundled gem, so the encoder
   # only handles the classes the caller has already loaded (proposal 0001, D6).
+  #
+  # @api private
   module Encoder
     module_function
 

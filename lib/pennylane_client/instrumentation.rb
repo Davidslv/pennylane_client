@@ -27,6 +27,8 @@ module PennylaneClient
   #
   # The path never has a query, and nothing in an event comes from the
   # request headers, so the token cannot appear.
+  #
+  # @api private
   class Instrumentation
     def initialize(logger: nil, on_request: nil)
       @logger = logger

@@ -75,7 +75,7 @@ A Transport is anything with `call(request) -> Response` that raises `Connection
 - The cursor does not remember `filter` or `sort` (`guides/cursor-pagination.md`), so every param goes again on every page, next to `cursor`. The exception is `start_date`: every changelog operation answers 400 to `start_date` next to `cursor`, so it goes with the first request only.
 - It stops when `has_more` is false or `next_cursor` is null.
 - It returns an `Enumerator::Lazy`: reading the first ten items sends one request. Enumerating it again starts again from the first page. `client.pages` gives the page Hashes instead of the items.
-- `getPaRegistrations` answers with `items`, `has_more` and `next_cursor` but takes no cursor, so an Operation that is not paginated is read as one page. A response without `items` raises `Error`; an Operation that is not a GET raises `ArgumentError`.
+- `getPaRegistrations` answers with `items`, `has_more` and `next_cursor` but takes no cursor, so an Operation that is not paginated is read as one page. If that page says `has_more: true`, the rest cannot be asked for, so the walk raises `Error` rather than loop or return part of the list. A response without `items` raises `Error`; an Operation that is not a GET raises `ArgumentError`.
 
 ## Planned components
 

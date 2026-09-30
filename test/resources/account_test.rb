@@ -33,19 +33,26 @@ class AccountTest < Minitest::Test
   end
 
   # names: getPaRegistrations
-  def test_pa_registrations_returns_the_items
+  def test_pa_registrations_list_is_lazy_like_every_other_list
     body = JSON.generate({ items: [{ id: 1, siret: nil, status: "activated" }], has_more: false, next_cursor: nil })
-    stub_request(:get, "#{API}/pa_registrations").to_return(status: 200, body:)
+    stub = stub_request(:get, "#{API}/pa_registrations").to_return(status: 200, body:)
+    list = client.pa_registrations.list
 
-    assert_equal [{ id: 1, siret: nil, status: "activated" }], client.pa_registrations.list
+    assert_instance_of Enumerator::Lazy, list
+    assert_not_requested stub
+    assert_equal [{ id: 1, siret: nil, status: "activated" }], list.to_a
+    assert_requested stub, times: 1
   end
 
-  # Pennylane takes no cursor here, so a second page cannot be read.
+  # Pennylane takes no cursor here, so a second page cannot be read. The
+  # walk raises rather than loop or return part of the list.
   def test_pa_registrations_refuses_to_drop_a_second_page
-    body = JSON.generate({ items: [{ id: 1 }], has_more: true, next_cursor: "c2" })
-    stub_request(:get, "#{API}/pa_registrations").to_return(status: 200, body:)
+    [{ has_more: true, next_cursor: "c2" }, { has_more: true, next_cursor: nil }].each do |more|
+      body = JSON.generate({ items: [{ id: 1 }], **more })
+      stub_request(:get, "#{API}/pa_registrations").to_return(status: 200, body:)
 
-    error = assert_raises(PennylaneClient::Error) { client.pa_registrations.list }
-    assert_match(/has_more/, error.message)
+      error = assert_raises(PennylaneClient::Error) { client.pa_registrations.list.to_a }
+      assert_match(/has_more/, error.message)
+    end
   end
 end

@@ -63,11 +63,15 @@ A call makes at most 3 attempts, with a random backoff (up to 0.5 s, then 1 s), 
 PennylaneClient.new(token:, max_retry_wait: 10)
 ```
 
-When you know a write is safe to repeat, opt in per call. `retry` is not sent to Pennylane:
+When you know a write is safe to repeat, opt in per call. Every named write (every named method that is not a GET) takes the same `retry:` keyword as `client.call`. It defaults to `nil`, which keeps the rule above; `:always` opts in; anything else raises `ArgumentError`. `retry` is never sent to Pennylane:
 
 ```ruby
+client.category_groups.update(7, label: "Sales", retry: :always)
+client.supplier_invoices.categorize(42, categories, retry: :always)
 client.call(:putCategoryGroup, id: 7, label: "Sales", retry: :always)
 ```
+
+A named read takes no `retry:`: a GET is retried already.
 
 ### Share the budget across processes
 
@@ -157,9 +161,9 @@ invoices.import(file_attachment_id: 5, customer_id: 7, ...)     # PDF uploaded f
 invoices.import_e_invoice(Pathname("facturx.pdf"), invoice_options: { customer_id: 7 })
 ```
 
-`import` stores the amounts exactly as sent, so they must add up. `import_e_invoice` takes a Factur-X PDF, or a UBL or CII XML invoice (alpha at Pennylane), and streams it like any [upload](#upload-a-file). `upload_appendix(42, file)` attaches a PDF or image to an invoice the same way.
+`import` stores the amounts exactly as sent, so they must add up. `import_e_invoice` takes a Factur-X PDF, or a UBL or CII XML invoice, and streams it like any [upload](#upload-a-file). Pennylane calls the XML input alpha, so it is [Experimental](../README.md#stability): it may change in a minor release. `upload_appendix(42, file)` attaches a PDF or image to an invoice the same way.
 
-`link_credit_note(42, credit_note_id: 43)` links credit note 43 to invoice 42. `mark_installment_as_paid(42, 3)` marks one installment paid; Pennylane tags it Hidden and alpha, so it may change.
+`link_credit_note(42, credit_note_id: 43)` links credit note 43 to invoice 42. `mark_installment_as_paid(42, 3)` marks one installment paid. Pennylane tags it Hidden and alpha, so it is [Experimental](../README.md#stability): it may change in a minor release.
 
 ## Work with customers
 
@@ -177,7 +181,7 @@ customers.update_individual(ada[:id], emails: ["ada@example.org"])
 customers.find_company(acme[:id])     # also find_individual; find(id) works for either
 ```
 
-`create` is `postCustomer`, which makes either kind from `customer_type:`. Pennylane tags it Hidden, so it may change. Prefer `create_company` and `create_individual`:
+`create` is `postCustomer`, which makes either kind from `customer_type:`. Pennylane tags it Hidden, so it is [Experimental](../README.md#stability): it may change in a minor release. Prefer `create_company` and `create_individual`:
 
 ```ruby
 customers.create(customer_type: "company", name: "Acme", billing_address: address)
@@ -213,7 +217,7 @@ invoices.import_e_invoice(Pathname("facturx.pdf"), invoice_options: { supplier_i
 
 Pennylane de-duplicates supplier invoice files: importing the same file twice raises `ConflictError`. `import` also raises `ConflictError` while the uploaded file is not ready yet; Pennylane says to try again after a few seconds. The client never retries a 409. A `ConflictError` that persists most likely means the file was imported before.
 
-`import_e_invoice` takes a Factur-X PDF, or a UBL or CII XML invoice (alpha at Pennylane), and streams it like any [upload](#upload-a-file).
+`import_e_invoice` takes a Factur-X PDF, or a UBL or CII XML invoice, and streams it like any [upload](#upload-a-file). The XML input is alpha at Pennylane and [Experimental](../README.md#stability) here.
 
 `ValidateAccountingSupplierInvoice` is `validate_accounting(42)`. Payment status and e-invoice status take their value as a keyword. `update_payment_status` returns true:
 
@@ -293,7 +297,7 @@ Match a transaction from the invoice's side. Call `match_transaction` once per t
 
 ```ruby
 client.customer_invoices.match_transaction(42, transaction_id: tx[:id])
-client.customer_invoices.unmatch_transaction(42, tx[:id])
+client.customer_invoices.unmatch_transaction(42, transaction_id: tx[:id])
 client.supplier_invoices.match_transaction(51, transaction_id: tx[:id])   # also unmatch_transaction
 ```
 
@@ -408,7 +412,7 @@ client.changelogs.customer_invoices(since: Time.now - 3600).each do |change|
 end
 ```
 
-Pennylane keeps four weeks of changes. A `since:` older than that raises `ValidationError` (422). Without `since:` the feed starts at the oldest change kept. `since:` is sent with the first page only, because Pennylane answers 400 to `start_date` next to a `cursor`.
+Pennylane keeps four weeks of changes. A `since:` older than that raises `ValidationError` (422). Without `since:` the feed starts at the oldest change kept. `since:` is sent with the first page only, because Pennylane answers 400 to `start_date` next to a `cursor`. `since:` is the only spelling: passing Pennylane's name, `start_date:`, raises `ArgumentError`.
 
 To resume where the last run stopped, keep the `processed_at` of the last change you handled and pass it as `since:` next time. The last page's `next_cursor` is null, so it cannot carry you forward. `processed_at` carries microseconds. Pass it back as the String, or as a Time parsed from it: a Time is sent with its microseconds (`2025-06-25T11:54:18.589480Z`), so the feed does not restart earlier in that second. The contract does not say whether `start_date` includes a change at that exact time, so handle a repeat of the last change:
 
@@ -450,7 +454,7 @@ end
 
 With `installments` off, an invoice sent with installments either gets a 403 or is created with a single installment. Pennylane adds keys here as it gates new features.
 
-`client.pa_registrations.list` returns the company's registrations with a Plateforme Agréée. The company has finished PA onboarding when a registration is `"activated"` with the `exchange_direction` you need. A nil `siret` is the head office (SIREN). The list is one request: Pennylane takes no cursor for it. If Pennylane answers `has_more: true`, `list` raises `PennylaneClient::Error` rather than return part of the list.
+`client.pa_registrations.list` returns the company's registrations with a Plateforme Agréée. The company has finished PA onboarding when a registration is `"activated"` with the `exchange_direction` you need. A nil `siret` is the head office (SIREN). Like every `list`, it returns an `Enumerator::Lazy`. Reading it is one request: Pennylane takes no cursor for it. If Pennylane answers `has_more: true`, reading raises `PennylaneClient::Error` rather than return part of the list.
 
 ## Work with billing subscriptions
 
@@ -497,7 +501,7 @@ client.purchase_requests.import(
 
 ## Subscribe to webhooks
 
-`client.webhook_subscriptions` names the Webhooks operations. Webhooks are in beta at Pennylane, which suggests the changelogs as a fallback.
+`client.webhook_subscriptions` names the Webhooks operations. Webhooks are in beta at Pennylane, which suggests the changelogs as a fallback, so every `webhook_subscriptions` method is [Experimental](../README.md#stability): it may change in a minor release. `Webhook.verify!` is stable.
 
 ```ruby
 hook = client.webhook_subscriptions.create(callback_url: "https://example.com/pennylane",
