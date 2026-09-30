@@ -9,6 +9,8 @@ module PennylaneClient
   #   from the rate limit as it can;
   # - sends every param again on every page, next to the `cursor`, because
   #   the cursor does not remember `filter` or `sort`;
+  # - except `start_date`, which goes with the first request only: every
+  #   changelog operation answers 400 to `start_date` next to a `cursor`;
   # - stops when `has_more` is false or `next_cursor` is null.
   #
   # `getPaRegistrations` answers in the same shape but takes no cursor, so
@@ -17,6 +19,8 @@ module PennylaneClient
   # Both `items` and `pages` start again from the first page each time they
   # are enumerated.
   class Paginator
+    FIRST_PAGE_ONLY = %i[start_date].freeze
+
     def initialize(executor:, operation:, params:)
       raise ArgumentError, "#{operation.id.inspect} does not return a list" unless operation.verb == :get
 
@@ -32,13 +36,13 @@ module PennylaneClient
     # and `next_cursor`.
     def pages
       Enumerator.new do |yielder|
-        cursor = @params[:cursor]
+        params = @params
         loop do
-          page = fetch(cursor)
+          page = fetch(params)
           yielder << page
           break unless @operation.paginated && page[:has_more] && page[:next_cursor]
 
-          cursor = next_cursor(page, cursor)
+          params = @params.except(*FIRST_PAGE_ONLY).merge(cursor: next_cursor(page, params[:cursor]))
         end
       end.lazy
     end
@@ -64,8 +68,8 @@ module PennylaneClient
       raise Error, "#{@operation.id} returned the cursor it was given, #{cursor.inspect}"
     end
 
-    def fetch(cursor)
-      page = @executor.call(@operation.id, @params.merge(cursor:))
+    def fetch(params)
+      page = @executor.call(@operation.id, params)
       return page if page.is_a?(Hash) && page[:items].is_a?(Array)
 
       raise Error, "#{@operation.id} did not return a page of items"
