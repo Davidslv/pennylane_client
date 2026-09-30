@@ -1,0 +1,25 @@
+# pennylane_client
+
+> Unofficial, zero-dependency Ruby client for the Pennylane Company API v2. In development, not yet released. Not affiliated with Pennylane.
+
+Planned usage: `require "pennylane_client"`, then `PennylaneClient.new(token: ...)`. Every Pennylane operation reachable through `client.call(:operationId, ...)`, with stable Ruby names such as `client.customer_invoices.finalize(id)`. Ruby >= 3.3, MIT licensed.
+
+## Docs
+
+- [README](README.md): What it is, status, planned usage
+- [Getting started](docs/getting-started.md): Install and first call
+- [Architecture](docs/architecture.md): Components, request path, design rationale, where the design strains
+- [Design diagram](docs/architecture/design-diagram.md): The whole gem on one page
+- [How-to recipes](docs/how-to.md): Task-oriented recipes
+- [Domain language](CONTEXT.md): Operation, Registered and Named operation, Contract snapshot, Clean room, Drift
+
+## Design
+
+- [Proposal 0001](proposals/0001-pennylane-client-gem.md): Scope, architecture and decisions D1 to D8
+
+## Meta
+
+- [AGENTS.md](AGENTS.md): Rules for agents working in the repo
+- [Contributing](CONTRIBUTING.md): Setup and the `bundle exec rake` gate
+- [Changelog](CHANGELOG.md): Release history
+- [Security](SECURITY.md): Threat model and private reporting

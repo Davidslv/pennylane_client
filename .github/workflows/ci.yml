@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    name: Ruby ${{ matrix.ruby }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby:
+          - "3.3"
+          - "3.4"
+          - "4.0"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler: latest
+      # No bundler-cache: it keys on Gemfile.lock, which this gem does not keep.
+      - name: Install dependencies
+        run: bundle install
+      - name: Run the gate (tests, RuboCop, RBS)
+        run: bundle exec rake
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    name: Dependency audit
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler: latest
+      # The Gemfile says `lockfile false` (gems do not commit lockfiles), and
+      # bundler-audit needs one. Resolve a throwaway lockfile in CI only.
+      - name: Resolve a lockfile for auditing
+        run: |
+          sed -i "/^lockfile false/d" Gemfile
+          bundle lock
+          bundle install
+      - name: bundler-audit
+        run: bundle exec bundle-audit check --update
