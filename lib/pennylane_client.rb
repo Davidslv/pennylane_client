@@ -11,8 +11,22 @@ require_relative "pennylane_client/request"
 require_relative "pennylane_client/net_http_transport"
 require_relative "pennylane_client/instrumentation"
 require_relative "pennylane_client/executor"
+require_relative "pennylane_client/configuration"
+require_relative "pennylane_client/client"
 
 # Unofficial Ruby client for the Pennylane Company API v2.
 # Not affiliated with Pennylane.
 module PennylaneClient
+  # Shortcut for PennylaneClient::Client.new.
+  def self.new(...)
+    Client.new(...)
+  end
+
+  def self.configuration
+    @configuration ||= Configuration.new
+  end
+
+  def self.configure
+    yield configuration
+  end
 end

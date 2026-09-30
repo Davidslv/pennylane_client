@@ -1,0 +1,15 @@
+module PennylaneClient
+  def self.new: (token: String, ?base_url: String, ?transport: _Transport, ?logger: untyped,
+                 ?on_request: (^(Instrumentation::event) -> void)?) -> Client
+
+  class Client
+    DEFAULT_BASE_URL: String
+
+    def initialize: (token: String, ?base_url: String, ?transport: _Transport, ?logger: untyped,
+                     ?on_request: (^(Instrumentation::event) -> void)?) -> void
+
+    def call: (Symbol | String operation_id, **untyped params) -> untyped
+
+    def inspect: () -> String
+  end
+end

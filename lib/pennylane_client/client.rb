@@ -1,0 +1,32 @@
+# frozen_string_literal: true
+
+module PennylaneClient
+  # The entry point. Wiring only: it builds the Executor and hands calls to it.
+  #
+  #   client = PennylaneClient.new(token: ENV.fetch("PENNYLANE_TOKEN"))
+  #   client.call(:getCustomerInvoice, id: 42)
+  #
+  # `logger` and `on_request` default to PennylaneClient.configuration.
+  # `transport` and `base_url` are there for tests and fakes.
+  class Client
+    DEFAULT_BASE_URL = "https://app.pennylane.com"
+
+    def initialize(token:, base_url: DEFAULT_BASE_URL, transport: NetHttpTransport.new,
+                   logger: PennylaneClient.configuration.logger,
+                   on_request: PennylaneClient.configuration.on_request)
+      raise ArgumentError, "token must be a non-empty String" unless token.is_a?(String) && !token.empty?
+
+      @base_url = base_url
+      @executor = Executor.new(registry: Registry.default, transport:, token:, base_url:,
+                               instrumentation: Instrumentation.new(logger:, on_request:))
+    end
+
+    # Runs any Registered operation by its Pennylane operationId.
+    # Returns a deep-frozen Hash with symbol keys, or true for an empty 2xx.
+    def call(operation_id, **params)
+      @executor.call(operation_id, params)
+    end
+
+    def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
+  end
+end
