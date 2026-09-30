@@ -9,3 +9,4 @@ Gemfile.lock
 /pkg/
 /tmp/
 CLAUDE.local.md
+.claude/worktrees/
