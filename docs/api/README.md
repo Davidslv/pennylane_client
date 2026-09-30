@@ -28,6 +28,26 @@ bundle exec rake contract:snapshot
 
 This reaches `pennylane.readme.io` (the docs site, not the API). It is not part of `bundle exec rake`, and the tests for the tool run offline against the fixtures in `test/fixtures/contract/`. A new snapshot lands only in a pull request together with the code that matches it.
 
+## Drift
+
+The [contract drift workflow](../../.github/workflows/contract-drift.yml) runs every Monday at 06:00 UTC and on demand (Actions, "Contract drift", "Run workflow"). It snapshots the docs into a temporary folder with the same tool, compares that with the latest committed snapshot, and reports:
+
+- new, removed and newly deprecated operations;
+- per operation, added, removed and changed parameters (named `<in>:<name>`, such as `query:filter`) and request and response fields, plus changes to method, path, tags and scopes;
+- guides whose body changed.
+
+Summaries, descriptions, titles and examples are ignored, so a reworded page is not drift. A schema property that is itself called `description` or `title` is still compared. `oneOf`, `anyOf` and `allOf` variants are matched by content, not position, so a new variant shows as one addition. A variant that changes shows as one removed and one added, each named by a short digest.
+
+If the snapshot tool refuses the docs (the reference pages and `accounting.json` disagree, an operationId is documented twice, a new security scheme appears), the issue says so and quotes the error. If the docs site cannot be read at all, the run fails and opens no issue.
+
+Any drift opens one issue labelled `drift`, or updates the body of the one already open. With no drift the workflow touches no issue. It never commits. To apply the drift, take a new snapshot in a pull request with the code that matches it and close the issue from that pull request. The workflow can only read the repository and write issues.
+
+To see the full report locally:
+
+```sh
+bundle exec rake contract:drift
+```
+
 ## What is generated from it
 
 Two files are generated from the latest dated snapshot. Never edit either by hand.

@@ -1,0 +1,38 @@
+name: Contract drift
+
+# Weekly: compare Pennylane's published docs with the latest committed
+# contract snapshot and open (or update) one issue labelled `drift` with the
+# difference. It never commits; a new snapshot lands only in a pull request
+# with the code that matches it. See docs/api/README.md.
+
+on:
+  schedule:
+    # Mondays at 06:00 UTC.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: contract-drift
+  cancel-in-progress: false
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+      # The tool is standard library only, so no bundle install.
+      - name: Compare the docs with the snapshot and open or update the drift issue
+        run: ruby tools/contract_drift.rb --open-issue
+        env:
+          GH_TOKEN: ${{ github.token }}

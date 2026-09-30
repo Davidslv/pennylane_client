@@ -35,6 +35,9 @@ module SnapshotContract
 
   class Error < StandardError; end
 
+  # The docs site could not be read (a transport failure, not the content).
+  class FetchError < Error; end
+
   # Snapshots the contract into <root>/<date>/ and returns the folder and a
   # summary of what it holds.
   def self.run(fetch:, root:, date:, warn: Kernel.method(:warn))
@@ -291,11 +294,11 @@ module SnapshotContract
       when Net::HTTPSuccess then String.new(response.body, encoding: Encoding::UTF_8)
       when Net::HTTPNotFound, Net::HTTPGone then nil
       when Net::HTTPRedirection
-        raise Error, "GET #{url}: too many redirects" if redirects.zero?
-        raise Error, "GET #{url}: redirect without a Location header" unless response["location"]
+        raise FetchError, "GET #{url}: too many redirects" if redirects.zero?
+        raise FetchError, "GET #{url}: redirect without a Location header" unless response["location"]
 
         get(URI.join(url, response["location"]).to_s, redirects: redirects - 1)
-      else raise Error, "GET #{url}: HTTP #{response.code}"
+      else raise FetchError, "GET #{url}: HTTP #{response.code}"
       end
     end
   end
