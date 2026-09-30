@@ -13,6 +13,9 @@
 require "json"
 
 module SnapshotContract
+  INDEX_URL = "https://pennylane.readme.io/llms.txt"
+  FULL_SPEC_URL = "https://pennylane.readme.io/openapi/accounting.json"
+
   class Error < StandardError; end
 
   # Reads the reference page links out of llms.txt.
@@ -98,5 +101,74 @@ module SnapshotContract
       end
     end
     private_class_method :identity, :schemas, :scopes, :sorted
+  end
+
+  # Compares the operation sets of the two sources by operationId, method
+  # and path. Returns nil when they agree, or a readable diff.
+  module CrossCheck
+    def self.diff(documented, full)
+      ours = documented.map { |operation| signature(operation) }
+      theirs = full.map { |operation| signature(operation) }
+      return if ours.sort == theirs.sort
+
+      lines = ["The reference pages and accounting.json list different operations."]
+      lines += side("only in the reference pages:", "+", ours - theirs)
+      lines += side("only in accounting.json:", "-", theirs - ours)
+      "#{lines.join("\n")}\n"
+    end
+
+    def self.signature(operation)
+      operation.values_at("operation_id", "method", "path").join(" ")
+    end
+
+    def self.side(title, mark, signatures)
+      return [] if signatures.empty?
+
+      ["  #{title}"] + signatures.sort.map { |line| "    #{mark} #{line}" }
+    end
+    private_class_method :signature, :side
+  end
+
+  # Builds the operation list from the documented surface and checks it
+  # against the full spec. `fetch` takes a URL and returns the body, or nil
+  # when the page is not there; it is injected so tests never touch the
+  # network.
+  class Snapshot
+    def initialize(fetch:, warn: Kernel.method(:warn))
+      @fetch = fetch
+      @warn = warn
+    end
+
+    def operations
+      documented = Index.reference_urls(read(INDEX_URL)).flat_map do |url|
+        Normaliser.operations(Fragment.extract(read(url), source_url: url), source_url: url)
+      end
+      refuse_duplicates(documented)
+      cross_check(documented)
+      documented.sort_by { |operation| operation["operation_id"] }
+    end
+
+    def read(url)
+      @fetch.call(url) or raise Error, "GET #{url}: not found"
+    end
+
+    private
+
+    def refuse_duplicates(operations)
+      operations.group_by { |operation| operation["operation_id"] }.each do |id, copies|
+        next if copies.one?
+
+        raise Error, "#{id} is documented more than once: #{copies.map { _1["source_url"] }.join(", ")}"
+      end
+    end
+
+    def cross_check(documented)
+      body = @fetch.call(FULL_SPEC_URL)
+      return @warn.call("#{FULL_SPEC_URL} is gone; skipping the cross-check") unless body
+
+      full = Normaliser.operations(JSON.parse(body), source_url: FULL_SPEC_URL)
+      difference = CrossCheck.diff(documented, full)
+      raise Error, difference if difference
+    end
   end
 end

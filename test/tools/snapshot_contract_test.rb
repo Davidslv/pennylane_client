@@ -13,6 +13,17 @@ module SnapshotContractFixtures
   def page(name)
     fixture("pages/#{name}.md")
   end
+
+  # What the network would serve, keyed by URL. A missing key is a 404.
+  def site
+    pages = %w[getjournal postjournals postledgerattachments].to_h do |name|
+      ["https://pennylane.readme.io/reference/#{name}.md", page(name)]
+    end
+    pages.merge(
+      SnapshotContract::INDEX_URL => fixture("llms.txt"),
+      SnapshotContract::FULL_SPEC_URL => fixture("accounting.json")
+    )
+  end
 end
 
 class SnapshotContractIndexTest < Minitest::Test
@@ -123,5 +134,77 @@ class SnapshotContractNormaliserTest < Minitest::Test
     assert_equal %w[properties required type], schema.keys
     assert_equal %w[id label], schema["properties"].keys
     assert_equal %w[label id], schema["required"], "arrays keep the source order"
+  end
+end
+
+class SnapshotContractSnapshotTest < Minitest::Test
+  include SnapshotContractFixtures
+
+  def setup
+    @warnings = []
+  end
+
+  def snapshot(served)
+    SnapshotContract::Snapshot.new(fetch: served.method(:[]), warn: @warnings.method(:<<))
+  end
+
+  def test_returns_every_documented_operation_sorted_by_operation_id
+    ids = snapshot(site).operations.map { _1["operation_id"] }
+
+    assert_equal %w[getJournal postJournals postLedgerAttachments], ids
+    assert_empty @warnings
+  end
+
+  def test_fails_when_llms_txt_is_missing
+    served = site.except(SnapshotContract::INDEX_URL)
+
+    error = assert_raises(SnapshotContract::Error) { snapshot(served).operations }
+
+    assert_equal "GET #{SnapshotContract::INDEX_URL}: not found", error.message
+  end
+
+  def test_fails_when_a_listed_reference_page_is_missing
+    served = site.except("https://pennylane.readme.io/reference/postjournals.md")
+
+    error = assert_raises(SnapshotContract::Error) { snapshot(served).operations }
+
+    assert_match(/postjournals\.md: not found/, error.message)
+  end
+
+  def test_fails_when_two_pages_document_the_same_operation_id
+    served = site.merge("https://pennylane.readme.io/reference/postjournals.md" => page("getjournal"))
+
+    error = assert_raises(SnapshotContract::Error) { snapshot(served).operations }
+
+    assert_match(/getJournal is documented more than once/, error.message)
+  end
+
+  # accounting.json without postJournals and with an extra deleteJournal.
+  def disagreeing_full_spec
+    full = JSON.parse(fixture("accounting.json"))
+    full["paths"].delete("/api/external/v2/journals")
+    full["paths"]["/api/external/v2/journals/{id}"]["delete"] = { "operationId" => "deleteJournal" }
+    JSON.generate(full)
+  end
+
+  def test_fails_with_a_readable_diff_when_accounting_json_disagrees
+    served = site.merge(SnapshotContract::FULL_SPEC_URL => disagreeing_full_spec)
+
+    error = assert_raises(SnapshotContract::Error) { snapshot(served).operations }
+
+    assert_equal <<~DIFF, error.message
+      The reference pages and accounting.json list different operations.
+        only in the reference pages:
+          + postJournals POST /api/external/v2/journals
+        only in accounting.json:
+          - deleteJournal DELETE /api/external/v2/journals/{id}
+    DIFF
+  end
+
+  def test_warns_and_carries_on_when_accounting_json_is_gone
+    served = site.except(SnapshotContract::FULL_SPEC_URL)
+
+    assert_equal 3, snapshot(served).operations.size
+    assert_equal ["#{SnapshotContract::FULL_SPEC_URL} is gone; skipping the cross-check"], @warnings
   end
 end
