@@ -196,3 +196,92 @@ class CustomerInvoiceImportsTest < Minitest::Test
     assert_equal({ id: 46 }, invoices.import_e_invoice(xml, invoice_options: { customer_id: 12 }))
   end
 end
+
+# What hangs off one invoice. Every list here is paginated, so each walks
+# all its pages at the largest page size.
+class CustomerInvoiceNestedTest < Minitest::Test
+  include CustomerInvoicesTestHelper
+
+  def stub_list(path, **query)
+    stub_request(:get, "#{API}/customer_invoices/42/#{path}")
+      .with(query: { limit: "100", **query })
+      .to_return(status: 200, body: page(1, 2))
+  end
+
+  # names: getCustomerInvoiceInvoiceLines
+  def test_invoice_lines_walks_every_page
+    first = JSON.generate({ items: [{ id: 1 }], has_more: true, next_cursor: "c2" })
+    stub_request(:get, "#{API}/customer_invoices/42/invoice_lines")
+      .with(query: { limit: "100", sort: "id" })
+      .to_return(status: 200, body: first)
+    stub_request(:get, "#{API}/customer_invoices/42/invoice_lines")
+      .with(query: { limit: "100", sort: "id", cursor: "c2" })
+      .to_return(status: 200, body: page(2))
+
+    assert_equal [1, 2], invoices.invoice_lines(42, sort: "id").map { _1[:id] }.to_a
+  end
+
+  # names: getCustomerInvoiceInvoiceLineSections
+  def test_invoice_line_sections
+    stub_list("invoice_line_sections")
+
+    assert_equal [1, 2], invoices.invoice_line_sections(42).map { _1[:id] }.to_a
+  end
+
+  # names: getCustomerInvoicePayments
+  def test_payments
+    stub_list("payments", sort: "-id")
+
+    assert_equal [1, 2], invoices.payments(42, sort: "-id").map { _1[:id] }.to_a
+  end
+
+  # names: getCustomerInvoiceMatchedTransactions
+  def test_matched_transactions
+    stub_list("matched_transactions")
+
+    assert_equal [1, 2], invoices.matched_transactions(42).map { _1[:id] }.to_a
+  end
+
+  # names: getCustomerInvoiceCustomHeaderFields
+  def test_custom_header_fields
+    stub_list("custom_header_fields")
+
+    assert_equal [1, 2], invoices.custom_header_fields(42).map { _1[:id] }.to_a
+  end
+
+  # names: getCustomerInvoiceAppendices
+  def test_appendices
+    stub_list("appendices", limit: "10")
+
+    assert_equal [1, 2], invoices.appendices(42, limit: 10).map { _1[:id] }.to_a
+  end
+
+  # names: postCustomerInvoiceAppendices
+  def test_upload_appendix_streams_the_file
+    stub_request(:post, "#{API}/customer_invoices/42/appendices")
+      .with { _1.body.include?(%(name="file"; filename="terms.pdf"\r\nContent-Type: application/pdf\r\n\r\n%PDF-1.7)) }
+      .to_return(status: 201, body: '{"id":8}')
+
+    file = PennylaneClient::Upload.new(StringIO.new("%PDF-1.7"), filename: "terms.pdf")
+
+    assert_equal({ id: 8 }, invoices.upload_appendix(42, file))
+  end
+
+  # names: getCustomerInvoiceCategories
+  def test_categories
+    stub_list("categories")
+
+    assert_equal [1, 2], invoices.categories(42).map { _1[:id] }.to_a
+  end
+
+  # names: putCustomerInvoiceCategories
+  def test_categorize_sends_the_categories_as_a_bare_array
+    stub_request(:put, "#{API}/customer_invoices/42/categories")
+      .with(body: '[{"id":426,"weight":"0.6575"},{"id":427,"weight":"0.3425"}]')
+      .to_return(status: 200, body: '[{"id":426},{"id":427}]')
+
+    categories = [{ id: 426, weight: BigDecimal("0.6575") }, { id: 427, weight: "0.3425" }]
+
+    assert_equal [{ id: 426 }, { id: 427 }], invoices.categorize(42, categories)
+  end
+end

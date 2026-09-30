@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 15 of 177 live |
+| Named | 24 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (0 of 3 named)
@@ -103,7 +103,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 |---|---|---|---|---|---|---|
 | `getCustomerInvoiceTemplates` | GET | `/customer_invoice_templates` | yes | no | unverified: no sandbox access |  |
 
-## Customer Invoices (14 of 23 named)
+## Customer Invoices (23 of 23 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
@@ -112,15 +112,15 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `createCustomerInvoiceFromQuote` | POST | `/customer_invoices/create_from_quote` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_create_from_quote` |
 | `createCustomerInvoiceEInvoiceImport` | POST | `/customer_invoices/e_invoices/imports` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_import_e_invoice_uploads_the_file_with_json_options` |
 | `importCustomerInvoices` | POST | `/customer_invoices/import` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_import` |
-| `getCustomerInvoiceAppendices` | GET | `/customer_invoices/{customer_invoice_id}/appendices` | yes | no | unverified: no sandbox access |  |
-| `postCustomerInvoiceAppendices` | POST | `/customer_invoices/{customer_invoice_id}/appendices` | yes | no | unverified: no sandbox access |  |
-| `getCustomerInvoiceCategories` | GET | `/customer_invoices/{customer_invoice_id}/categories` | yes | no | unverified: no sandbox access |  |
-| `putCustomerInvoiceCategories` | PUT | `/customer_invoices/{customer_invoice_id}/categories` | yes | no | unverified: no sandbox access |  |
-| `getCustomerInvoiceCustomHeaderFields` | GET | `/customer_invoices/{customer_invoice_id}/custom_header_fields` | yes | no | unverified: no sandbox access |  |
-| `getCustomerInvoiceInvoiceLineSections` | GET | `/customer_invoices/{customer_invoice_id}/invoice_line_sections` | yes | no | unverified: no sandbox access |  |
-| `getCustomerInvoiceInvoiceLines` | GET | `/customer_invoices/{customer_invoice_id}/invoice_lines` | yes | no | unverified: no sandbox access |  |
-| `getCustomerInvoiceMatchedTransactions` | GET | `/customer_invoices/{customer_invoice_id}/matched_transactions` | yes | no | unverified: no sandbox access |  |
-| `getCustomerInvoicePayments` | GET | `/customer_invoices/{customer_invoice_id}/payments` | yes | no | unverified: no sandbox access |  |
+| `getCustomerInvoiceAppendices` | GET | `/customer_invoices/{customer_invoice_id}/appendices` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_appendices` |
+| `postCustomerInvoiceAppendices` | POST | `/customer_invoices/{customer_invoice_id}/appendices` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_upload_appendix_streams_the_file` |
+| `getCustomerInvoiceCategories` | GET | `/customer_invoices/{customer_invoice_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_categories` |
+| `putCustomerInvoiceCategories` | PUT | `/customer_invoices/{customer_invoice_id}/categories` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_categorize_sends_the_categories_as_a_bare_array` |
+| `getCustomerInvoiceCustomHeaderFields` | GET | `/customer_invoices/{customer_invoice_id}/custom_header_fields` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_custom_header_fields` |
+| `getCustomerInvoiceInvoiceLineSections` | GET | `/customer_invoices/{customer_invoice_id}/invoice_line_sections` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_invoice_line_sections` |
+| `getCustomerInvoiceInvoiceLines` | GET | `/customer_invoices/{customer_invoice_id}/invoice_lines` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_invoice_lines_walks_every_page` |
+| `getCustomerInvoiceMatchedTransactions` | GET | `/customer_invoices/{customer_invoice_id}/matched_transactions` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_matched_transactions` |
+| `getCustomerInvoicePayments` | GET | `/customer_invoices/{customer_invoice_id}/payments` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_payments` |
 | `deleteCustomerInvoices` | DELETE | `/customer_invoices/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_delete_returns_true_on_no_content` |
 | `getCustomerInvoice` | GET | `/customer_invoices/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_find` |
 | `updateCustomerInvoice` | PUT | `/customer_invoices/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customer_invoices_test.rb#test_update` |

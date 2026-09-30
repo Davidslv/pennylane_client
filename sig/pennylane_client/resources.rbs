@@ -47,6 +47,24 @@ module PennylaneClient
       def link_credit_note: (Integer id, Integer credit_note_id) -> item
 
       def update_imported: (Integer id, **untyped attributes) -> item
+
+      def invoice_lines: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def invoice_line_sections: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def payments: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def matched_transactions: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def custom_header_fields: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def appendices: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def upload_appendix: (Integer customer_invoice_id, untyped file) -> item
+
+      def categories: (Integer customer_invoice_id, **untyped params) -> Enumerator::Lazy[item, void]
+
+      def categorize: (Integer customer_invoice_id, Array[{ id: Integer, weight: untyped }] categories) -> Array[item]
     end
   end
 end

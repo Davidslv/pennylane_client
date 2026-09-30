@@ -72,6 +72,54 @@ module PennylaneClient
 
       # Updates an imported invoice or credit note (not a draft).
       def update_imported(id, **attributes) = call(:updateImportedCustomerInvoice, id:, **attributes)
+
+      # The lists below hang off one invoice. Each returns every item as an
+      # Enumerator::Lazy of Hashes, like `list`, and takes `sort:` or a
+      # smaller `limit:` where Pennylane does.
+
+      def invoice_lines(customer_invoice_id, **params)
+        paginate(:getCustomerInvoiceInvoiceLines, customer_invoice_id:, **params)
+      end
+
+      def invoice_line_sections(customer_invoice_id, **params)
+        paginate(:getCustomerInvoiceInvoiceLineSections, customer_invoice_id:, **params)
+      end
+
+      def payments(customer_invoice_id, **params)
+        paginate(:getCustomerInvoicePayments, customer_invoice_id:, **params)
+      end
+
+      def matched_transactions(customer_invoice_id, **params)
+        paginate(:getCustomerInvoiceMatchedTransactions, customer_invoice_id:, **params)
+      end
+
+      def custom_header_fields(customer_invoice_id, **params)
+        paginate(:getCustomerInvoiceCustomHeaderFields, customer_invoice_id:, **params)
+      end
+
+      # Files attached to the invoice as appendices (not in the DMS).
+      def appendices(customer_invoice_id, **params)
+        paginate(:getCustomerInvoiceAppendices, customer_invoice_id:, **params)
+      end
+
+      # Attaches `file` (a PDF or image: File, IO, Pathname or
+      # PennylaneClient::Upload) as an appendix. It streams from disk.
+      def upload_appendix(customer_invoice_id, file)
+        call(:postCustomerInvoiceAppendices, customer_invoice_id:, file:)
+      end
+
+      def categories(customer_invoice_id, **params)
+        paginate(:getCustomerInvoiceCategories, customer_invoice_id:, **params)
+      end
+
+      # Replaces the invoice's categories. `categories` is an Array of
+      # `{ id:, weight: }`; within one category group the weights must add up
+      # to 1. Not for drafts.
+      #
+      #   invoices.categorize(42, [{ id: 426, weight: "0.6575" }, { id: 427, weight: "0.3425" }])
+      def categorize(customer_invoice_id, categories)
+        call(:putCustomerInvoiceCategories, categories, customer_invoice_id:)
+      end
     end
   end
 end
