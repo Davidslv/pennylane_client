@@ -18,6 +18,7 @@
 require "date"
 require "fileutils"
 require "json"
+require "securerandom"
 require_relative "../lib/pennylane_client"
 require_relative "live_reports"
 require_relative "operation_table"
@@ -26,6 +27,7 @@ require_relative "operation_table"
 module Smoke
   TOKEN = "PENNYLANE_SMOKE_TOKEN"
   USER = "PENNYLANE_SMOKE_GITHUB_USER"
+  SANDBOX = "PENNYLANE_SMOKE_SANDBOX"
   # Seconds before each request: at most 10 per 5 seconds.
   PACE = 0.5
   PASS = Checklist::LiveReports::PASS
@@ -41,7 +43,17 @@ module Smoke
     plan = Plan.load(root, operations)
     runner = Runner.new(client: client || PennylaneClient.new(token: token), plan: plan, sleeper: sleeper, out: out)
     report = { root: root, date: today, user: env[USER], contract: plan.contract }
-    summarise(out, Report.write(**report, operations: runner.reads, checks: {}))
+    summarise(out, Report.write(**report, operations: exercise(runner, env, out), checks: {}))
+  end
+
+  # The reads always; the writes only when the contributor says the token
+  # belongs to a sandbox, since the client cannot tell.
+  def self.exercise(runner, env, out)
+    results = runner.reads
+    return results.merge(runner.writes) if env[SANDBOX] == "yes"
+
+    out.puts "Writes not run: set #{SANDBOX}=yes when the token belongs to a sandbox company."
+    results
   end
 
   def self.skip(out)
@@ -61,7 +73,7 @@ module Smoke
     out.puts "Wrote #{path}. Run `bundle exec rake checklist` and open a pull request with both."
     counts["fail"].zero? ? 0 : 1
   end
-  private_class_method :skip, :refuse, :summarise
+  private_class_method :exercise, :skip, :refuse, :summarise
 
   # What the smoke run reads: every live GET that needs no path param and no
   # required query param, then the detail read of the first item it lists.
@@ -103,23 +115,73 @@ module Smoke
       "#{prefix}: #{[error.status, error.class.name.split("::").last].compact.join(" ")}"
     end
 
+    # The smoke run's webhook subscription. Disabled, so Pennylane never
+    # delivers to it; example.com, so nothing would receive it anyway.
+    WEBHOOK = { callback_url: "https://example.com/pennylane-client-smoke", events: ["dms_file.created"],
+                enabled: false }.freeze
+
     def initialize(client:, plan:, sleeper:, out: nil)
       @client = client
       @plan = plan
       @sleeper = sleeper
       @out = out
+      @listed = {}
     end
 
     def reads
       @plan.lists.each_with_object({}) do |list, results|
-        response = attempt(results, list.id) { @client.call(list.id, **(list.paginated ? { limit: 1 } : {})) }
+        remember(list.id, attempt(results, list.id) { @client.call(list.id, **page_of_one(list)) })
         detail = @plan.detail(list)
-        id = first_id(response)
+        id = first_id(list.id)
         attempt(results, detail.id) { @client.call(detail.id, id: id) } if detail && id
       end
     end
 
+    # Creates, reads, updates and deletes a contact on the first customer
+    # and, when the company has none, a webhook subscription. Run `reads`
+    # first. Everything created is deleted, even when a step fails.
+    def writes
+      results = {}
+      contact(results)
+      webhook(results)
+      results
+    end
+
     private
+
+    def contact(results)
+      customer_id = first_id(:getCustomers)
+      return @out&.puts("No customer in the sandbox: contact writes not run.") unless customer_id
+
+      attributes = { first_name: "pennylane_client", last_name: "smoke",
+                     email: "smoke+#{SecureRandom.hex(4)}@example.com" }
+      created = attempt(results, :postCustomerContact) do
+        @client.call(:postCustomerContact, customer_id: customer_id, **attributes)
+      end
+      lifecycle(results, created, %i[getCustomerContact putCustomerContact deleteCustomerContact],
+                { role: "smoke test" }, customer_id: customer_id)
+    end
+
+    def webhook(results)
+      unless @listed[:getWebhookSubscriptions] == []
+        return @out&.puts("The company has a webhook subscription, or listing failed: webhook writes not run.")
+      end
+
+      created = attempt(results, :postWebhookSubscriptions) { @client.call(:postWebhookSubscriptions, **WEBHOOK) }
+      lifecycle(results, created, %i[getWebhookSubscription putWebhookSubscription deleteWebhookSubscription],
+                WEBHOOK.slice(:events, :enabled))
+    end
+
+    # Reads, updates, then always deletes the record `created` holds.
+    def lifecycle(results, created, (find, update, delete), changes, **scope)
+      id = created[:id] if created.is_a?(Hash)
+      return unless id
+
+      attempt(results, find) { @client.call(find, **scope, id: id) }
+      attempt(results, update) { @client.call(update, **scope, id: id, **changes) }
+    ensure
+      attempt(results, delete) { @client.call(delete, **scope, id: id) } if id
+    end
 
     def attempt(results, operation_id)
       @sleeper.call(PACE)
@@ -132,9 +194,17 @@ module Smoke
       nil
     end
 
-    def first_id(response)
+    def page_of_one(list) = list.paginated ? { limit: 1 } : {}
+
+    def remember(list_id, response)
       items = response[:items] if response.is_a?(Hash)
-      items.first[:id] if items.is_a?(Array) && items.first.is_a?(Hash)
+      @listed[list_id] = items if items.is_a?(Array)
+    end
+
+    # The id of the first item a list read returned, or nil.
+    def first_id(list_id)
+      item = @listed.fetch(list_id, []).first
+      item[:id] if item.is_a?(Hash)
     end
   end
 

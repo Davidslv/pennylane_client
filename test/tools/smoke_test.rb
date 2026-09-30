@@ -16,28 +16,36 @@ module SmokeFixtures
            max_limit: paginated ? 100 : nil, body: nil, success: 200, deprecated: deprecated)
   end
 
+  CONTACTS = "/customers/{customer_id}/contacts"
+  HOOKS = "/webhook_subscriptions"
+
   def operations
-    [op(:getMe, :get, "/me"),
-     op(:getCustomers, :get, "/customers", paginated: true),
-     op(:getCustomer, :get, "/customers/{id}"),
-     op(:getTrialBalance, :get, "/trial_balance"),
+    [op(:getMe, :get, "/me"), op(:getCustomers, :get, "/customers", paginated: true),
+     op(:getCustomer, :get, "/customers/{id}"), op(:getTrialBalance, :get, "/trial_balance"),
      op(:getOldThings, :get, "/old_things", deprecated: true),
-     op(:postCustomerContact, :post, "/customers/{customer_id}/contacts")]
+     op(:getWebhookSubscriptions, :get, HOOKS), op(:getWebhookSubscription, :get, "#{HOOKS}/{id}"),
+     op(:postWebhookSubscriptions, :post, HOOKS), op(:putWebhookSubscription, :put, "#{HOOKS}/{id}"),
+     op(:deleteWebhookSubscription, :delete, "#{HOOKS}/{id}"),
+     op(:getCustomerContacts, :get, CONTACTS, paginated: true), op(:postCustomerContact, :post, CONTACTS),
+     op(:getCustomerContact, :get, "#{CONTACTS}/{id}"), op(:putCustomerContact, :put, "#{CONTACTS}/{id}"),
+     op(:deleteCustomerContact, :delete, "#{CONTACTS}/{id}")]
   end
 
-  def record(id, method, path, required_query: [])
-    { "operation_id" => id, "method" => method, "path" => "/api/external/v2#{path}", "tags" => ["T"],
-      "deprecated" => id == "getOldThings",
-      "parameters" => required_query.map { { "in" => "query", "name" => _1, "required" => true } } }
-  end
-
+  # The snapshot records for `operations`; only getTrialBalance has a
+  # required query param.
   def document
-    { "retrieved_on" => "2026-09-30",
-      "operations" => [record("getMe", "GET", "/me"), record("getCustomers", "GET", "/customers"),
-                       record("getCustomer", "GET", "/customers/{id}"),
-                       record("getTrialBalance", "GET", "/trial_balance", required_query: %w[period_start]),
-                       record("getOldThings", "GET", "/old_things"),
-                       record("postCustomerContact", "POST", "/customers/{customer_id}/contacts")] }
+    required = [{ "in" => "query", "name" => "period_start", "required" => true }]
+    records = operations.map do |operation|
+      query = operation.id == :getTrialBalance ? required : []
+      { "operation_id" => operation.id.to_s, "method" => operation.verb.to_s.upcase, "path" => operation.path,
+        "tags" => ["T"], "deprecated" => operation.deprecated, "parameters" => query }
+    end
+    { "retrieved_on" => "2026-09-30", "operations" => records }
+  end
+
+  # Answers for a clean run of the reads: one customer, no webhook.
+  def read_answers
+    { getMe: {}, getCustomers: { items: [{ id: 7 }] }, getCustomer: { id: 7 }, getWebhookSubscriptions: { items: [] } }
   end
 
   def plan = Smoke::Plan.new(operations, document)
@@ -56,8 +64,8 @@ module SmokeFixtures
     klass.new(nil, status: status, body: %({"message":"secret detail about customer 42"}))
   end
 
-  # Answers each operation from `answers` (a value, or an Exception to
-  # raise) and records every call.
+  # Answers each operation from `answers` (a value, an Exception to raise,
+  # or a Proc given the params) and records every call.
   class FakeClient
     attr_reader :calls
 
@@ -69,10 +77,15 @@ module SmokeFixtures
     def call(operation_id, body = nil, **params)
       @calls << [operation_id, body, params]
       answer = @answers.fetch(operation_id) { raise "unexpected call #{operation_id}" }
+      answer = answer.call(params) if answer.is_a?(Proc)
       raise answer if answer.is_a?(Exception)
 
       answer
     end
+
+    def paginate(operation_id, **params) = call(operation_id, **params).fetch(:items).lazy
+
+    def ids = calls.map(&:first)
   end
 end
 
@@ -108,11 +121,11 @@ class SmokePlanTest < Minitest::Test
   include SmokeFixtures
 
   def test_reads_every_live_get_without_path_or_required_query_params
-    assert_equal %i[getMe getCustomers], plan.lists.map(&:id)
+    assert_equal %i[getMe getCustomers getWebhookSubscriptions], plan.lists.map(&:id)
   end
 
   def test_finds_the_detail_read_for_a_list
-    assert_equal :getCustomer, plan.detail(plan.lists.last).id
+    assert_equal :getCustomer, plan.detail(plan.lists[1]).id
     assert_nil plan.detail(plan.lists.first)
   end
 end
@@ -127,22 +140,22 @@ class SmokeReadsTest < Minitest::Test
   end
 
   def test_each_read_that_answers_passes_and_a_list_asks_for_one_item
-    results, calls = reads({ getMe: { id: 1 }, getCustomers: { items: [], has_more: false } })
+    results, calls = reads(read_answers.merge(getCustomers: { items: [], has_more: false }))
 
-    assert_equal({ "getMe" => "pass", "getCustomers" => "pass" }, results)
-    assert_equal [[:getMe, nil, {}], [:getCustomers, nil, { limit: 1 }]], calls
+    assert_equal({ "getMe" => "pass", "getCustomers" => "pass", "getWebhookSubscriptions" => "pass" }, results)
+    assert_equal [[:getMe, nil, {}], [:getCustomers, nil, { limit: 1 }], [:getWebhookSubscriptions, nil, {}]], calls
   end
 
   def test_follows_the_first_listed_item_to_its_detail_read
-    results, calls = reads({ getMe: {}, getCustomers: { items: [{ id: 7 }] }, getCustomer: { id: 7 } })
+    results, calls = reads(read_answers)
 
     assert_equal "pass", results["getCustomer"]
     assert_includes calls, [:getCustomer, nil, { id: 7 }]
   end
 
   def test_a_missing_scope_is_not_run_and_an_error_fails_without_the_response_body
-    results, = reads({ getMe: error(PennylaneClient::PermissionError, 403),
-                       getCustomers: error(PennylaneClient::ServerError, 500) })
+    results, = reads(read_answers.merge(getMe: error(PennylaneClient::PermissionError, 403),
+                                        getCustomers: error(PennylaneClient::ServerError, 500)))
 
     assert_equal "not run: 403 PermissionError", results["getMe"]
     assert_equal "fail: 500 ServerError", results["getCustomers"]
@@ -150,16 +163,100 @@ class SmokeReadsTest < Minitest::Test
 
   def test_waits_before_every_request_to_stay_well_inside_the_rate_limit
     sleeps = []
-    reads({ getMe: {}, getCustomers: { items: [{ id: 7 }] }, getCustomer: {} }, sleeps: sleeps)
+    reads(read_answers, sleeps: sleeps)
 
-    assert_equal [Smoke::PACE] * 3, sleeps
+    assert_equal [Smoke::PACE] * 4, sleeps
     assert_operator 5 / Smoke::PACE, :<=, 10
   end
 
   def test_never_sends_a_write
-    _, calls = reads({ getMe: {}, getCustomers: { items: [{ id: 7 }] }, getCustomer: {} })
+    _, calls = reads(read_answers)
 
     assert(calls.all? { |(id, _, _)| id.start_with?("get") })
+  end
+end
+
+class SmokeWritesTest < Minitest::Test
+  include SmokeFixtures
+
+  def write_answers
+    read_answers.merge(postCustomerContact: { id: 90 }, getCustomerContact: { id: 90 }, putCustomerContact: {},
+                       deleteCustomerContact: true, postWebhookSubscriptions: { id: 5, secret: "whsec" },
+                       getWebhookSubscription: { id: 5 }, putWebhookSubscription: {}, deleteWebhookSubscription: true)
+  end
+
+  def run_writes(answers)
+    client = FakeClient.new(answers)
+    runner = Smoke::Runner.new(client: client, plan: plan, sleeper: ->(_) {})
+    runner.reads
+    [runner.writes, client]
+  end
+
+  CONTACT_STEPS = %i[postCustomerContact getCustomerContact putCustomerContact deleteCustomerContact].freeze
+  HOOK_STEPS = %i[postWebhookSubscriptions getWebhookSubscription putWebhookSubscription
+                  deleteWebhookSubscription].freeze
+
+  def test_creates_reads_updates_and_deletes_a_contact_on_the_first_customer
+    results, client = run_writes(write_answers)
+    calls = client.calls.select { CONTACT_STEPS.include?(_1.first) }
+
+    assert_equal CONTACT_STEPS, calls.map(&:first)
+    assert_equal(%w[pass] * 4, results.values_at(*CONTACT_STEPS.map(&:to_s)))
+  end
+
+  def test_the_contact_is_on_the_first_customer_with_a_unique_address_and_the_id_pennylane_gave
+    _, client = run_writes(write_answers)
+    create, *rest = client.calls.select { CONTACT_STEPS.include?(_1.first) }.map(&:last)
+
+    assert_equal 7, create[:customer_id]
+    assert_match(/\Asmoke\+\h+@example\.com\z/, create[:email])
+    assert(rest.all? { _1.values_at(:customer_id, :id) == [7, 90] })
+  end
+
+  def test_deletes_the_contact_even_when_a_step_in_between_fails
+    results, client = run_writes(write_answers.merge(getCustomerContact: error(PennylaneClient::ServerError, 500)))
+
+    assert_equal "fail: 500 ServerError", results["getCustomerContact"]
+    assert_includes client.ids, :deleteCustomerContact
+  end
+
+  def test_deletes_the_contact_even_when_the_run_is_interrupted
+    client = FakeClient.new(write_answers.merge(putCustomerContact: Interrupt.new))
+    runner = Smoke::Runner.new(client: client, plan: plan, sleeper: ->(_) {})
+    runner.reads
+
+    assert_raises(Interrupt) { runner.writes }
+    assert_includes client.ids, :deleteCustomerContact
+  end
+
+  def test_a_failed_create_sends_nothing_after_it
+    results, client = run_writes(write_answers.merge(postCustomerContact: error(PennylaneClient::ValidationError, 422)))
+
+    assert_equal "fail: 422 ValidationError", results["postCustomerContact"]
+    refute_includes client.ids, :deleteCustomerContact
+  end
+
+  def test_no_customer_means_no_contact_writes
+    _, client = run_writes(write_answers.merge(getCustomers: { items: [] }))
+
+    refute_includes client.ids, :postCustomerContact
+  end
+
+  def test_a_webhook_subscription_is_created_disabled_updated_and_deleted_when_the_company_has_none
+    results, client = run_writes(write_answers)
+    create = client.calls.find { _1.first == :postWebhookSubscriptions }.last
+
+    assert_equal false, create[:enabled]
+    assert_equal HOOK_STEPS, client.ids.grep(/\A#{Regexp.union(HOOK_STEPS.map(&:to_s))}\z/)
+    assert_equal "pass", results["deleteWebhookSubscription"]
+  end
+
+  def test_an_existing_webhook_subscription_is_never_touched
+    _, client = run_writes(write_answers.merge(getWebhookSubscriptions: { items: [{ id: 1 }] }))
+
+    refute_includes client.ids, :postWebhookSubscriptions
+    refute_includes client.ids, :putWebhookSubscription
+    refute_includes client.ids, :deleteWebhookSubscription
   end
 end
 
@@ -174,7 +271,7 @@ class SmokeReportTest < Minitest::Test
 
       assert_includes markdown, "| `getMe` | GET | `/me` | yes | no | sandbox-verified 2026-10-01 (by @octocat) |"
       assert_includes markdown, "| `getCustomers` | GET | `/customers` | yes | no | unverified: no sandbox access |"
-      assert_includes markdown, "| Live-verified | 1 of 5 live |"
+      assert_includes markdown, "| Live-verified | 1 of #{operations.count { !_1.deprecated }} live |"
     end
   end
 
@@ -202,15 +299,39 @@ class SmokeReportTest < Minitest::Test
     with_root do |root|
       out = StringIO.new
 
-      assert_equal 0, main(root, { getMe: {}, getCustomers: { items: [] } }, out: out)
+      assert_equal 0, main(root, read_answers, out: out)
       assert_path_exists File.join(root, "docs/api/live/2026-10-01-octocat.json")
-      assert_match(/2 passed, 0 failed, 0 not run/, out.string)
+      assert_match(/4 passed, 0 failed, 0 not run/, out.string)
+    end
+  end
+
+  def test_main_sends_no_write_unless_the_contributor_says_the_token_is_for_a_sandbox
+    with_root do |root|
+      out = StringIO.new
+      main(root, read_answers, out: out)
+      report = JSON.parse(File.read(File.join(root, "docs/api/live/2026-10-01-octocat.json")))
+
+      assert_match(/PENNYLANE_SMOKE_SANDBOX=yes/, out.string)
+      assert(report["operations"].keys.all? { _1.start_with?("get") })
+    end
+  end
+
+  def test_main_runs_the_writes_on_a_sandbox
+    with_root do |root|
+      answers = read_answers.merge(postCustomerContact: { id: 90 }, getCustomerContact: {}, putCustomerContact: {},
+                                   deleteCustomerContact: true, postWebhookSubscriptions: { id: 5 },
+                                   getWebhookSubscription: {}, putWebhookSubscription: {},
+                                   deleteWebhookSubscription: true)
+      main(root, answers, env: ENV_OK.merge("PENNYLANE_SMOKE_SANDBOX" => "yes"))
+      report = JSON.parse(File.read(File.join(root, "docs/api/live/2026-10-01-octocat.json")))
+
+      assert_equal "pass", report["operations"]["deleteCustomerContact"]
     end
   end
 
   def test_main_exits_one_when_a_read_fails
     with_root do |root|
-      assert_equal 1, main(root, { getMe: error(PennylaneClient::ServerError, 500), getCustomers: { items: [] } })
+      assert_equal 1, main(root, read_answers.merge(getMe: error(PennylaneClient::ServerError, 500)))
     end
   end
 end
