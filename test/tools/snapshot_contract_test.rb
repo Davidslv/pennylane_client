@@ -2,6 +2,8 @@
 
 require_relative "../test_helper"
 require_relative "../../tools/snapshot_contract"
+require "digest"
+require "tmpdir"
 
 module SnapshotContractFixtures
   DIR = File.expand_path("../fixtures/contract", __dir__)
@@ -206,5 +208,116 @@ class SnapshotContractSnapshotTest < Minitest::Test
 
     assert_equal 3, snapshot(served).operations.size
     assert_equal ["#{SnapshotContract::FULL_SPEC_URL} is gone; skipping the cross-check"], @warnings
+  end
+end
+
+class SnapshotContractRunTest < Minitest::Test
+  include SnapshotContractFixtures
+
+  DATE = Date.new(2026, 9, 30)
+
+  def served
+    guides = SnapshotContract::GUIDES.to_h { |_name, url| [url, "# Guide\n\nBody of #{url}\n"] }
+    site.merge(guides)
+  end
+
+  def run_snapshot(root)
+    SnapshotContract.run(fetch: served.method(:[]), root: root, date: DATE, warn: ->(_) {})
+  end
+
+  def test_writes_operations_json_into_a_dated_folder
+    Dir.mktmpdir do |root|
+      run_snapshot(root)
+      document = JSON.parse(File.read(File.join(root, "2026-09-30", "operations.json")))
+
+      assert_equal "2026-09-30", document["retrieved_on"]
+      assert_equal SnapshotContract::INDEX_URL, document["source"]
+      ids = document["operations"].map { _1["operation_id"] }
+
+      assert_equal %w[getJournal postJournals postLedgerAttachments], ids
+    end
+  end
+
+  def test_summary_counts_operations_paths_methods_and_deprecations
+    Dir.mktmpdir do |root|
+      summary = run_snapshot(root)[:summary]
+
+      assert_equal({ "operations" => 3, "paths" => 3, "methods" => { "GET" => 1, "POST" => 2 },
+                     "deprecated" => ["postLedgerAttachments"] }, summary)
+    end
+  end
+
+  def test_every_guide_starts_with_its_source_url_and_retrieval_date
+    Dir.mktmpdir do |root|
+      run_snapshot(root)
+
+      SnapshotContract::GUIDES.each do |name, url|
+        guide = File.read(File.join(root, "2026-09-30", "guides", name))
+
+        assert guide.start_with?("<!--\n  Source: #{url}\n  Retrieved: 2026-09-30\n"), name
+        assert guide.end_with?("Body of #{url}\n"), name
+      end
+    end
+  end
+
+  def test_running_twice_on_the_same_day_is_byte_identical
+    Dir.mktmpdir do |root|
+      first = digests(run_snapshot(root)[:dir])
+      second = digests(run_snapshot(root)[:dir])
+
+      assert_equal 1 + SnapshotContract::GUIDES.size, first.size
+      assert_equal first, second
+    end
+  end
+
+  def digests(dir)
+    Dir.glob("**/*", base: dir).sort.reject { File.directory?(File.join(dir, _1)) }
+       .to_h { [_1, Digest::SHA256.file(File.join(dir, _1)).hexdigest] }
+  end
+end
+
+class SnapshotContractHTTPTest < Minitest::Test
+  URL = "https://pennylane.readme.io/reference/getjournal.md"
+
+  def test_returns_the_body_as_utf8
+    stub_request(:get, URL).to_return(status: 200, body: "# Journal ℹ️")
+
+    body = SnapshotContract::HTTP.get(URL)
+
+    assert_equal "# Journal ℹ️", body
+    assert_equal Encoding::UTF_8, body.encoding
+  end
+
+  def test_returns_nil_for_not_found_and_gone
+    stub_request(:get, URL).to_return(status: 404)
+
+    assert_nil SnapshotContract::HTTP.get(URL)
+
+    stub_request(:get, URL).to_return(status: 410)
+
+    assert_nil SnapshotContract::HTTP.get(URL)
+  end
+
+  def test_follows_a_relative_redirect
+    stub_request(:get, URL).to_return(status: 301, headers: { "Location" => "/reference/getjournal-1.md" })
+    stub_request(:get, "https://pennylane.readme.io/reference/getjournal-1.md").to_return(status: 200, body: "moved")
+
+    assert_equal "moved", SnapshotContract::HTTP.get(URL)
+  end
+
+  def test_gives_up_on_a_redirect_loop
+    stub_request(:get, URL).to_return(status: 302, headers: { "Location" => URL })
+
+    error = assert_raises(SnapshotContract::Error) { SnapshotContract::HTTP.get(URL) }
+
+    assert_equal "GET #{URL}: too many redirects", error.message
+  end
+
+  def test_raises_on_any_other_status
+    stub_request(:get, URL).to_return(status: 503)
+
+    error = assert_raises(SnapshotContract::Error) { SnapshotContract::HTTP.get(URL) }
+
+    assert_equal "GET #{URL}: HTTP 503", error.message
   end
 end
