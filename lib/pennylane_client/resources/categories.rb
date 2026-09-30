@@ -4,7 +4,8 @@ module PennylaneClient
   module Resources
     # Analytical categories: `client.categories`. Every category belongs to
     # a category group (`client.category_groups`). To categorize an invoice,
-    # transaction, customer or supplier, use `categorize` on that resource.
+    # transaction, customer, supplier or ledger entry line, use `categorize`
+    # on that resource.
     #
     # Attributes go to Pennylane as given, through the Encoder. Responses
     # are deep-frozen Hashes.

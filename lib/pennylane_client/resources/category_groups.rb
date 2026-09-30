@@ -26,7 +26,8 @@ module PennylaneClient
       # when you change only `kind:`.
       def update(id, **attributes) = call(:putCategoryGroup, id:, **attributes)
 
-      # The group's categories, as an Enumerator::Lazy of Hashes.
+      # The group's categories, as an Enumerator::Lazy of Hashes. Pennylane
+      # documents no filter or sort here.
       def categories(category_group_id, **params)
         paginate(:getCategoryGroupCategories, category_group_id:, **params)
       end
