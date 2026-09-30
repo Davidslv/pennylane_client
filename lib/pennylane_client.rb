@@ -46,6 +46,7 @@ require_relative "pennylane_client/resources/categories"
 require_relative "pennylane_client/resources/category_groups"
 require_relative "pennylane_client/resources/products"
 require_relative "pennylane_client/resources/changelogs"
+require_relative "pennylane_client/resources/exports"
 require_relative "pennylane_client/client"
 
 # Unofficial Ruby client for the Pennylane Company API v2.

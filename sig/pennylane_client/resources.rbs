@@ -380,5 +380,37 @@ module PennylaneClient
 
       def transactions: (?since: Time | String | nil, **untyped params) -> Enumerator::Lazy[item, void]
     end
+
+    class Exports < Resource
+      @clock: ^() -> Float
+      @sleeper: ^(Numeric) -> untyped
+
+      def initialize: (Client client, ?clock: ^() -> Float, ?sleeper: ^(Numeric) -> untyped) -> void
+
+      def create_fec: (**untyped attributes) -> item
+
+      def find_fec: (Integer id) -> item
+
+      def generate_fec: (?timeout: Numeric, ?interval: Numeric, **untyped attributes) -> item
+
+      def create_general_ledger: (**untyped attributes) -> item
+
+      def find_general_ledger: (Integer id) -> item
+
+      def generate_general_ledger: (?timeout: Numeric, ?interval: Numeric, **untyped attributes) -> item
+
+      def create_analytical_general_ledger: (**untyped attributes) -> item
+
+      def find_analytical_general_ledger: (Integer id) -> item
+
+      def generate_analytical_general_ledger: (?timeout: Numeric, ?interval: Numeric, **untyped attributes) -> item
+
+      private
+
+      def generate: (Symbol create_id, Symbol find_id, Hash[Symbol, untyped] attributes, timeout: Numeric,
+                     interval: Numeric) -> item
+
+      def ready?: (item export) -> bool
+    end
   end
 end

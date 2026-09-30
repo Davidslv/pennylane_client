@@ -17,7 +17,7 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | In the snapshot | 178 |
 | Live (not deprecated) | 177 |
 | Registered | 178 |
-| Named | 154 of 177 live |
+| Named | 160 of 177 live |
 | Live-verified | 0 of 177 live |
 
 ## Bank accounts (3 of 3 named)
@@ -151,16 +151,16 @@ Contract snapshot of 2026-09-30. One row per Operation, grouped by resource grou
 | `getIndividualCustomer` | GET | `/individual_customers/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_find_individual` |
 | `putIndividualCustomer` | PUT | `/individual_customers/{id}` | yes | yes | unverified: no sandbox access | `test/resources/customers_test.rb#test_update_individual` |
 
-## Exports (0 of 6 named)
+## Exports (6 of 6 named)
 
 | operationId | Method | Path | registered | named | live | proven by |
 |---|---|---|---|---|---|---|
-| `exportAnalyticalGeneralLedger` | POST | `/exports/analytical_general_ledgers` | yes | no | unverified: no sandbox access |  |
-| `getAnalyticalGeneralLedgerExport` | GET | `/exports/analytical_general_ledgers/{id}` | yes | no | unverified: no sandbox access |  |
-| `exportFec` | POST | `/exports/fecs` | yes | no | unverified: no sandbox access |  |
-| `getFecExport` | GET | `/exports/fecs/{id}` | yes | no | unverified: no sandbox access |  |
-| `exportGeneralLedger` | POST | `/exports/general_ledgers` | yes | no | unverified: no sandbox access |  |
-| `getGeneralLedgerExport` | GET | `/exports/general_ledgers/{id}` | yes | no | unverified: no sandbox access |  |
+| `exportAnalyticalGeneralLedger` | POST | `/exports/analytical_general_ledgers` | yes | yes | unverified: no sandbox access | `test/resources/exports_test.rb#test_create_analytical_general_ledger_passes_the_mode` |
+| `getAnalyticalGeneralLedgerExport` | GET | `/exports/analytical_general_ledgers/{id}` | yes | yes | unverified: no sandbox access | `test/resources/exports_test.rb#test_find_analytical_general_ledger` |
+| `exportFec` | POST | `/exports/fecs` | yes | yes | unverified: no sandbox access | `test/resources/exports_test.rb#test_create_fec_encodes_the_period` |
+| `getFecExport` | GET | `/exports/fecs/{id}` | yes | yes | unverified: no sandbox access | `test/resources/exports_test.rb#test_find_fec` |
+| `exportGeneralLedger` | POST | `/exports/general_ledgers` | yes | yes | unverified: no sandbox access | `test/resources/exports_test.rb#test_create_general_ledger` |
+| `getGeneralLedgerExport` | GET | `/exports/general_ledgers/{id}` | yes | yes | unverified: no sandbox access | `test/resources/exports_test.rb#test_find_general_ledger` |
 
 ## File Attachments (1 of 1 named)
 

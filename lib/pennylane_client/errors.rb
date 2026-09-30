@@ -105,6 +105,17 @@ module PennylaneClient
     end
   end
 
+  # An export that failed, or was not ready in time (Resources::Exports).
+  class ExportError < Error
+    # The export as last read: its `id` and `status`.
+    attr_reader :export
+
+    def initialize(message, export:)
+      @export = export
+      super(message)
+    end
+  end
+
   # The documented statuses (errors guide). Any other 5xx is a ServerError;
   # anything else is the base Error.
   STATUS_ERRORS = {

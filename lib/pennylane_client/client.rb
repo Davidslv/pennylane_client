@@ -145,6 +145,10 @@ module PennylaneClient
     # (Resources::Changelogs).
     def changelogs = @changelogs ||= Resources::Changelogs.new(self)
 
+    # The named Exports operations: FEC, General Ledger and Analytical
+    # General Ledger (Resources::Exports).
+    def exports = @exports ||= Resources::Exports.new(self)
+
     def inspect = "#<#{self.class.name} base_url=#{@base_url.inspect}>"
 
     private
