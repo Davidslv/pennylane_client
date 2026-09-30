@@ -32,6 +32,7 @@ class FakePennylane
     @rate_limit = RateLimit.new(limit:, period:, clock:)
     @sleeper = sleeper
     @lock = Mutex.new
+    @faults = Faults.new
     @collections = {}
     @counts = Hash.new(0)
   end
@@ -41,10 +42,37 @@ class FakePennylane
     self
   end
 
+  # Misbehaves on the next `times` requests, or until `heal`:
+  #
+  # - :rate_limited, a 429 storm: every request is refused with
+  #   `retry-after`, whatever the token's budget;
+  # - :server_error, a 5xx with `status`;
+  # - :slow, the normal answer after `delay` seconds;
+  # - :hang, no answer: the connection stays silent for `delay` seconds,
+  #   then closes (in process: TimeoutError after `delay`);
+  # - :reset, the connection is reset (in process: ConnectionError);
+  # - :malformed, a 200 whose JSON body is cut short.
+  #
+  # Every kind but :rate_limited takes a call from the budget first, as the
+  # request reached Pennylane.
+  def inject(kind, times: nil, status: 503, delay: 1.0, retry_after: 1)
+    @faults.inject(Faults::Fault.new(kind:, status:, delay:, retry_after:), times)
+    self
+  end
+
+  def heal
+    @faults.heal
+    self
+  end
+
   # The Transport interface, for a Client in the same process.
   def call(request)
     reply = handle(request)
     @sleeper.call(reply.delay) if reply.delay.positive?
+    case reply.drop
+    when :hang then raise PennylaneClient::TimeoutError, "FakePennylane did not answer"
+    when :reset then raise PennylaneClient::ConnectionError, "FakePennylane reset the connection"
+    end
     reply.response
   end
 
@@ -75,10 +103,28 @@ class FakePennylane
     token = bearer(request)
     return Reply.new(response: self.class.error(401, "unauthorized", "Missing or invalid token")) unless token
 
+    fault = @faults.take
+    return storm(fault) if fault&.kind == :rate_limited
+
     allowed, headers = @rate_limit.admit(token)
     return Reply.new(response: RateLimit.refusal(headers)) unless allowed
 
-    Reply.new(response: route(request, headers))
+    fault ? misbehave(fault, request, headers) : Reply.new(response: route(request, headers))
+  end
+
+  def storm(fault) = Reply.new(response: RateLimit.refusal(@rate_limit.storm(fault.retry_after)))
+
+  def misbehave(fault, request, headers)
+    case fault.kind
+    when :server_error
+      Reply.new(response: self.class.error(fault.status, "internal_error", "FakePennylane failed on purpose", headers))
+    when :slow then Reply.new(response: route(request, headers), delay: fault.delay)
+    when :hang then Reply.new(delay: fault.delay, drop: :hang)
+    when :reset then Reply.new(drop: :reset)
+    when :malformed
+      Reply.new(response: PennylaneClient::Response.new(status: 200, headers: JSON_HEADERS.merge(headers),
+                                                        body: '{"items": ['))
+    end
   end
 
   def bearer(request)
@@ -138,6 +184,13 @@ class FakePennylane
       [false, headers.merge("retry-after" => [(reset - now).ceil, 1].max.to_s)]
     end
 
+    # The headers of a 429 storm: nothing left until `retry_after` has passed.
+    def storm(retry_after)
+      reset = (@clock.call + retry_after).ceil
+      { "ratelimit-limit" => @limit.to_s, "ratelimit-remaining" => "0", "ratelimit-reset" => reset.to_s,
+        "retry-after" => retry_after.to_s }
+    end
+
     def headers(used, reset)
       { "ratelimit-limit" => @limit.to_s, "ratelimit-remaining" => [@limit - used, 0].max.to_s,
         "ratelimit-reset" => reset.to_s }
@@ -158,6 +211,40 @@ class FakePennylane
       used = 0 unless seen == window
       @windows[key] = [window, [used + 1, @limit].min]
       used + 1
+    end
+  end
+
+  # The fault in force and how many more requests it lasts (nil: until
+  # healed). Thread-safe.
+  class Faults
+    KINDS = %i[rate_limited server_error slow hang reset malformed].freeze
+    Fault = Data.define(:kind, :status, :delay, :retry_after)
+
+    def initialize
+      @lock = Mutex.new
+      @fault = nil
+      @left = nil
+    end
+
+    def inject(fault, times)
+      raise ArgumentError, "unknown fault #{fault.kind.inspect}, not one of #{KINDS}" unless KINDS.include?(fault.kind)
+
+      @lock.synchronize do
+        @fault = fault
+        @left = times
+      end
+    end
+
+    def heal = @lock.synchronize { @fault = nil }
+
+    # The fault for this request, or nil.
+    def take
+      @lock.synchronize do
+        fault = @fault
+        @left -= 1 if fault && @left
+        @fault = nil if @left&.zero?
+        fault
+      end
     end
   end
 

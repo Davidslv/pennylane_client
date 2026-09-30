@@ -1,41 +1,11 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "support/fake_pennylane"
+require "support/fake_pennylane_helpers"
 require "stringio"
 
 class FakePennylaneTest < Minitest::Test
-  BASE = "https://app.pennylane.com/api/external/v2"
-  # A window boundary: 1_770_379_500 is a multiple of 5.
-  START = 1_770_379_500.0
-
-  def setup
-    @time = VirtualClock.new(START)
-    @fake = FakePennylane.new(clock: @time.clock, sleeper: @time.sleeper)
-  end
-
-  def get(path = "/me", token: "tok")
-    @fake.call(request(:get, path, token:))
-  end
-
-  # A real Client on the same virtual clock as the fake.
-  def client
-    @client ||= PennylaneClient.new(token: "tok", transport: @fake, logger: nil, on_request: nil,
-                                    limiters: PennylaneClient::LimiterRegistry.new do
-                                      PennylaneClient::Limiter.new(clock: @time.clock, sleeper: @time.sleeper)
-                                    end)
-  end
-
-  def request(verb, path, token: "tok", headers: {}, body: nil)
-    headers = headers.merge("Authorization" => "Bearer #{token}") if token
-    PennylaneClient::Request.new(verb:, url: "#{BASE}#{path}", headers:, body:)
-  end
-
-  # [status, ratelimit-limit, ratelimit-remaining, ratelimit-reset, retry-after]
-  def summary(response)
-    [response.status, *response.headers.values_at("ratelimit-limit", "ratelimit-remaining", "ratelimit-reset",
-                                                  "retry-after")]
-  end
+  include FakePennylaneHelpers
 
   def test_answers_with_json_and_the_rate_limit_headers
     response = get
