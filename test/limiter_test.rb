@@ -2,25 +2,6 @@
 
 require "test_helper"
 
-# A clock that only moves when the limiter sleeps, so windows are exact.
-class VirtualClock
-  attr_reader :now, :sleeps
-
-  def initialize(now = 1_770_379_500.0)
-    @now = now
-    @sleeps = []
-  end
-
-  def clock = -> { @now }
-
-  def sleeper
-    lambda do |seconds|
-      @sleeps << seconds
-      @now += seconds
-    end
-  end
-end
-
 class LimiterTest < Minitest::Test
   def setup
     @time = VirtualClock.new

@@ -7,7 +7,9 @@ require "test_helper"
 class ClientTest < Minitest::Test
   API = "https://app.pennylane.com/api/external/v2"
 
-  def client = @client ||= PennylaneClient.new(token: "tok")
+  # A fresh LimiterRegistry per test, so the suite never waits on the
+  # process-wide bucket.
+  def client = @client ||= PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new)
 
   def test_new_returns_a_client
     assert_instance_of PennylaneClient::Client, client
@@ -71,6 +73,18 @@ class ClientTest < Minitest::Test
 
   def test_an_unknown_operation_raises
     assert_raises(PennylaneClient::UnknownOperationError) { client.call(:getNothing) }
+  end
+
+  def test_rate_limit_headers_reach_the_injected_limiter
+    stub_request(:get, "#{API}/me").to_return(status: 200, headers: { "RateLimit-Remaining" => "7" })
+    updates = []
+    limiter = Object.new
+    limiter.define_singleton_method(:acquire) { 0.0 }
+    limiter.define_singleton_method(:update) { |**headers| updates << headers }
+
+    PennylaneClient.new(token: "tok", limiters: PennylaneClient::LimiterRegistry.new { limiter }).call(:getMe)
+
+    assert_equal [{ remaining: 7, reset_at: nil }], updates
   end
 
   def test_base_url_and_transport_can_be_injected

@@ -15,6 +15,11 @@ Metrics/ModuleLength:
   Exclude:
     - "lib/pennylane_client/operations.rb"
 
+# Client is configured with keyword options, each with a default; the count
+# of positional parameters is what hurts readability.
+Metrics/ParameterLists:
+  CountKeywordArgs: false
+
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 

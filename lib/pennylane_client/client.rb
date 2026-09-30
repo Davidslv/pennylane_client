@@ -9,17 +9,25 @@ module PennylaneClient
   #
   # `token` is a String, or anything responding to `#call` that returns the
   # current token (Middleware::Auth). `logger` and `on_request` default to
-  # PennylaneClient.configuration. `transport` and `base_url` are there for
-  # tests and fakes.
+  # PennylaneClient.configuration. `limiters` defaults to the process-wide
+  # LimiterRegistry, so every Client on one token shares one budget.
+  # `transport` and `base_url` are there for tests and fakes.
+  #
+  # Each call runs through the middleware, outermost first:
+  #
+  #   Auth -> RateLimit -> Instrument -> Transport
   class Client
     DEFAULT_BASE_URL = "https://app.pennylane.com"
 
     def initialize(token:, base_url: DEFAULT_BASE_URL, transport: NetHttpTransport.default,
                    logger: PennylaneClient.configuration.logger,
-                   on_request: PennylaneClient.configuration.on_request)
+                   on_request: PennylaneClient.configuration.on_request,
+                   limiters: LimiterRegistry.default)
       @base_url = base_url
       instrumentation = Instrumentation.new(logger:, on_request:)
-      pipeline = Middleware::Auth.new(Middleware::Instrument.new(transport, instrumentation), token)
+      pipeline = Middleware::Instrument.new(transport, instrumentation)
+      pipeline = Middleware::RateLimit.new(pipeline, limiters, instrumentation)
+      pipeline = Middleware::Auth.new(pipeline, token)
       @executor = Executor.new(registry: Registry.default, transport: pipeline, base_url:)
     end
 

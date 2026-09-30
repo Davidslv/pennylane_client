@@ -27,3 +27,23 @@ class FakeTransport
     response
   end
 end
+
+# A wall clock that only moves when something sleeps on it, so rate-limit
+# windows and retry waits are exact and cost no real time.
+class VirtualClock
+  attr_reader :now, :sleeps
+
+  def initialize(now = 1_770_379_500.0)
+    @now = now
+    @sleeps = []
+  end
+
+  def clock = -> { @now }
+
+  def sleeper
+    lambda do |seconds|
+      @sleeps << seconds
+      @now += seconds
+    end
+  end
+end

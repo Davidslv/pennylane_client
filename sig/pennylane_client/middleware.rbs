@@ -19,6 +19,18 @@ module PennylaneClient
       def valid?: (untyped token) -> bool
     end
 
+    class RateLimit
+      include _Transport
+
+      def initialize: (_Transport app, _LimiterRegistry limiters, Instrumentation instrumentation) -> void
+
+      private
+
+      def key: (Request request) -> String
+      def correct: (_Limiter limiter, Hash[String, String] headers) -> void
+      def report: (Request request, Float waited) -> void
+    end
+
     class Instrument
       include _Transport
 

@@ -32,4 +32,13 @@ class InstrumentationTest < Minitest::Test
     assert_equal [EVENT], events
     assert_includes stderr, "IOError: disk full"
   end
+
+  def test_logs_a_rate_limit_wait
+    log = StringIO.new
+    PennylaneClient::Instrumentation.new(logger: Logger.new(log))
+                                    .record({ type: :wait, operation_id: :getMe, method: "GET",
+                                              path: "/api/external/v2/me", wait: 0.8 })
+
+    assert_includes log.string, "pennylane_client getMe GET /api/external/v2/me waited 0.8 s for the rate limit"
+  end
 end
