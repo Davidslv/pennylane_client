@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "io/nonblock"
 require "socket"
 require_relative "../fake_pennylane"
 
@@ -51,9 +52,9 @@ class FakePennylane
     end
 
     # Closes every open connection, as a server does to idle ones, and keeps
-    # listening.
+    # listening. Returns once each client has seen the close.
     def close_connections
-      @lock.synchronize { @connections.keys }.each(&:close)
+      @lock.synchronize { @connections.keys }.each { close_acknowledged(_1) }
     end
 
     def connections_opened = @lock.synchronize { @opened }
@@ -70,6 +71,21 @@ class FakePennylane
     def inspect = "#<#{self.class.name} url=#{url}>"
 
     private
+
+    # A plain close returns before the client has the FIN: on macOS it
+    # reaches the other end of 127.0.0.1 tens of microseconds later, and a
+    # request written meanwhile fails with EOFError or ECONNRESET (issue
+    # #52). A lingering close on a blocking socket returns only once the
+    # client has acknowledged the FIN, so the client sees the close on its
+    # next call. Ruby makes sockets non-blocking, and a non-blocking close
+    # does not linger.
+    def close_acknowledged(socket)
+      socket.nonblock = false
+      socket.setsockopt(Socket::Option.linger(true, 1))
+      socket.close
+    rescue IOError, SystemCallError
+      nil # the client hung up first
+    end
 
     def accept_loop
       loop do
